@@ -7,6 +7,8 @@ import {
   RouterProvider,
 } from "react-router-dom"; 
 import './index.css'
+import NewPallet from './pages/NewPallet/NewPallet.tsx';
+import Pallet from './pages/Pallet/Pallet.tsx';
 
 const router = createBrowserRouter([
   {
@@ -16,6 +18,14 @@ const router = createBrowserRouter([
   {
     path: "/workmode",
     element: <Workmode/>
+  },
+  {
+    path: "/new-pallet",
+    element: <NewPallet/>
+  },
+  {
+    path: "/pallet/:id",
+    element: <Pallet/>
   }
 ]);
 

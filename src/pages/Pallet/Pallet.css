@@ -1,0 +1,133 @@
+.pallet {
+  height: 100%;
+  padding: 0 6px 12px;
+  display: flex;
+  flex-direction: column;
+  background-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.8),
+      rgba(0, 0, 0, 0.7)
+    ),
+    url("../../assets/pallet.jpeg");
+  background-position: center;
+  background-size: auto;
+  overflow: auto;
+}
+
+.pallet__header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.pallet__user {
+  font-size: 6vw;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: center;
+
+}
+
+.pallet-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+
+.pallet-info__text {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    display: block;
+
+}
+
+.value {
+    font-size: 16px;
+    color: #222;
+    font-weight: 900;
+}
+
+.pallet-info__product-name {
+    font-weight: 900;
+    font-size: 16px;
+    margin: 0 0 10px;
+}
+
+.pallet__toggle-boxes,
+.pallet__remove-box {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pallet__toggle-boxes {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.pallet__toggle-boxes:hover,
+.pallet__toggle-boxes:active {
+  background-color: #1e7e34;
+}
+
+.pallet__remove-box {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.pallet-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: auto;
+}
+
+.pallet-table__heading {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+
+.pallet-table__data {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+}
+
+.pallet-table__row:nth-child(even) {
+  background-color: #8d8d8d;
+}
+
+.pallet__remove-box:hover {
+  background-color: #c82333;
+}
+
+.back-button {
+    width: min-content;
+    background-color: red;
+    color: #fff;
+    padding: 12px 24px;
+    border: 1px solid white;
+    border-radius: 25px;
+    font-size: 18px;
+    align-self: center;
+    justify-self: end;
+    margin-top: 12px;
+    transition: .3s;
+}
+
+.back-button:hover {
+    opacity: .7;
+}

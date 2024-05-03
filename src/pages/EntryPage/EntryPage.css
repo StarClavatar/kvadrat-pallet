@@ -7,13 +7,17 @@
   gap: 12px;
 }
 
-.pin-code {
-  width: 90%;
+.input {
   font-size: 24px;
   background-color: transparent;
   border: none;
   outline: none;
   border-bottom: 2px solid #f6fa05;
+  text-align: center;
+}
+
+.pin-code {
+  width: 90%;
   padding-top: 10px;
 }
 

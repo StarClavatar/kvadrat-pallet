@@ -41,11 +41,11 @@ const EntryPage: React.FC = () => {
   return (
     <div className="entry-page">
       <input
-        className="pin-code"
+        className="input pin-code"
         name="pin-code"
         type="text"
         pattern="[0-9]*"
-        placeholder="Введите пин код"
+        placeholder="Введите пин-код"
         maxLength={4}
         onChange={(e: ChangeEvent<HTMLInputElement>): void => {
           setPinCode(e.target.value);

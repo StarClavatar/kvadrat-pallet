@@ -29,8 +29,6 @@
 }
 
 .link_quit {
-    /* position: absolute;
-    bottom: 12px; */
     color: white;
     font-size: 18px;
     font-weight: 600;
@@ -40,9 +38,3 @@
     border-radius: 30px;
     margin-bottom: 12px;
 }
-
-/* @media only screen and (orientation: landscape) {
-    .workmode__links {
-        margin-top: 0;
-    }
-  } */
