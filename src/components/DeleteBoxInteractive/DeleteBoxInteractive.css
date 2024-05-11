@@ -1,0 +1,39 @@
+.box-delete {
+    background-color: #fff;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+  }
+  
+  .box-delete__input {
+    width: 100%;
+    margin-bottom: 40px;
+  }
+  
+  .box-delete__image-wrapper {
+    width: 50%;
+    margin-bottom: auto;
+  }
+  
+  .box-delete__next-button {
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 8px;
+    border: none;
+    background-color: #388e3c;
+    color: #fff;
+  }
+
+  .slide {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+  }
