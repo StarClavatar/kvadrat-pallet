@@ -1,0 +1,56 @@
+.group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+    gap: 4px;
+    flex: 1;
+    box-sizing: border-box;
+    /* border-top: 0.1px solid black; */
+    border-bottom: 0.1px solid black;
+}
+
+.popup_group {
+    background-color: #fff;
+    height: 90%;
+}
+
+.group:first-child {
+    border-top: none;
+}
+
+.group__prod-name {
+    margin: 0;
+    font-weight: 500;
+    text-align: center;
+    font-size: 16px;
+}
+
+.group__series {
+    font-size: 14px;
+}
+
+.group-boxes {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+
+.group-boxes p {
+    margin: 0;
+}
+
+.group-boxes__from {
+    font-size: 28px;
+    color: blue;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.group-boxes__total {
+    font-size: 28px;
+    font-weight: 500;
+}

@@ -24,7 +24,7 @@ const router = createBrowserRouter([
     element: <NewPallet/>
   },
   {
-    path: "/pallet/:id",
+    path: "/pallet/:sscc",
     element: <Pallet/>
   }
 ]);

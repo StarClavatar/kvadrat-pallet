@@ -15,7 +15,6 @@ const NewPallet = () => {
   }, []);
 
   const audio = new Audio(beep)
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     audio.play()
