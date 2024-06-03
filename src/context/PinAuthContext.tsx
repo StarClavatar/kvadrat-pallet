@@ -24,7 +24,10 @@ export const PinContext = createContext<PinContextType>({
 });
 
 const PinAuthContext = ({ children }: TProps) => {
+  
+  //State для хранения информации об авторизации
   const [pinAuthData, setPinAuthData] = useState<TPinAuthData | undefined>();
+
   return (
     <PinContext.Provider value={{ pinAuthData, setPinAuthData }}>
       {children}

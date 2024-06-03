@@ -17,33 +17,41 @@ const Pallet = () => {
   const [pallet, setPallet] = useState<TPallet>();
   const params = useParams();
   const palletContainerRef = useRef();
+  const [palletDataError, setPalletDataError] = useState<boolean>(false);
+  const [palletErrorText, setPalletErrorText] = useState<string>('')
 
-  if (!setShowDelete) {
-    useScanDetection({
-      container: palletContainerRef.current,
-      onComplete: (code) => {
-        const scannedCode = code.replace(/[^0-9]/g, "").toString();
-        const fetchAddCart = async () => {
-          console.log(
-            String(pinAuthData?.pinCode),
-            String(params.sscc),
-            scannedCode,
-            String(localStorage.getItem("tsdUUID"))
-          );
-          await addCart(
-            String(pinAuthData?.pinCode),
-            String(params.sscc),
-            scannedCode,
-            String(localStorage.getItem("tsdUUID"))
-          ).then((res) => {
+  useScanDetection({
+    container: palletContainerRef.current,
+    onComplete: (code) => {
+      const scannedCode = code.replace(/[^0-9]/g, "").toString();
+      const fetchAddCart = async () => {
+        console.log(
+          String(pinAuthData?.pinCode),
+          String(params.sscc),
+          scannedCode,
+          String(localStorage.getItem("tsdUUID"))
+        );
+        await addCart(
+          String(pinAuthData?.pinCode),
+          String(params.sscc),
+          scannedCode,
+          String(localStorage.getItem("tsdUUID"))
+        )
+          .then((res) => {
             console.log("res:", res);
-            setPallet(res);
-          });
-        };
-        fetchAddCart();
-      },
-    });
-  }
+            if (!res.error) {
+              setPallet(res);
+            } else {
+              setPalletDataError(true)
+              // setPalletErrorText(res.error)
+            }
+          })
+          .catch((err) => alert(err));
+      };
+      fetchAddCart();
+    },
+    
+  });
 
   useEffect(() => {
     console.log(pinAuthData);
@@ -54,12 +62,18 @@ const Pallet = () => {
         "",
         pinAuthData?.tsdUUID || ""
       );
-      setPallet(response);
-      console.log(pallet);
+      if (!response.error) {
+        setPallet(response);
+        console.log(pallet);
+      }
     };
 
     fetchData();
   }, []);
+
+  if (!pinAuthData?.tsdUUID) {
+    navigate("/");
+  }
 
   if (!pallet) {
     return (
@@ -67,6 +81,18 @@ const Pallet = () => {
         <h2>Загрузка...</h2>
       </div>
     );
+  }
+
+  if (palletDataError) {
+    setPalletDataError(true);
+    <Popup
+        isOpen={palletDataError}
+        onClose={() => {
+          setPalletDataError(false);
+        }}
+      >
+        <h2>{palletErrorText}</h2>
+      </Popup>
   }
 
   return (

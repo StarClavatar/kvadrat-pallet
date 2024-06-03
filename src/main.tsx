@@ -1,3 +1,4 @@
+import './utils/wdyr.ts'
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import Workmode from "./pages/Workmode/Workmode.tsx";

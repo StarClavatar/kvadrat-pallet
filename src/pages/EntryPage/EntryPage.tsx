@@ -34,9 +34,11 @@ const EntryPage: React.FC = () => {
 
   if (pinCode.length === 4) {
     const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
+    // alert(`tsdUUID from localStorage: ${tsdUUID}`)
     fetchPinAuth(Number(pinCode), tsdUUID)
       .then((data: TPinAuthData) => {
-        console.log(tsdUUID)
+        // console.log("TSDUUID: ", tsdUUID)
+        // alert(`tsdUUID during request: ${data.tsdUUID}`)
         setPinAuthData(data);
         if (data.error.length === 0) {
           setPinCode('');
