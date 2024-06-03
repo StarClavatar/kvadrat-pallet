@@ -19,7 +19,6 @@ const NewPallet = () => {
     e.preventDefault();
     audio.play()
     if (code?.length > 0) {
-      console.log("Отправленный SSCC-код:", code);
       navigate(`/pallet/${code}`);
       setCode("");
     }

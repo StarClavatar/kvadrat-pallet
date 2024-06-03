@@ -1,9 +1,12 @@
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useState, useContext } from "react";
 import "./EntryPage.css";
 import BackspaceIcon from "../../assets/backspaceIcon";
 import { useNavigate } from "react-router-dom";
+import { PinContext, TPinAuthData } from "../../context/PinAuthContext";
+import { fetchPinAuth } from "../../api/pinAuth";
 
 const EntryPage: React.FC = () => {
+  const { pinAuthData, setPinAuthData } = useContext(PinContext);
   const [pinCode, setPinCode] = useState<string>("");
   const [pinError, setPinError] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -30,12 +33,19 @@ const EntryPage: React.FC = () => {
   };
 
   if (pinCode.length === 4) {
-    if (pinCode === "1234") {
-      // Если введен правильный PIN-код, переходим на другую страницу
-      navigate("/workmode");
-    } else {
-      handlePinError();
-    }
+    const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
+    fetchPinAuth(Number(pinCode), tsdUUID)
+      .then((data: TPinAuthData) => {
+        console.log(tsdUUID)
+        setPinAuthData(data);
+        if (data.error.length === 0) {
+          setPinCode('');
+          localStorage.setItem("tsdUUID", String(data.tsdUUID));
+          navigate("/workmode");
+        } else {
+          handlePinError();
+        }
+      });
   }
 
   return (
@@ -50,14 +60,16 @@ const EntryPage: React.FC = () => {
         onChange={(e: ChangeEvent<HTMLInputElement>): void => {
           setPinCode(e.target.value);
         }}
-        value={pinCode} // Устанавливаем значение поля ввода
+        value={pinCode}
         style={{ borderBottom: "2px solid #f6fa05" }}
       />
       {pinError && (
         <p
           className={
             pinError ? "pin-code-error shake-animation" : "pin-code-error"
-          }>хуёвый пинкод
+          }
+        >
+          {pinAuthData?.error}
         </p>
       )}
       <div className="numpad">
@@ -65,7 +77,7 @@ const EntryPage: React.FC = () => {
           <button
             key={value.toString()}
             className="numpad__button"
-            onClick={() => handleButtonClick(value)} // Обработчик клика
+            onClick={() => handleButtonClick(value)}
           >
             {value === "backspace" ? <BackspaceIcon /> : value}
           </button>

@@ -5,12 +5,13 @@ import Popup from "../Popup/Popup";
 
 function Group({
   productName,
-  produtSerial,
+  produсtSerial,
   cartCount,
   cartsOnCount,
   groupState,
   carts,
 }: TGroup) {
+  console.log(produсtSerial)
   const [showGroupBoxes, setShowGroupBoxes] = useState<boolean>(false);
   return (
     <>
@@ -24,7 +25,7 @@ function Group({
         }}
       >
         <p className="group__prod-name">{productName}</p>
-        <span className="group__series">{`(серия: ${produtSerial})`}</span>
+        <span className="group__series">{`(серия: ${produсtSerial})`}</span>
         <div className="group-boxes">
           <p
             className="group-boxes__from"

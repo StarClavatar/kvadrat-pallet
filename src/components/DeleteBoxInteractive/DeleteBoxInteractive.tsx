@@ -2,7 +2,8 @@ import React, { useState, useRef } from "react";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import "./DeleteBoxInteractive.css";
 import useScanDetection from "use-scan-detection";
-import beep from '../../assets/beep.mp3'
+import scanSuccessSound from '../../assets/scanSuccess.mp3'
+// import scanFailedSound from '../../assets/scanFailed.mp3'
 
 interface DeleteBoxInteractiveProps {
   onClose: () => void;
@@ -16,10 +17,13 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   const [step, setStep] = useState<number>(0);
   const [deleteBoxValue, setDeleteBoxValue] = useState<any>("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const audio = new Audio(beep)
+  const successScanSound = new Audio(scanSuccessSound)
+  // const failedScanSound = new Audio(scanFailedSound)
+  const deleteBoxContainerRef = useRef<HTMLDivElement>()
   useScanDetection({
+    container: deleteBoxContainerRef.current,
     onComplete: (code) => {
-      audio.play()
+      successScanSound.play()
       if (isPopupOpened) {
         setDeleteBoxValue(code.replace(/[^0-9]/g, ''))
         setStep(1)
@@ -30,7 +34,8 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   });
 
   return (
-    <div className="swipeable-container">
+    //@ts-ignore
+    <div className="swipeable-container" ref={deleteBoxContainerRef}>
       <div className={`slide ${step === 0 && "slide_active"}`}>
         <input
           ref={inputRef}

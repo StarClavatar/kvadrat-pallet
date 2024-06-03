@@ -1,39 +1,83 @@
-import { pallet, TGroup } from "./config";
+import { TPallet, TGroup } from "./config";
 import "./Pallet.css";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useContext, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
 import Group from "../../components/Group/Group";
-// import useScanDetection from "use-scan-detection";
+import { PinContext } from "../../context/PinAuthContext";
+import { fetchPalletInfo } from "../../api/palletInfo";
+import useScanDetection from "use-scan-detection";
+import { addCart } from "../../api/addCart";
 
 const Pallet = () => {
+  const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const [showDelete, setShowDelete] = useState<boolean>(false);
+  const [pallet, setPallet] = useState<TPallet>();
   const params = useParams();
+  const palletContainerRef = useRef();
 
-  // useScanDetection({
-  //   onComplete: (code) => {
-  //     const box: Cart = {
-  //       cartSSCC: String(code)
-        
-  //     };
-  //     pallet.groups.push(box);
-  //   },
-  // });
+  if (!setShowDelete) {
+    useScanDetection({
+      container: palletContainerRef.current,
+      onComplete: (code) => {
+        const scannedCode = code.replace(/[^0-9]/g, "").toString();
+        const fetchAddCart = async () => {
+          console.log(
+            String(pinAuthData?.pinCode),
+            String(params.sscc),
+            scannedCode,
+            String(localStorage.getItem("tsdUUID"))
+          );
+          await addCart(
+            String(pinAuthData?.pinCode),
+            String(params.sscc),
+            scannedCode,
+            String(localStorage.getItem("tsdUUID"))
+          ).then((res) => {
+            console.log("res:", res);
+            setPallet(res);
+          });
+        };
+        fetchAddCart();
+      },
+    });
+  }
 
-// function checkPalletesFilling() {
+  useEffect(() => {
+    console.log(pinAuthData);
+    const fetchData = async () => {
+      const response = await fetchPalletInfo(
+        String(pinAuthData?.pinCode),
+        params.sscc || "",
+        "",
+        pinAuthData?.tsdUUID || ""
+      );
+      setPallet(response);
+      console.log(pallet);
+    };
 
-// }
+    fetchData();
+  }, []);
+
+  if (!pallet) {
+    return (
+      <div className="loading">
+        <h2>Загрузка...</h2>
+      </div>
+    );
+  }
 
   return (
-    <div className="pallet">
+    //@ts-ignore
+    <div className="pallet" ref={palletContainerRef}>
       <div className="pallet-info">
         <div className="pallet-user">
           <button className="" onClick={() => navigate("/new-pallet")}>
             Назад
           </button>
-          <p className="pallet__user">{pallet.user}</p>
+          <p className="pallet__user">{`${pinAuthData?.position} ${pinAuthData?.workerName}`}</p>
         </div>
         <div className="pallet-block pallet-block-about">
           <span className="pallet-text pallet-block-about">Паллета №</span>
@@ -62,7 +106,8 @@ const Pallet = () => {
         </div>
         <div className="pallet-block pallet-block-boxes">
           {pallet.groups.map((group: TGroup, idx): ReactNode => {
-            return <Group {...group} key={idx}/>;
+            console.log(group);
+            return <Group {...group} key={idx} />;
           })}
         </div>
         <div className="pallet-buttons">
@@ -77,7 +122,6 @@ const Pallet = () => {
           <button className="pallet-button pallet-button_finish">
             Завершить
           </button>
-          {/* <button className="pallet-button pallet-button_quit">Выход</button> */}
         </div>
       </div>
       {/* Модальное окно удаления коробки */}
