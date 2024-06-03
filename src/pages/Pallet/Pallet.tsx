@@ -21,16 +21,15 @@ const Pallet = () => {
   const [palletErrorText, setPalletErrorText] = useState<string>('')
 
   useScanDetection({
-    container: palletContainerRef.current,
     onComplete: (code) => {
       const scannedCode = code.replace(/[^0-9]/g, "").toString();
       const fetchAddCart = async () => {
-        console.log(
-          String(pinAuthData?.pinCode),
-          String(params.sscc),
-          scannedCode,
-          String(localStorage.getItem("tsdUUID"))
-        );
+        // console.log(
+        //   String(pinAuthData?.pinCode),
+        //   String(params.sscc),
+        //   scannedCode,
+        //   String(localStorage.getItem("tsdUUID"))
+        // );
         await addCart(
           String(pinAuthData?.pinCode),
           String(params.sscc),
@@ -43,14 +42,13 @@ const Pallet = () => {
               setPallet(res);
             } else {
               setPalletDataError(true)
-              // setPalletErrorText(res.error)
+              setPalletErrorText(res.error)
             }
           })
           .catch((err) => alert(err));
       };
       fetchAddCart();
     },
-    
   });
 
   useEffect(() => {
@@ -84,7 +82,6 @@ const Pallet = () => {
   }
 
   if (palletDataError) {
-    setPalletDataError(true);
     <Popup
         isOpen={palletDataError}
         onClose={() => {
@@ -92,12 +89,11 @@ const Pallet = () => {
         }}
       >
         <h2>{palletErrorText}</h2>
-      </Popup>
+    </Popup>
   }
 
   return (
-    //@ts-ignore
-    <div className="pallet" ref={palletContainerRef}>
+    <div className="pallet">
       <div className="pallet-info">
         <div className="pallet-user">
           <button className="" onClick={() => navigate("/new-pallet")}>
