@@ -11,7 +11,6 @@ function Group({
   groupState,
   carts,
 }: TGroup) {
-  console.log(produсtSerial)
   const [showGroupBoxes, setShowGroupBoxes] = useState<boolean>(false);
   return (
     <>

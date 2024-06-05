@@ -1,6 +1,6 @@
 import { TPallet, TGroup } from "./config";
 import "./Pallet.css";
-import { ReactNode, useState, useContext, useEffect, useRef } from "react";
+import { ReactNode, useState, useContext, useEffect, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
@@ -9,6 +9,7 @@ import { PinContext } from "../../context/PinAuthContext";
 import { fetchPalletInfo } from "../../api/palletInfo";
 import useScanDetection from "use-scan-detection";
 import { addCart } from "../../api/addCart";
+import errorSound from '../../assets/scanFailed.mp3'
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
@@ -16,38 +17,35 @@ const Pallet = () => {
   const [showDelete, setShowDelete] = useState<boolean>(false);
   const [pallet, setPallet] = useState<TPallet>();
   const params = useParams();
-  const palletContainerRef = useRef();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
-  const [palletErrorText, setPalletErrorText] = useState<string>('')
+  const [palletErrorText, setPalletErrorText] = useState<string>("");
+  const [inputValue, setInputValue] = useState<string>("");
+  const errorAudio = new Audio(errorSound)
+
+  const handleScan = async (code: string) => {
+    const normalizedCode = code.replace(/[^0-9]/g, "").toString();
+    try {
+      const response = await addCart(
+        String(pinAuthData?.pinCode),
+        String(params.sscc),
+        normalizedCode,
+        String(localStorage.getItem("tsdUUID"))
+      );
+
+      if (!response.error) {
+        setPallet(response);
+      } else {
+        setPalletDataError(true);
+        setPalletErrorText(response.error);
+      }
+    } catch (err) {
+      alert(err);
+    }
+  };
 
   useScanDetection({
     onComplete: (code) => {
-      const scannedCode = code.replace(/[^0-9]/g, "").toString();
-      const fetchAddCart = async () => {
-        // console.log(
-        //   String(pinAuthData?.pinCode),
-        //   String(params.sscc),
-        //   scannedCode,
-        //   String(localStorage.getItem("tsdUUID"))
-        // );
-        await addCart(
-          String(pinAuthData?.pinCode),
-          String(params.sscc),
-          scannedCode,
-          String(localStorage.getItem("tsdUUID"))
-        )
-          .then((res) => {
-            console.log("res:", res);
-            if (!res.error) {
-              setPallet(res);
-            } else {
-              setPalletDataError(true)
-              setPalletErrorText(res.error)
-            }
-          })
-          .catch((err) => alert(err));
-      };
-      fetchAddCart();
+      handleScan(String(code));
     },
   });
 
@@ -82,15 +80,28 @@ const Pallet = () => {
   }
 
   if (palletDataError) {
-    <Popup
+    errorAudio.play()
+    return (
+      <Popup
         isOpen={palletDataError}
         onClose={() => {
           setPalletDataError(false);
         }}
       >
         <h2>{palletErrorText}</h2>
-    </Popup>
+      </Popup>
+    );
   }
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleScan(inputValue);
+    }
+  };
 
   return (
     <div className="pallet">
@@ -128,11 +139,16 @@ const Pallet = () => {
         </div>
         <div className="pallet-block pallet-block-boxes">
           {pallet.groups.map((group: TGroup, idx): ReactNode => {
-            console.log(group);
             return <Group {...group} key={idx} />;
           })}
         </div>
         <div className="pallet-buttons">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+          />
           <button
             className="pallet-button pallet-button_delete"
             onClick={() => {
