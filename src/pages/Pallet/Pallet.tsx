@@ -1,6 +1,6 @@
 import { TPallet, TGroup } from "./config";
 import "./Pallet.css";
-import { ReactNode, useState, useContext, useEffect, ChangeEvent } from "react";
+import { ReactNode, useState, useContext, useEffect, ChangeEvent, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
@@ -9,7 +9,8 @@ import { PinContext } from "../../context/PinAuthContext";
 import { fetchPalletInfo } from "../../api/palletInfo";
 import useScanDetection from "use-scan-detection";
 import { addCart } from "../../api/addCart";
-import errorSound from '../../assets/scanFailed.mp3'
+import errorSound from "../../assets/scanFailed.mp3";
+import Loader from "../../components/Loader/Loader";
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
@@ -20,17 +21,24 @@ const Pallet = () => {
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
   const [palletErrorText, setPalletErrorText] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>("");
-  const errorAudio = new Audio(errorSound)
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const errorAudio = new Audio(errorSound);
+  const scannedCode = useRef<string>()
 
   const handleScan = async (code: string) => {
     const normalizedCode = code.replace(/[^0-9]/g, "").toString();
+    scannedCode.current = normalizedCode
     try {
-      const response = await addCart(
+      const response: TPallet = await addCart(
         String(pinAuthData?.pinCode),
         String(params.sscc),
         normalizedCode,
         String(localStorage.getItem("tsdUUID"))
       );
+
+      if (response.info) {
+        setIsDialogOpen(true);
+      }
 
       if (!response.error) {
         setPallet(response);
@@ -45,7 +53,9 @@ const Pallet = () => {
 
   useScanDetection({
     onComplete: (code) => {
-      handleScan(String(code));
+      if (!showDelete) {
+        handleScan(String(code));
+      }
     },
   });
 
@@ -61,6 +71,9 @@ const Pallet = () => {
       if (!response.error) {
         setPallet(response);
         console.log(pallet);
+      } else {
+        setPalletDataError(response.error);
+        setPalletErrorText(response.error);
       }
     };
 
@@ -74,21 +87,42 @@ const Pallet = () => {
   if (!pallet) {
     return (
       <div className="loading">
-        <h2>Загрузка...</h2>
+        {palletErrorText ? (
+          <div className="pallet-error">
+            <p className="loading__error-text">{palletErrorText}</p>
+            <button
+              className="popup-error__button"
+              onClick={() => navigate("/new-pallet")}
+            >
+              Назад
+            </button>
+          </div>
+        ) : (
+          <Loader />
+        )}
       </div>
     );
   }
 
   if (palletDataError) {
-    errorAudio.play()
+    errorAudio.play();
     return (
       <Popup
+        containerClassName="popup-error"
         isOpen={palletDataError}
         onClose={() => {
           setPalletDataError(false);
         }}
       >
-        <h2>{palletErrorText}</h2>
+        <div className="popup-error__container">
+          <h4 className="popup-error__text">{palletErrorText}</h4>
+          <button
+            className="popup-error__button"
+            onClick={() => setPalletDataError(false)}
+          >
+            продолжить
+          </button>
+        </div>
       </Popup>
     );
   }
@@ -162,6 +196,53 @@ const Pallet = () => {
           </button>
         </div>
       </div>
+      {pallet.info ? (
+        <Popup
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          containerClassName="pallet-dialog"
+        >
+          <p className="pallet-dialog__text">{pallet.info}</p>
+          <div className="pallet-dialog-buttons">
+            {pallet.infoType === "yesNo" ? (
+              <>
+                <button
+                  className="pallet-dialog-btn"
+                  onClick={async () => {
+                    setPallet(await addCart(
+                      String(pinAuthData?.pinCode),
+                      params.sscc || "",
+                      String(scannedCode.current),
+                      pinAuthData?.tsdUUID || "",
+                      pallet.info,
+                      "yes",
+                    ))
+                  }}
+                >
+                  Да
+                </button>
+                <button
+                  className="pallet-dialog-btn"
+                  onClick={async () => {
+                    setPallet(await addCart(
+                      String(pinAuthData?.pinCode),
+                      params.sscc || "",
+                      String(scannedCode.current),
+                      pinAuthData?.tsdUUID || "",
+                      pallet.info,
+                      "no",
+                    ))
+                  }}
+                >
+                  Нет
+                </button>
+              </>
+            ) : (
+              <button className="pallet-dialog-btn">Продолжить</button>
+            )}
+          </div>
+        </Popup>
+      ) : null}
       {/* Модальное окно удаления коробки */}
       <Popup
         title="Удаление коробки"
@@ -171,6 +252,7 @@ const Pallet = () => {
         <DeleteBoxInteractive
           onClose={() => setShowDelete(false)}
           isPopupOpened={showDelete}
+          setPallet={setPallet}
         />
       </Popup>
     </div>

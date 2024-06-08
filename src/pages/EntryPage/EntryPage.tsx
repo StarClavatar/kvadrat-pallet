@@ -32,6 +32,8 @@ const EntryPage: React.FC = () => {
     }, 2000); // Задержка перед удалением класса анимации
   };
 
+
+  // здесь при наборе пин-кода из 4 цифр делаем запрос на получение данных авторизации
   if (pinCode.length === 4) {
     const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
     // alert(`tsdUUID from localStorage: ${tsdUUID}`)

@@ -1,44 +1,92 @@
-import React, { useState, useRef } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import "./DeleteBoxInteractive.css";
 import useScanDetection from "use-scan-detection";
-import scanSuccessSound from '../../assets/scanSuccess.mp3'
-// import scanFailedSound from '../../assets/scanFailed.mp3'
+import scanSuccessSound from "../../assets/scanSuccess.mp3";
+import scanFailedSound from '../../assets/scanFailed.mp3'
+import { deleteCart } from "../../api/deleteCart";
+import { PinContext } from "../../context/PinAuthContext";
+import { useParams } from "react-router-dom";
+import { TPallet } from "../../pages/Pallet/config";
+import Loader from "../Loader/Loader";
 
 interface DeleteBoxInteractiveProps {
   onClose: () => void;
   isPopupOpened?: boolean;
+  setPallet: Dispatch<SetStateAction<TPallet | undefined>>;
 }
 
 const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   onClose,
   isPopupOpened,
+  setPallet,
 }) => {
   const [step, setStep] = useState<number>(0);
   const [deleteBoxValue, setDeleteBoxValue] = useState<any>("");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const successScanSound = new Audio(scanSuccessSound)
-  // const failedScanSound = new Audio(scanFailedSound)
-  const deleteBoxContainerRef = useRef<HTMLDivElement>()
+  const [errorOccurred, setErrorOccurred] = useState<boolean>(false);
+  const successScanSound = new Audio(scanSuccessSound);
+  const [deleteErrorText, setDeleteErrorText] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const failedScanSound = new Audio(scanFailedSound)
   useScanDetection({
-    container: deleteBoxContainerRef.current,
     onComplete: (code) => {
-      successScanSound.play()
-      if (isPopupOpened) {
-        setDeleteBoxValue(code.replace(/[^0-9]/g, ''))
-        setStep(1)
+      if (isPopupOpened && !errorOccurred) {
+        successScanSound.play();
+        setDeleteBoxValue(code.replace(/[^0-9]/g, ""));
+        setStep(1);
       }
     },
-    averageWaitTime:20
-  
+    averageWaitTime: 20,
   });
 
+  const { pinAuthData } = useContext(PinContext);
+  const params = useParams();
+
+  const handleDelete = async () => {
+    if (!errorOccurred) {
+      setLoading(true);
+      try {
+        const response = await deleteCart(
+          String(pinAuthData?.pinCode),
+          String(pinAuthData?.tsdUUID),
+          String(params.sscc),
+          deleteBoxValue
+        );
+        setLoading(false);
+        if (!response.error) {
+          setPallet(response);
+          onClose();
+          setStep(0);
+          setDeleteBoxValue("");
+        } else {
+          setDeleteErrorText(response.error);
+          setErrorOccurred(true);
+        }
+      } catch (error) {}
+    }
+  };
+
+  useEffect(() => {
+    if (errorOccurred) {
+      setStep(2); // Переключаем на слайд об ошибке
+      failedScanSound.play()
+    }
+  }, [errorOccurred]);
+
   return (
-    //@ts-ignore
-    <div className="swipeable-container" ref={deleteBoxContainerRef}>
-      <div className={`slide ${step === 0 && "slide_active"}`}>
+    <div className="swipeable-container">
+      <div
+        className={`slide ${step === 0 ? "slide_active" : "slide_next"} ${
+          step === 2 ? "slide_error" : ""
+        }`}
+      >
         <input
-          ref={inputRef}
           autoFocus
           onChange={(e) => setDeleteBoxValue(e.target.value)}
           value={deleteBoxValue}
@@ -68,15 +116,28 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           <br /> с паллеты и нажмите{" "}
           <span className="finish-span">завершить</span>
         </p>
+
+        {loading? <Loader /> : null}
+        <button className="slide__button" onClick={handleDelete}>
+          Завершить
+        </button>
+      </div>
+      <div
+        className={`slide slide_error ${
+          step === 2 ? "slide_active" : "slide_next"
+        }`}
+      >
+        <p className="slide-heading">{deleteErrorText}</p>
         <button
           className="slide__button"
           onClick={() => {
-            onClose();
+            setErrorOccurred(false);
             setStep(0);
-            setDeleteBoxValue("");
+            setDeleteBoxValue('')
+            onClose()
           }}
         >
-          Завершить
+          Продолжить
         </button>
       </div>
     </div>

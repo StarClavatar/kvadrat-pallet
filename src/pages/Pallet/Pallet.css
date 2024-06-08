@@ -59,7 +59,7 @@
   flex-direction: column;
   justify-content: start;
   padding: 0;
-  height: calc(100vh - 143px);  
+  height: calc(100vh - 143px);
   border: none;
 }
 
@@ -185,7 +185,7 @@
 .pallet-table__sscc {
   overflow-wrap: anywhere;
   font-size: 14px;
-  word-break: break-all; 
+  word-break: break-all;
 }
 
 .pallet-table__row {
@@ -198,19 +198,105 @@
 
 .loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
   width: 100%;
   background-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.8),
-    rgba(0, 0, 0, 0.7)
-  ),
-  url("../../assets/pallet.jpeg");
-background-position: center;
-background-size: auto;
-overflow: auto;
-box-sizing: border-box;
-color: #fff;
+      to bottom,
+      rgba(0, 0, 0, 0.8),
+      rgba(0, 0, 0, 0.7)
+    ),
+    url("../../assets/pallet.jpeg");
+  background-position: center;
+  background-size: auto;
+  overflow: auto;
+  box-sizing: border-box;
+  color: #fff;
+}
+
+.pallet-error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading__error-text {
+  font-size: 26px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+  margin-bottom: 15%;
+}
+
+.popup-error {
+  background-color: #ffebee; /* Светло-красный фон для индикации ошибки */
+  color: #d32f2f; /* Красный текст */
+  justify-content: center;
+}
+
+.popup-error__container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-error__text {
+    font-size: 26px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.popup-error__button {
+  width: 50%;
+  padding: 16px 0;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  background-color: #d32f2f;
+  color: #fff;
+  margin-top: 20px;
+}
+
+.pallet-dialog {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  text-align: center;
+}
+
+.pallet-dialog-buttons {
+  width: 100%;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.pallet-dialog-btn {
+  width: 40%;
+  padding: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  background-color: #66bb6a;
+  color: #fff;
+  margin-top: 20px;
+  transition: .3s;
+}
+
+.pallet-dialog-btn:active {
+  opacity: .7;
+  transform: scale(0.9);
+}
+
+.pallet-dialog-btn:nth-child(2) {
+  background-color: #d32f2f;
 }

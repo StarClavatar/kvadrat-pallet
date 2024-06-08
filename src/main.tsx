@@ -1,3 +1,4 @@
+// main.tsx
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import Workmode from "./pages/Workmode/Workmode.tsx";
@@ -6,6 +7,7 @@ import "./index.css";
 import NewPallet from "./pages/NewPallet/NewPallet.tsx";
 import Pallet from "./pages/Pallet/Pallet.tsx";
 import PinAuthContext from "./context/PinAuthContext.tsx";
+import ProtectedRoute from "./auth/ProtectedRoute/ProtectedRoute.tsx";
 
 const router = createBrowserRouter([
   {
@@ -14,15 +16,27 @@ const router = createBrowserRouter([
   },
   {
     path: "/workmode",
-    element: <Workmode />,
+    element: (
+      <ProtectedRoute>
+        <Workmode />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/new-pallet",
-    element: <NewPallet />,
+    element: (
+      <ProtectedRoute>
+        <NewPallet />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/pallet/:sscc",
-    element: <Pallet />,
+    element: (
+      <ProtectedRoute>
+        <Pallet />
+      </ProtectedRoute>
+    ),
   },
 ]);
 

@@ -60,6 +60,19 @@
     transform: translateX(100%);
   }
 
+  .slide_error {
+    background-color: #ffebee; /* Светло-красный фон для индикации ошибки */
+    color: #d32f2f;            /* Красный текст */
+    justify-content: center;
+  }
+  
+  /* Обновить стили для кнопки в случае ошибки */
+  .slide_error .slide__button {
+    background-color: #d32f2f; /* Красная кнопка для ошибки */
+    color: #fff;               /* Белый текст */
+    margin-top: 20px;
+  }
+
   .slide-buttons {
     width: 100%;
     display: flex;
@@ -114,4 +127,9 @@
     padding-left: 8px;
     font-size: 20px;
     font-weight: 500;
+  }
+
+  .button-block {
+    width: 100%;
+    display: flex;
   }

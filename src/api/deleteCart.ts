@@ -1,4 +1,4 @@
-export const deleteCart = async ( pincode: string, palletSSCC: string, cartSSCC: string, tsdUUID: string ) => {
+export const deleteCart = async ( pincode: string, tsdUUID: string, palletSSCC: string, cartSSCC: string  ) => {
     const response = await fetch(
       "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/palletservice/deleteCart",
       {

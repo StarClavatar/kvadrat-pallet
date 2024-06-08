@@ -1,10 +1,10 @@
 import { FormEvent, useState, useEffect, useRef } from "react";
-import beep from '../../assets/beep.mp3'
+import beep from '../../assets/scanSuccess.mp3'
 import "./NewPallet.css";
 import { useNavigate } from "react-router-dom";
 
 const NewPallet = () => {
-  const [code, setCode] = useState<string>("");
+  const [code, setCode] = useState<string>("00046600112100000827");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 

@@ -25,4 +25,6 @@ export type TPallet = {
   palleteState: "Новая" | "В работе" | "Собрана" | "Завершена";
   groups: TGroup[];
   user: string;
+  info?: string;
+  infoType?: string
 };
