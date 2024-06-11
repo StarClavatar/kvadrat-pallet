@@ -1,6 +1,13 @@
 import { TPallet, TGroup } from "./config";
 import "./Pallet.css";
-import { ReactNode, useState, useContext, useEffect, ChangeEvent, useRef } from "react";
+import {
+  ReactNode,
+  useState,
+  useContext,
+  useEffect,
+  ChangeEvent,
+  useRef,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
@@ -11,6 +18,7 @@ import useScanDetection from "use-scan-detection";
 import { addCart } from "../../api/addCart";
 import errorSound from "../../assets/scanFailed.mp3";
 import Loader from "../../components/Loader/Loader";
+import { closePallet } from "../../api/closePallet";
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
@@ -23,11 +31,11 @@ const Pallet = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const errorAudio = new Audio(errorSound);
-  const scannedCode = useRef<string>()
+  const scannedCode = useRef<string>();
 
   const handleScan = async (code: string) => {
     const normalizedCode = code.replace(/[^0-9]/g, "").toString();
-    scannedCode.current = normalizedCode
+    scannedCode.current = normalizedCode;
     try {
       const response: TPallet = await addCart(
         String(pinAuthData?.pinCode),
@@ -48,6 +56,21 @@ const Pallet = () => {
       }
     } catch (err) {
       alert(err);
+    }
+  };
+
+  const handleClosePallet = async () => {
+    try {
+      const response = await closePallet(
+        String(pinAuthData?.pinCode),
+        String(pinAuthData?.tsdUUID),
+        String(params.sscc)
+      );
+      if (response.error) {
+        alert(response.error);
+      }
+    } catch (e) {
+      alert(e);
     }
   };
 
@@ -191,7 +214,10 @@ const Pallet = () => {
           >
             Удалить коробку
           </button>
-          <button className="pallet-button pallet-button_finish">
+          <button
+            className="pallet-button pallet-button_finish"
+            onClick={handleClosePallet}
+          >
             Завершить
           </button>
         </div>
@@ -209,14 +235,16 @@ const Pallet = () => {
                 <button
                   className="pallet-dialog-btn"
                   onClick={async () => {
-                    setPallet(await addCart(
-                      String(pinAuthData?.pinCode),
-                      params.sscc || "",
-                      String(scannedCode.current),
-                      pinAuthData?.tsdUUID || "",
-                      pallet.info,
-                      "yes",
-                    ))
+                    setPallet(
+                      await addCart(
+                        String(pinAuthData?.pinCode),
+                        params.sscc || "",
+                        String(scannedCode.current),
+                        pinAuthData?.tsdUUID || "",
+                        pallet.info,
+                        "yes"
+                      )
+                    );
                   }}
                 >
                   Да
@@ -224,14 +252,16 @@ const Pallet = () => {
                 <button
                   className="pallet-dialog-btn"
                   onClick={async () => {
-                    setPallet(await addCart(
-                      String(pinAuthData?.pinCode),
-                      params.sscc || "",
-                      String(scannedCode.current),
-                      pinAuthData?.tsdUUID || "",
-                      pallet.info,
-                      "no",
-                    ))
+                    setPallet(
+                      await addCart(
+                        String(pinAuthData?.pinCode),
+                        params.sscc || "",
+                        String(scannedCode.current),
+                        pinAuthData?.tsdUUID || "",
+                        pallet.info,
+                        "no"
+                      )
+                    );
                   }}
                 >
                   Нет
