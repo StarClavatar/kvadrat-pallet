@@ -85,9 +85,7 @@
     width: 50%;
     padding: 16px 0;
     text-transform: uppercase;
-    font-size: 18px;
-    font-weight: 600;
-    color: #fff;
+    font-weight: 500;
     border: none;
     border-radius: 10px;
   }
@@ -117,7 +115,7 @@
 
   .finish-span {
     padding: 6px;
-    /* background-color: #388e3c; */
+    background-color: #388e3c;
     display: block;
     width: min-content;
     margin: 4px auto 0;

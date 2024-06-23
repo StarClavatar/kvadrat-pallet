@@ -4,7 +4,7 @@ import "./NewPallet.css";
 import { useNavigate } from "react-router-dom";
 
 const NewPallet = () => {
-  const [code, setCode] = useState<string>("00046600112100000827");
+  const [code, setCode] = useState<string>("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 

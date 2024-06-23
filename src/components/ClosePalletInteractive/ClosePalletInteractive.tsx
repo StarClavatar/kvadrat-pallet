@@ -6,7 +6,7 @@ import React, {
   useEffect,
 } from "react";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
-import "./DeleteBoxInteractive.css";
+import "./ClosePalletInteractive.css";
 import useScanDetection from "use-scan-detection";
 import scanSuccessSound from "../../assets/scanSuccess.mp3";
 import scanFailedSound from '../../assets/scanFailed.mp3'
@@ -22,7 +22,7 @@ interface DeleteBoxInteractiveProps {
   setPallet: Dispatch<SetStateAction<TPallet | undefined>>;
 }
 
-const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
+const ClosePalletInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   onClose,
   isPopupOpened,
   setPallet,
@@ -86,7 +86,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           step === 2 ? "slide_error" : ""
         }`}
       >
-        <input
+        {/* <input
           autoFocus
           onChange={(e) => setDeleteBoxValue(e.target.value)}
           value={deleteBoxValue}
@@ -96,7 +96,9 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         />
         <div className="box-delete__image-wrapper">
           <BarCodeIcon />
-        </div>
+        </div> */}
+
+        <h2 className=""></h2>
         <button
           className="box-delete__next-button"
           disabled={Number(deleteBoxValue) < 1}
@@ -114,7 +116,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           Уберите Коробку <br />{" "}
           <span className="slide-box-code">{`№: ${deleteBoxValue}`}</span>
           <br /> с паллеты и нажмите{" "}
-          <span className="finish-span">"Завершить"</span>
+          <span className="finish-span">завершить</span>
         </p>
 
         {loading? <Loader /> : null}
@@ -144,4 +146,4 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   );
 };
 
-export default DeleteBoxInteractive;
+export default ClosePalletInteractive;

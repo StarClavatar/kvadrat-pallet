@@ -5,7 +5,7 @@ import Popup from "../Popup/Popup";
 
 function Group({
   productName,
-  produсtSerial,
+  productSerial,
   cartCount,
   cartsOnCount,
   groupState,
@@ -18,13 +18,13 @@ function Group({
         className="group"
         style={{
           backgroundColor:
-            groupState === "Собрана"
-              ? "rgba(145, 255, 145, .5)"
+            groupState === "собрана" ?
+               "rgba(145, 255, 145, .5)"
               : "rgba(186, 186, 186, 0.7)",
         }}
       >
         <p className="group__prod-name">{productName}</p>
-        <span className="group__series">{`(серия: ${produсtSerial})`}</span>
+        <span className="group__series">{`(серия: ${productSerial})`}</span>
         <div className="group-boxes">
           <p
             className="group-boxes__from"

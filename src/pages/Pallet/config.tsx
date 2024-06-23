@@ -10,10 +10,10 @@ export type Cart = {
 
 export type TGroup = {
   productName: string;
-  produсtSerial: string;
+  productSerial: string;
   cartCount: number;
   cartsOnCount: number;
-  groupState: "Новая" | "В работе" | "Собрана" | "Завершена";
+  // groupState: "новая" | "в работе" | "собрана" | "закрыта";
   carts: Cart[];
 };
 
@@ -22,7 +22,7 @@ export type TPallet = {
   palleteSSCC: string;
   beginDate: string;
   endDate: string;
-  palleteState: "Новая" | "В работе" | "Собрана" | "Завершена";
+  palletState: "новая" | "в работе" | "собрана" | "закрыта";
   groups: TGroup[];
   user: string;
   info?: string;

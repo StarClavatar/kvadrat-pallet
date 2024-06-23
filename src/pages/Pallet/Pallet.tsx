@@ -17,6 +17,7 @@ import { fetchPalletInfo } from "../../api/palletInfo";
 import useScanDetection from "use-scan-detection";
 import { addCart } from "../../api/addCart";
 import errorSound from "../../assets/scanFailed.mp3";
+import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
 import { closePallet } from "../../api/closePallet";
 
@@ -31,8 +32,11 @@ const Pallet = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const errorAudio = new Audio(errorSound);
-  const scannedCode = useRef<string>();
+  const [closePalletPopup, setClosePalletPopup] = useState<boolean>(false);
+  const successAudio = new Audio(successSound);
 
+  const scannedCode = useRef<string>();
+  console.log(pallet);
   const handleScan = async (code: string) => {
     const normalizedCode = code.replace(/[^0-9]/g, "").toString();
     scannedCode.current = normalizedCode;
@@ -49,6 +53,8 @@ const Pallet = () => {
       }
 
       if (!response.error) {
+        successAudio.play();
+
         setPallet(response);
       } else {
         setPalletDataError(true);
@@ -60,6 +66,7 @@ const Pallet = () => {
   };
 
   const handleClosePallet = async () => {
+    setClosePalletPopup(true);
     try {
       const response = await closePallet(
         String(pinAuthData?.pinCode),
@@ -68,6 +75,8 @@ const Pallet = () => {
       );
       if (response.error) {
         alert(response.error);
+      } else {
+        setPallet(response);
       }
     } catch (e) {
       alert(e);
@@ -76,9 +85,10 @@ const Pallet = () => {
 
   useScanDetection({
     onComplete: (code) => {
-      if (!showDelete) {
-        handleScan(String(code));
-      }
+      // if (pallet?.palletState === "закрыта")
+        if (!showDelete) {
+          handleScan(String(code));
+        }
     },
   });
 
@@ -150,15 +160,15 @@ const Pallet = () => {
     );
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
+  // const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  //   setInputValue(e.target.value);
+  // };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleScan(inputValue);
-    }
-  };
+  // const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter") {
+  //     handleScan(inputValue);
+  //   }
+  // };
 
   return (
     <div className="pallet">
@@ -177,16 +187,16 @@ const Pallet = () => {
           className="pallet-block pallet-block-status"
           style={{
             backgroundColor:
-              pallet.palleteState === "Собрана" ? "lightgreen" : "khaki",
+              pallet.palletState === "собрана" ? "lightgreen" : "khaki",
           }}
         >
           <span
             className="pallet-block-status__status"
             style={{
-              color: pallet.palleteState === "Собрана" ? "green" : "#808000",
+              color: pallet.palletState === "собрана" ? "green" : "#808000",
             }}
           >
-            {pallet.palleteState}
+            {pallet.palletState}
           </span>
           <p className="pallet-block-status__text">
             {`${pallet.beginDate} ${
@@ -200,14 +210,28 @@ const Pallet = () => {
           })}
         </div>
         <div className="pallet-buttons">
-          <input
+          {/* <input
             type="text"
             value={inputValue}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-          />
+          /> */}
           <button
             className="pallet-button pallet-button_delete"
+            style={{
+              display: pallet.palletState === "закрыта" ? "initial" : "none",
+            }}
+            onClick={() => {
+              setShowDelete(true);
+            }}
+          >
+            Перейти к другой палете
+          </button>
+          <button
+            className="pallet-button pallet-button_delete"
+            style={{
+              display: pallet.palletState === "закрыта" ? "none" : "initial",
+            }}
             onClick={() => {
               setShowDelete(true);
             }}
@@ -217,11 +241,16 @@ const Pallet = () => {
           <button
             className="pallet-button pallet-button_finish"
             onClick={handleClosePallet}
+            style={{
+              display: pallet.palletState === "собрана" ? "initial" : "none",
+            }}
+            disabled={pallet.palletState === "собрана" ? false : true}
           >
             Завершить
           </button>
         </div>
       </div>
+      {/* попап добавления коробки с infoType */}
       {pallet.info ? (
         <Popup
           isOpen={isDialogOpen}
@@ -233,7 +262,7 @@ const Pallet = () => {
             {pallet.infoType === "yesNo" ? (
               <>
                 <button
-                  className="pallet-dialog-btn"
+                  className="pallet-dialog-btn knopka-yes"
                   onClick={async () => {
                     setPallet(
                       await addCart(
@@ -252,16 +281,19 @@ const Pallet = () => {
                 <button
                   className="pallet-dialog-btn"
                   onClick={async () => {
-                    setPallet(
-                      await addCart(
-                        String(pinAuthData?.pinCode),
-                        params.sscc || "",
-                        String(scannedCode.current),
-                        pinAuthData?.tsdUUID || "",
-                        pallet.info,
-                        "no"
-                      )
+                    const response = await addCart(
+                      String(pinAuthData?.pinCode),
+                      params.sscc || "",
+                      String(scannedCode.current),
+                      pinAuthData?.tsdUUID || "",
+                      pallet.info,
+                      "no"
                     );
+                    if (response.error) {
+                      setIsDialogOpen(false);
+                      setPalletErrorText(response.error);
+                      setPalletDataError(true);
+                    }
                   }}
                 >
                   Нет
@@ -269,6 +301,78 @@ const Pallet = () => {
               </>
             ) : (
               <button className="pallet-dialog-btn">Продолжить</button>
+            )}
+          </div>
+        </Popup>
+      ) : null}
+      {/* попап закрытия паллеты */}
+      {pallet.info ? (
+        <Popup
+          isOpen={closePalletPopup}
+          onClose={() => setClosePalletPopup(false)}
+          containerClassName="pallet-dialog"
+        >
+          <p className="pallet-dialog__text">{pallet.info}</p>
+          <div className="pallet-dialog-buttons">
+            {pallet.infoType === "yesNo" ? (
+              <>
+                <button
+                  className="pallet-dialog-btn"
+                  onClick={async () => {
+                    setPallet(
+                      await closePallet(
+                        String(pinAuthData?.pinCode),
+                        pinAuthData?.tsdUUID || "",
+                        params.sscc || "",
+                        pallet.info,
+                        "yes"
+                      )
+                    );
+                  }}
+                >
+                  Да
+                </button>
+                <button
+                  className="pallet-dialog-btn"
+                  onClick={async () => {
+                    const response = await closePallet(
+                      String(pinAuthData?.pinCode),
+                      pinAuthData?.tsdUUID || "",
+                      params.sscc || "",
+                      pallet.info,
+                      "no"
+                    );
+                    if (response.error) {
+                      setClosePalletPopup(false);
+                      setPalletErrorText(response.error);
+                      setPalletDataError(true);
+                    }
+                  }}
+                >
+                  Нет
+                </button>
+              </>
+            ) : (
+              <button
+                className="pallet-dialog-btn"
+                onClick={async () => {
+                  const response = await closePallet(
+                    String(pinAuthData?.pinCode),
+                    pinAuthData?.tsdUUID || "",
+                    params.sscc || "",
+                    pallet.info,
+                    "next"
+                  );
+                  setPallet(response);
+                  if (response.error) {
+                    setClosePalletPopup(false);
+                    setPalletErrorText(response.error);
+                    setPalletDataError(true);
+                  }
+                }}
+              >
+                Продолжить
+              </button>
             )}
           </div>
         </Popup>

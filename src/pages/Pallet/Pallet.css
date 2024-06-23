@@ -47,11 +47,15 @@
 
 .pallet-block-status {
   border-top: none;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
 }
 
 .pallet-block-status__text {
   margin: 0;
   font-weight: 500;
+  font-size: 18px;
 }
 
 .pallet-block-boxes {
@@ -130,11 +134,12 @@
 }
 
 .pallet-button {
-  width: 50%;
+  width: 100%;
   padding: 16px 0;
   text-transform: uppercase;
   font-weight: 500;
   border: none;
+
 }
 
 .pallet-button:active {
@@ -145,11 +150,21 @@
   text-transform: uppercase;
   background-color: #d32f2f;
   color: #fff;
+  /* width: 100%; */
+}
+
+.pallet-button_exit {
+  background-color: grey;
 }
 
 .pallet-button_finish {
   color: #fff;
   background-color: #66bb6a;
+}
+
+.pallet-button_finish:disabled {
+  background-color: gray;
+  opacity: .3;
 }
 
 .pallet-table {
@@ -270,6 +285,11 @@
   justify-content: center;
   align-items: center;
   background-color: #fff;
+  text-align: center;
+}
+
+.pallet-dialog__text {
+  width: 100%;
   text-align: center;
 }
 
