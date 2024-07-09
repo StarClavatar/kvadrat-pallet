@@ -15,6 +15,7 @@ export type TGroup = {
   cartsOnCount: number;
   // groupState: "новая" | "в работе" | "собрана" | "закрыта";
   carts: Cart[];
+  groupState: "новая" | "в работе" | "собрана" | "закрыта";
 };
 
 export type TPallet = {

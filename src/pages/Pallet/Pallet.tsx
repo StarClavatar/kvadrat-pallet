@@ -5,7 +5,6 @@ import {
   useState,
   useContext,
   useEffect,
-  ChangeEvent,
   useRef,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,7 +28,7 @@ const Pallet = () => {
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
   const [palletErrorText, setPalletErrorText] = useState<string>("");
-  const [inputValue, setInputValue] = useState<string>("");
+  // const [inputValue, setInputValue] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const errorAudio = new Audio(errorSound);
   const [closePalletPopup, setClosePalletPopup] = useState<boolean>(false);

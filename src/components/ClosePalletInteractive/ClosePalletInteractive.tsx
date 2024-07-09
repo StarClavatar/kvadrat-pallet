@@ -5,7 +5,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { BarCodeIcon } from "../../assets/barCodeIcon";
+// import { BarCodeIcon } from "../../assets/barCodeIcon";
 import "./ClosePalletInteractive.css";
 import useScanDetection from "use-scan-detection";
 import scanSuccessSound from "../../assets/scanSuccess.mp3";
