@@ -1,6 +1,6 @@
 import React, {
   Dispatch,
-  SetStateAction,
+  // SetStateAction,
   useContext,
   useState,
   useEffect,
@@ -13,19 +13,23 @@ import scanFailedSound from '../../assets/scanFailed.mp3'
 import { deleteCart } from "../../api/deleteCart";
 import { PinContext } from "../../context/PinAuthContext";
 import { useParams } from "react-router-dom";
-import { TPallet } from "../../pages/Pallet/config";
+// import { TPallet } from "../../pages/Pallet/config";
 import Loader from "../Loader/Loader";
+import { unshipPallet } from "../../api/unshipPallet";
 
 interface DeleteBoxInteractiveProps {
   onClose: () => void;
   isPopupOpened?: boolean;
-  setPallet: Dispatch<SetStateAction<TPallet | undefined>>;
+  // setPallet: Dispatch<SetStateAction<ITruckInfo | undefined >>;
+  setPallet: Dispatch<any>;
+  type: 'pallet' | 'truck';
 }
 
 const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   onClose,
   isPopupOpened,
   setPallet,
+  type
 }) => {
   const [step, setStep] = useState<number>(0);
   const [deleteBoxValue, setDeleteBoxValue] = useState<any>("");
@@ -50,25 +54,47 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
 
   const handleDelete = async () => {
     if (!errorOccurred) {
-      setLoading(true);
-      try {
-        const response = await deleteCart(
-          String(pinAuthData?.pinCode),
-          String(pinAuthData?.tsdUUID),
-          String(params.sscc),
-          deleteBoxValue
-        );
-        setLoading(false);
-        if (!response.error) {
-          setPallet(response);
-          onClose();
-          setStep(0);
-          setDeleteBoxValue("");
-        } else {
-          setDeleteErrorText(response.error);
-          setErrorOccurred(true);
-        }
-      } catch (error) {}
+    if (type === 'pallet') {
+        setLoading(true);
+        try {
+          const response = await deleteCart(
+            String(pinAuthData?.pinCode),
+            String(pinAuthData?.tsdUUID),
+            String(params.sscc),
+            deleteBoxValue
+          );
+          setLoading(false);
+          if (!response.error) {
+            setPallet(response);
+            onClose();
+            setStep(0);
+            setDeleteBoxValue("");
+          } else {
+            setDeleteErrorText(response.error);
+            setErrorOccurred(true);
+          }
+        } catch (error) {}
+      } else {
+        setLoading(true);
+        try {
+          const response = await unshipPallet(
+            String(pinAuthData?.pinCode),
+            String(pinAuthData?.tsdUUID),
+            String(params.docId),
+            deleteBoxValue
+          );
+          setLoading(false);
+          if (!response.error) {
+            setPallet(response);
+            onClose();
+            setStep(0);
+            setDeleteBoxValue("");
+          } else {
+            setDeleteErrorText(response.error);
+            setErrorOccurred(true);
+          }
+        } catch (error) {}
+      }
     }
   };
 
@@ -92,7 +118,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           value={deleteBoxValue}
           className="input box-delete__input"
           type="number"
-          placeholder="Отсканируйте код коробки"
+          placeholder={`Отсканируйте код ${type === 'pallet' ? 'коробки' : 'паллеты'} `}
         />
         <div className="box-delete__image-wrapper">
           <BarCodeIcon />
@@ -111,9 +137,9 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         }`}
       >
         <p className="slide-heading">
-          Уберите Коробку <br />{" "}
+          {`Уберите ${type === 'pallet' ? 'паллету' : 'коробку'} `} <br />{" "}
           <span className="slide-box-code">{`№: ${deleteBoxValue}`}</span>
-          <br /> с паллеты и нажмите{" "}
+          <br /> {`${type === 'pallet' ? 'с паллеты' : 'из машины'} и нажмите`}{" "}
           <span className="finish-span">"Завершить"</span>
         </p>
 

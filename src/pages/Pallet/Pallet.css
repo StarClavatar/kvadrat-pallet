@@ -1,3 +1,10 @@
+.exit-button {
+  background-color: #c82333;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+}
+
 .pallet {
   position: relative;
   height: 100%;
@@ -63,7 +70,7 @@
   flex-direction: column;
   justify-content: start;
   padding: 0;
-  height: calc(100vh - 143px);
+  height: 100%;
   border: none;
 }
 
@@ -149,6 +156,13 @@
 .pallet-button_delete {
   text-transform: uppercase;
   background-color: #d32f2f;
+  color: #fff;
+  /* width: 100%; */
+}
+
+.pallet-button_next-pallet {
+  text-transform: uppercase;
+  background-color: #66bb6a;
   color: #fff;
   /* width: 100%; */
 }
@@ -279,8 +293,8 @@
 }
 
 .pallet-dialog {
-  width: 100%;
-  height: 100%;
+  width: 92%;
+  height: 92%;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -291,6 +305,7 @@
 .pallet-dialog__text {
   width: 100%;
   text-align: center;
+  font-size: 22px;
 }
 
 .pallet-dialog-buttons {

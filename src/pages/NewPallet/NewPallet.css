@@ -48,3 +48,16 @@
     text-transform: uppercase;
     border: 2px solid white;
 }
+
+.exit-button_new-pallet {
+    font-size: 16px;
+    position: absolute;
+    bottom: 6px;
+    left: 20%;
+    background-color: #c82333;
+    color: #fff;
+    font-weight: 500;
+    border: none;
+    border-radius: 16px;
+    padding: 6px 12px;
+}

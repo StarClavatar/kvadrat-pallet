@@ -1,12 +1,6 @@
 import { TPallet, TGroup } from "./config";
 import "./Pallet.css";
-import {
-  ReactNode,
-  useState,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import { ReactNode, useState, useContext, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
@@ -84,10 +78,9 @@ const Pallet = () => {
 
   useScanDetection({
     onComplete: (code) => {
-      // if (pallet?.palletState === "закрыта")
-        if (!showDelete) {
-          handleScan(String(code));
-        }
+      if (!showDelete && pallet?.palletState !== "закрыта" && pallet?.palletState !== "собрана") {
+        handleScan(String(code));
+      }
     },
   });
 
@@ -111,6 +104,19 @@ const Pallet = () => {
 
     fetchData();
   }, []);
+
+  function sumCartsOnCount(pallet: TPallet): number {
+    return pallet.groups.reduce(
+      (acc: number, group: TGroup) => acc + group.cartsOnCount,   
+      0
+    );
+  }
+
+  useEffect(() => {
+    if (pallet) {
+      console.log(sumCartsOnCount(pallet))
+    }
+  }, [pallet]);
 
   if (!pinAuthData?.tsdUUID) {
     navigate("/");
@@ -173,14 +179,19 @@ const Pallet = () => {
     <div className="pallet">
       <div className="pallet-info">
         <div className="pallet-user">
-          <button className="" onClick={() => navigate("/new-pallet")}>
-            Назад
+          <button
+            className="exit-button"
+            onClick={() => navigate("/new-pallet")}
+          >
+            Выйти
           </button>
           <p className="pallet__user">{`${pinAuthData?.position} ${pinAuthData?.workerName}`}</p>
         </div>
         <div className="pallet-block pallet-block-about">
           <span className="pallet-text pallet-block-about">Паллета №</span>
-          <p className="pallet-text pallet-block__text_sscc">{params.sscc}</p>
+          <p className="pallet-text pallet-block__text_sscc">
+            {pallet.palletSSCC}
+          </p>
         </div>
         <div
           className="pallet-block pallet-block-status"
@@ -216,12 +227,12 @@ const Pallet = () => {
             onKeyDown={handleKeyDown}
           /> */}
           <button
-            className="pallet-button pallet-button_delete"
+            className="pallet-button pallet-button_next-pallet"
             style={{
               display: pallet.palletState === "закрыта" ? "initial" : "none",
             }}
             onClick={() => {
-              setShowDelete(true);
+              navigate("/new-pallet");
             }}
           >
             Перейти к другой палете
@@ -229,7 +240,7 @@ const Pallet = () => {
           <button
             className="pallet-button pallet-button_delete"
             style={{
-              display: pallet.palletState === "закрыта" ? "none" : "initial",
+              display: pallet.palletState === "закрыта" || sumCartsOnCount(pallet) === 0 ? "none" : "initial" ,
             }}
             onClick={() => {
               setShowDelete(true);
@@ -386,6 +397,7 @@ const Pallet = () => {
           onClose={() => setShowDelete(false)}
           isPopupOpened={showDelete}
           setPallet={setPallet}
+          type="pallet"
         />
       </Popup>
     </div>

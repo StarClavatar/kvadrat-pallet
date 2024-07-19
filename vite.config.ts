@@ -7,7 +7,7 @@ import react from "@vitejs/plugin-react";
 const pwaOptions: Partial<VitePWAOptions> = {
   mode: "development",
   base: "/",
-  includeAssets: ["*.png"],
+  includeAssets: ["*.png", "*.mp3"],
   includeManifestIcons: true,
   manifest: {
     name: "Паллетная Агрегация Квадрат-С",

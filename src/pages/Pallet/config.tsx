@@ -20,7 +20,7 @@ export type TGroup = {
 
 export type TPallet = {
   error: string;
-  palleteSSCC: string;
+  palletSSCC: string;
   beginDate: string;
   endDate: string;
   palletState: "новая" | "в работе" | "собрана" | "закрыта";

@@ -8,6 +8,8 @@ import NewPallet from "./pages/NewPallet/NewPallet.tsx";
 import Pallet from "./pages/Pallet/Pallet.tsx";
 import PinAuthContext from "./context/PinAuthContext.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute/ProtectedRoute.tsx";
+import TruckFilling from "./pages/TruckFilling/TruckFilling.tsx";
+import NewTruckFilling from "./pages/NewTruckFilling/NewTruckFilling.tsx";
 
 const router = createBrowserRouter([
   {
@@ -38,12 +40,28 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  {
+    path: "/new-truck-filling",
+    element: (
+      <ProtectedRoute>
+        <NewTruckFilling />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/truck-filling/:docId",
+    element: (
+      <ProtectedRoute>
+        <TruckFilling />
+      </ProtectedRoute>
+    ),
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
-    <PinAuthContext>
-      <RouterProvider router={router} />
-    </PinAuthContext>
+  <PinAuthContext>
+    <RouterProvider router={router} />
+  </PinAuthContext>
   // </React.StrictMode>
 );

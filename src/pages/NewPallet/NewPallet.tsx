@@ -1,12 +1,15 @@
-import { FormEvent, useState, useEffect, useRef } from "react";
+import { FormEvent, useState, useEffect, useRef, useContext } from "react";
 import beep from '../../assets/scanSuccess.mp3'
 import "./NewPallet.css";
 import { useNavigate } from "react-router-dom";
+import { fetchPalletInfo } from "../../api/palletInfo";
+import { PinContext } from "../../context/PinAuthContext";
 
 const NewPallet = () => {
   const [code, setCode] = useState<string>("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { pinAuthData } = useContext(PinContext);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -19,7 +22,14 @@ const NewPallet = () => {
     e.preventDefault();
     audio.play()
     if (code?.length > 0) {
-      navigate(`/pallet/${code}`);
+      const response = await fetchPalletInfo(
+        String(pinAuthData?.pinCode),
+        String(code),
+        '',
+        String(localStorage.getItem("tsdUUID"))
+      );
+      const { palletSSCC } = response;
+      navigate(`/pallet/${palletSSCC}`);
       setCode("");
     }
   };
@@ -43,6 +53,12 @@ const NewPallet = () => {
           Отправить
         </button>
       </form>
+      <button
+            className="exit-button_new-pallet"
+            onClick={() => navigate("/workmode")}
+          >
+            Выбор режима работы
+          </button>
     </div>
   );
 };

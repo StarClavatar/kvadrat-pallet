@@ -1,0 +1,382 @@
+.exit-button {
+    background-color: #c82333;
+    color: #fff;
+    font-weight: 500;
+    border: none;
+  }
+  
+  .truck-filling {
+    position: relative;
+    height: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.8),
+        rgba(0, 0, 0, 0.7)
+      ),
+      url("../../assets/pallet.jpeg");
+    background-position: center;
+    background-size: auto;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .truck-filling-user {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .truck-filling-text {
+    margin: 0;
+    font-size: 16px;
+    /* color: #333; */
+    display: block;
+  }
+
+  .truck-filling-text_auto {
+    margin-right: 6px;
+  }
+
+  .truck-filling-text_pallets {
+    font-size: 28px;
+    color: blue;
+    text-decoration: underline;
+    font-weight: 500;
+  }
+  
+  .truck-filling-block {
+    width: 100%;
+    border-bottom: 1px solid black;
+    border-top: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    box-sizing: border-box;
+  }
+  
+  .truck-filling-block-about {
+    background-color: #b6b6b6;
+    justify-content: space-evenly;
+  }
+  
+  .truck-filling-block-status {
+    border-top: none;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+  
+  .truck-filling-block-status__text {
+    margin: 0;
+    font-weight: 500;
+    font-size: 18px;
+  }
+
+  .truck-filling-text-block {
+    border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .text-bold {
+    font-weight: 500;
+  }
+
+  .row-wrapper {
+    display: flex;
+  }
+  
+  .column-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .truck-filling-block-boxes {
+    overflow: scroll;
+    flex-direction: column;
+    justify-content: start;
+    padding: 0;
+    height: 100%;
+    border: none;
+  }
+
+  .truck-pallets {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(186, 186, 186, 0.7);
+  }
+  
+  .truck-filling-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    box-sizing: border-box;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(2px);
+    height: 100%;
+    width: 100%;
+  }
+  .truck-filling__user {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    text-align: end;
+    padding: 6px;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  
+  .truck-filling__remove-box {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: #dc3545;
+    color: #fff;
+  }
+  
+  .truck-filling__remove-box:hover {
+    background-color: #c82333;
+  }
+  
+  .back-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min-content;
+    background-color: red;
+    color: #fff;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    font-size: 12px;
+    align-self: center;
+    justify-self: end;
+    transition: 0.3s;
+  }
+  
+  .back-button:hover {
+    opacity: 0.7;
+  }
+  
+  .truck-filling-buttons {
+    width: 100%;
+    display: flex;
+  }
+  
+  .truck-filling-button {
+    width: 100%;
+    padding: 16px 0;
+    text-transform: uppercase;
+    font-weight: 500;
+    border: none;
+  
+  }
+  
+  .truck-filling-button:active {
+    opacity: 0.5;
+  }
+  
+  .truck-filling-button_delete {
+    text-transform: uppercase;
+    background-color: #d32f2f;
+    color: #fff;
+    /* width: 100%; */
+  }
+  
+  .truck-filling-button_next-truck-filling {
+    text-transform: uppercase;
+    background-color: #66bb6a;
+    color: #fff;
+    /* width: 100%; */
+  }
+  
+  .truck-filling-button_exit {
+    background-color: grey;
+  }
+  
+  .truck-filling-button_finish {
+    color: #fff;
+    background-color: #66bb6a;
+  }
+  
+  .truck-filling-button:disabled {
+    background-color: gray;
+    opacity: .3;
+  }
+  
+  .truck-filling-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: none;
+    position: relative;
+  }
+  
+  .truck-filling-table thead {
+    position: sticky;
+    top: -1px;
+  }
+  
+  .truck-filling-table__heading {
+    padding: 0.5rem;
+    border-right: 1px solid #ccc;
+    border-left: 0;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+  }
+  
+  .truck-filling-table__heading:last-child {
+    border: none;
+  }
+  
+  .truck-filling-table__data {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+  }
+  
+  .truck-filling-table__sscc {
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    word-break: break-all;
+  }
+  
+  .truck-filling-table__row {
+    background-color: #d6d6d6;
+  }
+  
+  .truck-filling-table__row:nth-child(even) {
+    background-color: #b6b6b6;
+  }
+  
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    background-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.8),
+        rgba(0, 0, 0, 0.7)
+      ),
+      url("../../assets/truck-filling.jpeg");
+    background-position: center;
+    background-size: auto;
+    overflow: auto;
+    box-sizing: border-box;
+    color: #fff;
+  }
+  
+  .truck-filling-error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loading__error-text {
+    font-size: 26px;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+    margin-bottom: 15%;
+  }
+  
+  .popup-error {
+    background-color: #ffebee; /* Светло-красный фон для индикации ошибки */
+    color: #d32f2f; /* Красный текст */
+    justify-content: center;
+  }
+  
+  .popup-error__container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .popup-error__text {
+      font-size: 26px;
+      font-weight: 500;
+      text-align: center;
+  }
+  
+  .popup-error__button {
+    width: 50%;
+    padding: 16px 0;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    background-color: #d32f2f;
+    color: #fff;
+    margin-top: 20px;
+  }
+  
+  .truck-filling-dialog {
+    width: 92%;
+    height: 92%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    text-align: center;
+  }
+  
+  .truck-filling-dialog__text {
+    width: 100%;
+    text-align: center;
+    font-size: 22px;
+  }
+  
+  .truck-filling-dialog-buttons {
+    width: 100%;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .truck-filling-dialog-btn {
+    width: 40%;
+    padding: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    background-color: #66bb6a;
+    color: #fff;
+    margin-top: 20px;
+    transition: .3s;
+  }
+  
+  .truck-filling-dialog-btn:active {
+    opacity: .7;
+    transform: scale(0.9);
+  }
+  
+  .truck-filling-dialog-btn:nth-child(2) {
+    background-color: #d32f2f;
+  }
+  
