@@ -7,9 +7,9 @@ import { fetchPinAuth } from "../../api/pinAuth";
 import Loader from "../../components/Loader/Loader";
 
 const EntryPage: React.FC = () => {
-  const { pinAuthData, setPinAuthData } = useContext(PinContext);
+  const { setPinAuthData } = useContext(PinContext);
   const [pinCode, setPinCode] = useState<string>("");
-  const [pinError, setPinError] = useState<boolean>(false);
+  const [pinError, setPinError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
@@ -26,22 +26,33 @@ const EntryPage: React.FC = () => {
     }
   };
 
-  const handlePinError = () => {
+  // Функция обработки ошибки ввода PIN-кода
+  const handlePinError = (errorMsg: string) => {
     setPinCode("");
-    setPinError(true);
+    setPinError(errorMsg);
     setTimeout(() => {
-      setPinError(false);
+      setPinError(null);
     }, 2000); // Задержка перед удалением класса анимации
   };
 
-
   // здесь при наборе пин-кода из 4 цифр делаем запрос на получение данных авторизации
-  useEffect(()=>{
+  useEffect(() => {
     if (pinCode.length === 4) {
       setLoading(true);
       const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
-      fetchPinAuth(Number(pinCode), tsdUUID)
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      // Устанавливаем тайм-аут для отмены запроса через 10 секунд
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        handlePinError("Превышено время ожидания ответа от сервера.");
+        setLoading(false);
+      }, 10000); // 10 секунд
+
+      fetchPinAuth(Number(pinCode), tsdUUID, signal)
         .then((data: TPinAuthData) => {
+          clearTimeout(timeoutId);
           setPinAuthData(data);
           if (data.error.length === 0) {
             setLoading(false);
@@ -50,12 +61,20 @@ const EntryPage: React.FC = () => {
             navigate("/workmode");
           } else {
             setLoading(false);
-            handlePinError();
+            handlePinError(data.error);
           }
+        })
+        .catch((error) => {
+          if (error.name === "AbortError") {
+            console.log("Fetch aborted");
+          } else {
+            console.log(error);
+            handlePinError("Ошибка при выполнении запроса.");
+          }
+          setLoading(false);
         });
     }
-  }, [pinCode])
-
+  }, [pinCode]);
 
   return (
     <div className="entry-page">
@@ -73,21 +92,18 @@ const EntryPage: React.FC = () => {
         style={{ borderBottom: "2px solid #f6fa05" }}
       />
       {pinError && (
-        <p
-          className={
-            pinError ? "pin-code-error shake-animation" : "pin-code-error"
-          }
-        >
-          {pinAuthData?.error}
+        <p className="pin-code-error shake-animation">
+          {pinError}
         </p>
       )}
-      <Loader size="s"/>
+      {loading && <Loader size="s" />}
       <div className="numpad">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "backspace"].map((value) => (
           <button
             key={value.toString()}
             className="numpad__button"
             onClick={() => handleButtonClick(value)}
+            disabled={loading}
           >
             {value === "backspace" ? <BackspaceIcon /> : value}
           </button>

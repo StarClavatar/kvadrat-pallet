@@ -90,6 +90,10 @@
   transform: scale(0.90);
 }
 
+.numpad__button:disabled {
+  opacity: 0.5;
+}
+
 @media only screen and (orientation: landscape) {
   .numpad {
     display: none;
