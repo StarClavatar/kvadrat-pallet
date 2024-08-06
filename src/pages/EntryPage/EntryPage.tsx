@@ -1,14 +1,16 @@
-import React, { ChangeEvent, useState, useContext } from "react";
+import React, { ChangeEvent, useState, useContext, useEffect } from "react";
 import "./EntryPage.css";
 import BackspaceIcon from "../../assets/backspaceIcon";
 import { useNavigate } from "react-router-dom";
 import { PinContext, TPinAuthData } from "../../context/PinAuthContext";
 import { fetchPinAuth } from "../../api/pinAuth";
+import Loader from "../../components/Loader/Loader";
 
 const EntryPage: React.FC = () => {
   const { pinAuthData, setPinAuthData } = useContext(PinContext);
   const [pinCode, setPinCode] = useState<string>("");
   const [pinError, setPinError] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Функция обработки нажатия на кнопку
@@ -34,23 +36,26 @@ const EntryPage: React.FC = () => {
 
 
   // здесь при наборе пин-кода из 4 цифр делаем запрос на получение данных авторизации
-  if (pinCode.length === 4) {
-    const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
-    // alert(`tsdUUID from localStorage: ${tsdUUID}`)
-    fetchPinAuth(Number(pinCode), tsdUUID)
-      .then((data: TPinAuthData) => {
-        // console.log("TSDUUID: ", tsdUUID)
-        // alert(`tsdUUID during request: ${data.tsdUUID}`)
-        setPinAuthData(data);
-        if (data.error.length === 0) {
-          setPinCode('');
-          localStorage.setItem("tsdUUID", String(data.tsdUUID));
-          navigate("/workmode");
-        } else {
-          handlePinError();
-        }
-      });
-  }
+  useEffect(()=>{
+    if (pinCode.length === 4) {
+      setLoading(true);
+      const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
+      fetchPinAuth(Number(pinCode), tsdUUID)
+        .then((data: TPinAuthData) => {
+          setPinAuthData(data);
+          if (data.error.length === 0) {
+            setLoading(false);
+            setPinCode('');
+            localStorage.setItem("tsdUUID", String(data.tsdUUID));
+            navigate("/workmode");
+          } else {
+            setLoading(false);
+            handlePinError();
+          }
+        });
+    }
+  }, [pinCode])
+
 
   return (
     <div className="entry-page">
@@ -76,6 +81,7 @@ const EntryPage: React.FC = () => {
           {pinAuthData?.error}
         </p>
       )}
+      <Loader size="s"/>
       <div className="numpad">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "backspace"].map((value) => (
           <button
