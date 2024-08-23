@@ -10,6 +10,7 @@ import PinAuthContext from "./context/PinAuthContext.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute/ProtectedRoute.tsx";
 import TruckFilling from "./pages/TruckFilling/TruckFilling.tsx";
 import NewTruckFilling from "./pages/NewTruckFilling/NewTruckFilling.tsx";
+import ValueContext from "./context/valueContext.tsx";
 
 const router = createBrowserRouter([
   {
@@ -61,7 +62,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <PinAuthContext>
+    <ValueContext>
     <RouterProvider router={router} />
+    </ValueContext>
   </PinAuthContext>
   // </React.StrictMode>
 );

@@ -2,7 +2,9 @@ export const unshipPallet = async (
     pincode: string,
     tsdUUID: string,
     docId: string,
-    palletSSCC: string
+    palletSSCC: string,
+    info?: string,
+    infoType?: string
   ): Promise<ITruckInfo> => {
     const response = await fetch(
       "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/shipservice/unshippallet",
@@ -15,7 +17,9 @@ export const unshipPallet = async (
           pinCode: pincode,
           tsdUUID: tsdUUID,
           code: docId,
-          palletSSCC: palletSSCC
+          palletSSCC: palletSSCC,
+          infoType: infoType ? infoType : "",
+          info: info ? info : "",
         }),
       }
     );

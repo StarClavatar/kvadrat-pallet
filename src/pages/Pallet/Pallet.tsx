@@ -394,10 +394,12 @@ const Pallet = () => {
         onClose={() => setShowDelete(false)}
       >
         <DeleteBoxInteractive
-          onClose={() => setShowDelete(false)}
+          pallet={pallet}
+          onClose={() => {setShowDelete(false)}}
           isPopupOpened={showDelete}
           setPallet={setPallet}
           type="pallet"
+          deleteBoxInteractiveReset={!showDelete}
         />
       </Popup>
     </div>
