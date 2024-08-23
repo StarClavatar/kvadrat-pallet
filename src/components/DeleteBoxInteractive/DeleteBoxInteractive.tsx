@@ -57,6 +57,23 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
       if (isPopupOpened && !errorOccurred) {
         successScanSound.play();
         setValue(code.replace(/[^0-9]/g, ""));
+        const fetchScanned = async () => {
+            try {
+              const response = await deleteCart(
+                String(pinAuthData?.pinCode),
+                String(pinAuthData?.tsdUUID),
+                String(params.sscc),
+                value,
+              );
+              if (!response.error) {
+                setPallet(response);
+              } else {
+                setDeleteErrorText(response.error);
+                setErrorOccurred(true);
+              }
+            } catch (error) {}
+        }
+        fetchScanned();
         setStep(1);
       }
     },
@@ -151,7 +168,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         </div>
         <button
           className="box-delete__next-button"
-          disabled={Number(value) < 1}
+          disabled={Number(value) < 1 || loading}
           onClick={ async () => {
             if (type === "pallet") {
               setLoading(true);
