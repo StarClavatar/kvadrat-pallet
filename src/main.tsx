@@ -11,6 +11,7 @@ import ProtectedRoute from "./auth/ProtectedRoute/ProtectedRoute.tsx";
 import TruckFilling from "./pages/TruckFilling/TruckFilling.tsx";
 import NewTruckFilling from "./pages/NewTruckFilling/NewTruckFilling.tsx";
 import ValueContext from "./context/valueContext.tsx";
+import TestPage from "./pages/testPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <TruckFilling />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/playground",
+    element: (
+      <ProtectedRoute>
+        <TestPage />
       </ProtectedRoute>
     ),
   },

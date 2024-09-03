@@ -13,6 +13,7 @@ import errorSound from "../../assets/scanFailed.mp3";
 import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
 import { closePallet } from "../../api/closePallet";
+import ScanDialog from "../../components/ScanDialog/ScanDialog";
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
@@ -27,6 +28,7 @@ const Pallet = () => {
   const errorAudio = new Audio(errorSound);
   const [closePalletPopup, setClosePalletPopup] = useState<boolean>(false);
   const successAudio = new Audio(successSound);
+  const [ScanDialogOpen, setScanDialogOpen] = useState<boolean>(false);
 
   const scannedCode = useRef<string>();
   console.log(pallet);
@@ -243,7 +245,8 @@ const Pallet = () => {
               display: pallet.palletState === "закрыта" || sumCartsOnCount(pallet) === 0 ? "none" : "initial" ,
             }}
             onClick={() => {
-              setShowDelete(true);
+              // setShowDelete(true);
+              setScanDialogOpen(true)
             }}
           >
             Удалить коробку
@@ -259,6 +262,7 @@ const Pallet = () => {
             Завершить
           </button>
         </div>
+        <ScanDialog cmd={handleScan} isOpen={ScanDialogOpen} close={() => setScanDialogOpen(false)} text={'сканирование ёпта'}/>
       </div>
       {/* попап добавления коробки с infoType */}
       {pallet.info ? (

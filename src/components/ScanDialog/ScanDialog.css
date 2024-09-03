@@ -1,0 +1,31 @@
+.scan-dialog {
+  background-color: #fff;
+  height: 84%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+}
+
+.scan-dialog-text {
+  margin-top: 0;
+  margin-bottom: auto;
+  display: block;
+}
+
+.scan-dialog-btn {
+  width: 40%;
+  padding: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  background-color: #66bb6a;
+  color: #fff;
+  margin-top: 20px;
+  transition: .3s;
+}
+
+.scan-dialog-btn:active {
+  opacity: .7;
+  transform: scale(0.9);
+}

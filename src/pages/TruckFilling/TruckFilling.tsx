@@ -64,23 +64,23 @@ const TruckFilling = () => {
     }
   };
 
-  const handleClosePallet = async () => {
-    setCloseShipmentPopup(true);
-    try {
-      const response = await closeShipment(
-        String(pinAuthData?.pinCode),
-        String(pinAuthData?.tsdUUID),
-        String(params.docId)
-      );
-      if (response.error) {
-        alert(response.error);
-      } else {
-        setTruckInfo(response);
-      }
-    } catch (e) {
-      alert(e);
-    }
-  };
+  // const handleClosePallet = async () => {
+  //   setCloseShipmentPopup(true);
+  //   try {
+  //     const response = await closeShipment(
+  //       String(pinAuthData?.pinCode),
+  //       String(pinAuthData?.tsdUUID),
+  //       String(params.docId)
+  //     );
+  //     if (response.error) {
+  //       alert(response.error);
+  //     } else {
+  //       setTruckInfo(response);
+  //     }
+  //   } catch (e) {
+  //     alert(e);
+  //   }
+  // };
 
   useScanDetection({
     onComplete: (code) => {
