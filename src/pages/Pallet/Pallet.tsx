@@ -245,8 +245,8 @@ const Pallet = () => {
               display: pallet.palletState === "закрыта" || sumCartsOnCount(pallet) === 0 ? "none" : "initial" ,
             }}
             onClick={() => {
-              // setShowDelete(true);
-              setScanDialogOpen(true)
+              setShowDelete(true);
+              // setScanDialogOpen(true)
             }}
           >
             Удалить коробку

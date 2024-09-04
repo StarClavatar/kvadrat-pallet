@@ -11,7 +11,7 @@ const Workmode = () => {
       <div className="workmode__links">
         <Link to={"/new-pallet"} className="link">Создание паллет </Link>
         <Link to={"/new-truck-filling"} className="link">Загрузка фуры</Link>
-        <Link to={"/playground"} className="link">Тест</Link>
+        {/* <Link to={"/playground"} className="link">Тест</Link> */}
       </div>
       <Link to={"/"} className="link_quit" onClick={() => setPinAuthData(undefined)}>Выйти</Link>
     </div>
