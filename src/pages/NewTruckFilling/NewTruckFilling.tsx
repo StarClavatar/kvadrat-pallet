@@ -1,4 +1,4 @@
-import { FormEvent, useState, useRef } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useScanDetection from "use-scan-detection";
 // import { fetchPalletInfo } from "../../api/palletInfo";
@@ -7,12 +7,13 @@ import useScanDetection from "use-scan-detection";
 const NewPallet = () => {
   const [docID, setDocID] = useState<string>("");
   const navigate = useNavigate();
-  const inputRef = useRef<HTMLInputElement>(null);
 //   const { pinAuthData } = useContext(PinContext);
 
   useScanDetection({
     onComplete: (code) => {
-      setDocID(String(code))
+      const normalizedCode = code.replace(/[^0-9]/g, "").toString();
+      console.log(normalizedCode)
+      setDocID('Doc_Ogr#' + normalizedCode);
       const encodedDocID = encodeURIComponent(docID);
       navigate(`/truck-filling/${encodedDocID}`);
       setDocID("");
@@ -33,7 +34,6 @@ const NewPallet = () => {
       <h2 className="new-pallet__heading">Отсканируйте штрих-код документа отгрузки</h2>
       <form className="pallet-form" onSubmit={handleSubmit}>
         <input
-          ref={inputRef}
           autoFocus
           required
           placeholder="Номер отгрузки"
