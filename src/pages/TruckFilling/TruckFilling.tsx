@@ -20,8 +20,7 @@ const TruckFilling = () => {
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const [showPalletDelete, setShowPalletDelete] = useState<boolean>(false);
-  // const [pallet, setPallet] = useState<TPallet>();
-  const [truckInfo, setTruckInfo] = useState<ITruckInfo>();
+  const {truckInfo, setTruckInfo} = useContext(ValueContext);
 
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);

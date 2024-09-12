@@ -14,12 +14,13 @@ import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
 import { closePallet } from "../../api/closePallet";
 import ScanDialog from "../../components/ScanDialog/ScanDialog";
+import { ValueContext } from "../../context/valueContext";
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const [showDelete, setShowDelete] = useState<boolean>(false);
-  const [pallet, setPallet] = useState<TPallet>();
+  const {pallet, setPallet} = useContext(ValueContext);
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
   const [palletErrorText, setPalletErrorText] = useState<string>("");
@@ -86,26 +87,26 @@ const Pallet = () => {
     },
   });
 
-  useEffect(() => {
-    console.log(pinAuthData);
-    const fetchData = async () => {
-      const response = await fetchPalletInfo(
-        String(pinAuthData?.pinCode),
-        params.sscc || "",
-        "",
-        pinAuthData?.tsdUUID || ""
-      );
-      if (!response.error) {
-        setPallet(response);
-        console.log(pallet);
-      } else {
-        setPalletDataError(response.error);
-        setPalletErrorText(response.error);
-      }
-    };
+  // useEffect(() => {
+  //   console.log(pinAuthData);
+  //   const fetchData = async () => {
+  //     const response = await fetchPalletInfo(
+  //       String(pinAuthData?.pinCode),
+  //       params.sscc || "",
+  //       "",
+  //       pinAuthData?.tsdUUID || ""
+  //     );
+  //     if (!response.error) {
+  //       setPallet(response);
+  //       console.log(pallet);
+  //     } else {
+  //       setPalletDataError(response.error);
+  //       setPalletErrorText(response.error);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   function sumCartsOnCount(pallet: TPallet): number {
     return pallet.groups.reduce(

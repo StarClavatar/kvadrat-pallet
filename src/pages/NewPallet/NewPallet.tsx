@@ -1,20 +1,26 @@
-import { useState, useContext } from "react";
+import { useState, useContext, FormEvent } from "react";
 import beep from "../../assets/scanSuccess.mp3";
+import errorSound from '../../assets/scanFailed.mp3'
 import "./NewPallet.css";
 import { useNavigate } from "react-router-dom";
 import { fetchPalletInfo } from "../../api/palletInfo";
 import { PinContext } from "../../context/PinAuthContext";
 import useScanDetection from "use-scan-detection";
+import { ValueContext } from "../../context/valueContext";
+import Popup from "../../components/Popup/Popup";
 
 const NewPallet = () => {
+  const {setPallet} = useContext(ValueContext);
   const [code, setCode] = useState<string>("");
   const navigate = useNavigate();
   const { pinAuthData } = useContext(PinContext);
+  const [popupError, setPopupError] = useState<boolean>(false);
+  const [popupErrorText, setPopupErrorText] = useState<string>("");
 
   const audio = new Audio(beep);
+  const audioError = new Audio(errorSound);
 
   const handleFormAction = async (code: string) => {
-    audio.play();
     if (code?.length > 0) {
       const response = await fetchPalletInfo(
         String(pinAuthData?.pinCode),
@@ -22,12 +28,23 @@ const NewPallet = () => {
         "",
         String(localStorage.getItem("tsdUUID"))
       );
-      const { palletSSCC } = response;
-      navigate(`/pallet/${palletSSCC}`);
-      setCode("");
+      
+      if(!response?.error) {
+        audio.play();
+        const { palletSSCC } = response;
+        setPallet(response);
+        navigate(`/pallet/${palletSSCC}`);
+        setCode("");
+      } else {
+        setPopupErrorText(response.error)
+        setPopupError(true);
+        setCode('')
+      }
+
     }
   };
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
    await handleFormAction(code);
   };
 
@@ -37,6 +54,30 @@ const NewPallet = () => {
       await handleFormAction(normalizedCode);
     }
   })
+
+  if (popupError) {
+    audioError.play();
+    return (
+      <Popup
+        title="Ошибка"
+        containerClassName="popup-error"
+        isOpen={popupError}
+        onClose={() => {
+          setPopupError(false);
+        }}
+      >
+        <div className="popup-error__container">
+          <h4 className="popup-error__text">{popupErrorText}</h4>
+          <button
+            className="popup-error__button"
+            onClick={() => setPopupError(false)}
+          >
+            продолжить
+          </button>
+        </div>
+      </Popup>
+    );
+  }
 
   return (
     <div className="new-pallet">
