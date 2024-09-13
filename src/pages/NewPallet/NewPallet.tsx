@@ -1,6 +1,6 @@
 import { useState, useContext, FormEvent } from "react";
 import beep from "../../assets/scanSuccess.mp3";
-import errorSound from '../../assets/scanFailed.mp3'
+import errorSound from "../../assets/scanFailed.mp3";
 import "./NewPallet.css";
 import { useNavigate } from "react-router-dom";
 import { fetchPalletInfo } from "../../api/palletInfo";
@@ -10,7 +10,7 @@ import { ValueContext } from "../../context/valueContext";
 import Popup from "../../components/Popup/Popup";
 
 const NewPallet = () => {
-  const {setPallet} = useContext(ValueContext);
+  const { setPallet } = useContext(ValueContext);
   const [code, setCode] = useState<string>("");
   const navigate = useNavigate();
   const { pinAuthData } = useContext(PinContext);
@@ -21,6 +21,7 @@ const NewPallet = () => {
   const audioError = new Audio(errorSound);
 
   const handleFormAction = async (code: string) => {
+    if (popupError) return;
     if (code?.length > 0) {
       const response = await fetchPalletInfo(
         String(pinAuthData?.pinCode),
@@ -28,32 +29,31 @@ const NewPallet = () => {
         "",
         String(localStorage.getItem("tsdUUID"))
       );
-      
-      if(!response?.error) {
+
+      if (!response?.error) {
         audio.play();
         const { palletSSCC } = response;
         setPallet(response);
         navigate(`/pallet/${palletSSCC}`);
         setCode("");
       } else {
-        setPopupErrorText(response.error)
+        setPopupErrorText(response.error);
         setPopupError(true);
-        setCode('')
+        setCode("");
       }
-
     }
   };
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-   await handleFormAction(code);
+    e.preventDefault();
+    await handleFormAction(code);
   };
 
   useScanDetection({
     onComplete: async (code) => {
       const normalizedCode = code.replace(/[^0-9]/g, "").toString();
       await handleFormAction(normalizedCode);
-    }
-  })
+    },
+  });
 
   if (popupError) {
     audioError.play();
