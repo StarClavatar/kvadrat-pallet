@@ -20,7 +20,7 @@ const TruckFilling = () => {
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const [showPalletDelete, setShowPalletDelete] = useState<boolean>(false);
-  const {truckInfo, setTruckInfo} = useContext(ValueContext);
+  const {truckInfo, setTruckInfo, isLoading, setIsLoading} = useContext(ValueContext);
 
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
@@ -39,6 +39,7 @@ const TruckFilling = () => {
     const normalizedCode = code.replace(/[^0-9]/g, "").toString();
     scannedCode.current = normalizedCode;
     try {
+      setIsLoading(true);
       const response: ITruckInfo = await shipPallet(
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
@@ -47,14 +48,17 @@ const TruckFilling = () => {
       );
 
       if (response.info) {
+        setIsLoading(false);
         setIsDialogOpen(true);
       }
 
       if (!response.error) {
+        setIsLoading(false);
         successAudio.play();
 
         setTruckInfo(response);
       } else {
+        setIsLoading(false);
         setPalletDataError(true);
         setPalletErrorText(response.error);
       }
@@ -63,27 +67,9 @@ const TruckFilling = () => {
     }
   };
 
-  // const handleClosePallet = async () => {
-  //   setCloseShipmentPopup(true);
-  //   try {
-  //     const response = await closeShipment(
-  //       String(pinAuthData?.pinCode),
-  //       String(pinAuthData?.tsdUUID),
-  //       String(params.docId)
-  //     );
-  //     if (response.error) {
-  //       alert(response.error);
-  //     } else {
-  //       setTruckInfo(response);
-  //     }
-  //   } catch (e) {
-  //     alert(e);
-  //   }
-  // };
-
   useScanDetection({
     onComplete: (code) => {
-      if (!showPalletDelete || !palletDataError) {
+      if (!showPalletDelete && !palletDataError && !closeShipmentPopup && !InfoTypePopup && !isLoading) {
         handleScan(String(code));
       }
     },
@@ -101,6 +87,7 @@ const TruckFilling = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       const decodedDocID = decodeURIComponent(String(params.docId));
       const response = await fetchTruckInfo(
         String(pinAuthData?.pinCode),
@@ -108,10 +95,12 @@ const TruckFilling = () => {
         decodedDocID
       );
       if (!response.error) {
+        setIsLoading(false);
         successAudio.play();
         setTruckInfo(response);
         console.log(truckInfo);
       } else {
+        setIsLoading(false);
         errorAudio.play();
         setPalletDataError(true);
         setPalletErrorText(response.error);

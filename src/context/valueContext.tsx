@@ -11,7 +11,9 @@ type valueContextType = {
   pallet: TPallet;
   setPallet: Dispatch<SetStateAction<TPallet>>
   truckInfo: ITruckInfo;
-  setTruckInfo: Dispatch<SetStateAction<ITruckInfo>>
+  setTruckInfo: Dispatch<SetStateAction<ITruckInfo>>;
+  isLoading: boolean;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 export const ValueContext = createContext<valueContextType>({
@@ -43,7 +45,9 @@ export const ValueContext = createContext<valueContextType>({
     comment: "",
     pallets: []
   },
-  setTruckInfo: () => {}
+  setTruckInfo: () => {},
+  isLoading: false,
+  setIsLoading: () => {}
 });
 
 const FieldContext = ({ children }: TProps) => {
@@ -76,8 +80,10 @@ const FieldContext = ({ children }: TProps) => {
     pallets: []
   })
 
+  const [isLoading, setIsLoading] = useState(false);
+
   return (
-    <ValueContext.Provider value={{ value, setValue, pallet, setPallet, truckInfo, setTruckInfo }}>
+    <ValueContext.Provider value={{ value, setValue, pallet, setPallet, truckInfo, setTruckInfo, isLoading, setIsLoading }}>
       {children}
     </ValueContext.Provider>
   );

@@ -6,21 +6,19 @@ import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
 import Group from "../../components/Group/Group";
 import { PinContext } from "../../context/PinAuthContext";
-import { fetchPalletInfo } from "../../api/palletInfo";
 import useScanDetection from "use-scan-detection";
 import { addCart } from "../../api/addCart";
 import errorSound from "../../assets/scanFailed.mp3";
 import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
 import { closePallet } from "../../api/closePallet";
-import ScanDialog from "../../components/ScanDialog/ScanDialog";
 import { ValueContext } from "../../context/valueContext";
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const [showDelete, setShowDelete] = useState<boolean>(false);
-  const {pallet, setPallet} = useContext(ValueContext);
+  const {pallet, setPallet, isLoading, setIsLoading} = useContext(ValueContext);
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
   const [palletErrorText, setPalletErrorText] = useState<string>("");
@@ -29,7 +27,12 @@ const Pallet = () => {
   const errorAudio = new Audio(errorSound);
   const [closePalletPopup, setClosePalletPopup] = useState<boolean>(false);
   const successAudio = new Audio(successSound);
-  const [ScanDialogOpen, setScanDialogOpen] = useState<boolean>(false);
+
+  if (isLoading) {
+    return (
+      <div style={{}}><Loader/></div>
+    )
+  }
 
   const scannedCode = useRef<string>();
   console.log(pallet);
@@ -37,6 +40,7 @@ const Pallet = () => {
     const normalizedCode = code.replace(/[^0-9]/g, "").toString();
     scannedCode.current = normalizedCode;
     try {
+      setIsLoading(true);
       const response: TPallet = await addCart(
         String(pinAuthData?.pinCode),
         String(params.sscc),
@@ -45,14 +49,16 @@ const Pallet = () => {
       );
 
       if (response.info) {
+        setIsLoading(false);
         setIsDialogOpen(true);
       }
 
       if (!response.error) {
         successAudio.play();
-
+        setIsLoading(false);
         setPallet(response);
       } else {
+        setIsLoading(false);
         setPalletDataError(true);
         setPalletErrorText(response.error);
       }
@@ -64,14 +70,17 @@ const Pallet = () => {
   const handleClosePallet = async () => {
     setClosePalletPopup(true);
     try {
+      setIsLoading(true);
       const response = await closePallet(
         String(pinAuthData?.pinCode),
         String(pinAuthData?.tsdUUID),
         String(params.sscc)
       );
       if (response.error) {
+        setIsLoading(false);
         alert(response.error);
       } else {
+        setIsLoading(false);
         setPallet(response);
       }
     } catch (e) {
@@ -81,32 +90,11 @@ const Pallet = () => {
 
   useScanDetection({
     onComplete: (code) => {
-      if (!showDelete && pallet?.palletState !== "закрыта" && pallet?.palletState !== "собрана") {
+      if (!showDelete && pallet?.palletState !== "закрыта" && pallet?.palletState !== "собрана" && !palletDataError && !isLoading) {
         handleScan(String(code));
       }
     },
   });
-
-  // useEffect(() => {
-  //   console.log(pinAuthData);
-  //   const fetchData = async () => {
-  //     const response = await fetchPalletInfo(
-  //       String(pinAuthData?.pinCode),
-  //       params.sscc || "",
-  //       "",
-  //       pinAuthData?.tsdUUID || ""
-  //     );
-  //     if (!response.error) {
-  //       setPallet(response);
-  //       console.log(pallet);
-  //     } else {
-  //       setPalletDataError(response.error);
-  //       setPalletErrorText(response.error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
 
   function sumCartsOnCount(pallet: TPallet): number {
     return pallet.groups.reduce(
@@ -263,7 +251,6 @@ const Pallet = () => {
             Завершить
           </button>
         </div>
-        <ScanDialog cmd={handleScan} isOpen={ScanDialogOpen} close={() => setScanDialogOpen(false)} text={'сканирование ёпта'}/>
       </div>
       {/* попап добавления коробки с infoType */}
       {pallet.info ? (

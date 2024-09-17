@@ -39,7 +39,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   const [deleteErrorText, setDeleteErrorText] = useState<string>(""); // Текст ошибки
   const [loading, setLoading] = useState<boolean>(false); // Состояние загрузки
   const failedScanSound = new Audio(scanFailedSound); // Звук ошибки сканирования
-  const { value, setValue } = useContext(ValueContext); // Контекст для хранения значения сканирования
+  const { value, setValue, isLoading, setIsLoading } = useContext(ValueContext); // Контекст для хранения значения сканирования
   const [responseComment, setResponseComment] = useState<string>(""); // Комментарий из ответа сервера
 
   const { pinAuthData } = useContext(PinContext); // Данные авторизации пин-кода
@@ -56,6 +56,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   // Обработка сканирования штрих-кода
   useScanDetection({
     onComplete: (code) => {
+
       if (isPopupOpened && !errorOccurred) {
         successScanSound.play();
         const scannedCode = code.replace(/[^0-9]/g, ""); // Очищаем код от нецифровых символов
@@ -63,6 +64,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
 
         const fetchScanned = async () => {
           try {
+            setIsLoading(true);
             const response = await deleteCart(
               String(pinAuthData?.pinCode),
               String(pinAuthData?.tsdUUID),
@@ -70,13 +72,16 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
               scannedCode
             );
             if (!response.error) {
+              setIsLoading(false);
               setPallet(response); // Устанавливаем новое состояние паллета
               setStep(1);  // Переход на следующий шаг только при успешном ответе
             } else {
+              setIsLoading(false);
               setDeleteErrorText(response.error);
               setErrorOccurred(true);
             }
           } catch (error) {
+            setIsLoading(false);
             setDeleteErrorText("Ошибка сети, попробуйте снова.");
             setErrorOccurred(true);
           }
@@ -93,6 +98,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
       setLoading(true);
       try {
         if (type === "pallet") {
+          setIsLoading(true);
           const response = await deleteCart(
             String(pinAuthData?.pinCode),
             String(pinAuthData?.tsdUUID),
@@ -102,14 +108,17 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
             'next'
           );
           if (!response.error) {
+            setIsLoading(false);
             setPallet(response); // Обновляем паллет
             onClose(); // Закрываем модалку
             deleteBoxInteractiveReset(); // Сбрасываем состояние
           } else {
+            setIsLoading(false);
             setDeleteErrorText(response.error);
             setErrorOccurred(true);
           }
         } else {
+          setIsLoading(true);
           const response = await unshipPallet(
             String(pinAuthData?.pinCode),
             String(pinAuthData?.tsdUUID),
@@ -117,19 +126,23 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
             value
           );
           if (!response.error) {
+            setIsLoading(false);
             setPallet(response);
             setResponseComment(response.comment || response.info);
             onClose();
             deleteBoxInteractiveReset();
           } else {
+            setIsLoading(false);
             setDeleteErrorText(response.error);
             setErrorOccurred(true);
           }
         }
       } catch (error) {
+        setIsLoading(false);
         setDeleteErrorText("Ошибка сети, попробуйте снова.");
         setErrorOccurred(true);
       } finally {
+        setIsLoading(false);
         setLoading(false);
       }
     }
@@ -184,7 +197,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
                   );
                   if (!response.error) {
                     setPallet(response);
-                    setStep(1); // Переход на следующий шаг только при успешном ответе
+                    setStep(1);
                   } else {
                     setDeleteErrorText(response.error);
                     setErrorOccurred(true);
