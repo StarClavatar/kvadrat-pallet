@@ -1,3 +1,5 @@
+const BASE_URL = import.meta.env.VITE_SHIPMENT_API_URL;
+
 export const shipPallet = async (
   pincode: string,
   tsdUUID: string,
@@ -7,7 +9,7 @@ export const shipPallet = async (
   infoType?: string
 ): Promise<ITruckInfo> => {
   const response = await fetch(
-    "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/shipservice/shippallet",
+    `${BASE_URL}/shippallet`,
     {
       method: "POST",
       headers: {

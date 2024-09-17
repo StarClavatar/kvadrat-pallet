@@ -1,3 +1,4 @@
+const PALLET_URL = import.meta.env.VITE_PALLET_API_URL
 export const addCart = async (
   pincode: string,
   palletSSCC: string,
@@ -7,7 +8,7 @@ export const addCart = async (
   infoType?: string
 ) => {
   const response = await fetch(
-    "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/palletservice/addCart",
+    `${PALLET_URL}/addCart`,
     {
       method: "POST",
       headers: {

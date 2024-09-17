@@ -1,7 +1,9 @@
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 export const fetchPinAuth = async (pincode: number, tsdUUID?: string, signal?: AbortSignal) => {
   try {
     const response = await fetch(
-      "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/pinauth",
+      `${BASE_URL}/pinauth`,
       {
         method: "POST",
         signal: signal,

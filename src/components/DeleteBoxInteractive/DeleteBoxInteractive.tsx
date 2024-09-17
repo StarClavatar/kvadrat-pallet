@@ -1,9 +1,4 @@
-import React, {
-  Dispatch,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import React, { Dispatch, useContext, useState, useEffect } from "react";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import "./DeleteBoxInteractive.css";
 import useScanDetection from "use-scan-detection";
@@ -39,7 +34,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   const [deleteErrorText, setDeleteErrorText] = useState<string>(""); // Текст ошибки
   const [loading, setLoading] = useState<boolean>(false); // Состояние загрузки
   const failedScanSound = new Audio(scanFailedSound); // Звук ошибки сканирования
-  const { value, setValue, isLoading, setIsLoading } = useContext(ValueContext); // Контекст для хранения значения сканирования
+  const { value, setValue, setIsLoading } = useContext(ValueContext); // Контекст для хранения значения сканирования
   const [responseComment, setResponseComment] = useState<string>(""); // Комментарий из ответа сервера
 
   const { pinAuthData } = useContext(PinContext); // Данные авторизации пин-кода
@@ -56,7 +51,6 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   // Обработка сканирования штрих-кода
   useScanDetection({
     onComplete: (code) => {
-
       if (isPopupOpened && !errorOccurred) {
         successScanSound.play();
         const scannedCode = code.replace(/[^0-9]/g, ""); // Очищаем код от нецифровых символов
@@ -65,21 +59,41 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         const fetchScanned = async () => {
           try {
             setIsLoading(true);
-            const response = await deleteCart(
-              String(pinAuthData?.pinCode),
-              String(pinAuthData?.tsdUUID),
-              String(params.sscc),
-              scannedCode
-            );
-            if (!response.error) {
-              setIsLoading(false);
-              setPallet(response); // Устанавливаем новое состояние паллета
-              setStep(1);  // Переход на следующий шаг только при успешном ответе
+            if (type === "pallet") {
+              const response = await deleteCart(
+                String(pinAuthData?.pinCode),
+                String(pinAuthData?.tsdUUID),
+                String(params.sscc),
+                scannedCode
+              );
+              if (!response.error) {
+                setIsLoading(false);
+                setPallet(response);
+                setResponseComment(response.comment || response.info);
+                setStep(1); // Переход на следующий шаг только при успешном ответе
+              } else {
+                setIsLoading(false);
+                setDeleteErrorText(response.error);
+                setErrorOccurred(true);
+              }  
             } else {
-              setIsLoading(false);
-              setDeleteErrorText(response.error);
-              setErrorOccurred(true);
+              const response = await unshipPallet(
+                String(pinAuthData?.pinCode),
+                String(pinAuthData?.tsdUUID),
+                String(params.docId),
+                scannedCode
+              );
+              if (!response.error) {
+                setIsLoading(false);
+                setPallet(response); // Устанавливаем новое состояние паллета
+                setStep(1); // Переход на следующий шаг только при успешном ответе
+              } else {
+                setIsLoading(false);
+                setDeleteErrorText(response.error);
+                setErrorOccurred(true);
+              }
             }
+            
           } catch (error) {
             setIsLoading(false);
             setDeleteErrorText("Ошибка сети, попробуйте снова.");
@@ -94,7 +108,8 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
 
   // Обработка кнопки "Завершить"
   const handleDelete = async () => {
-    if (!errorOccurred && value) { // Проверяем, что нет ошибки и value задано
+    if (!errorOccurred && value) {
+      // Проверяем, что нет ошибки и value задано
       setLoading(true);
       try {
         if (type === "pallet") {
@@ -105,7 +120,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
             String(params.sscc),
             value,
             pallet?.info,
-            'next'
+            "next"
           );
           if (!response.error) {
             setIsLoading(false);
@@ -184,7 +199,7 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         <button
           className="box-delete__next-button"
           disabled={Number(value) < 1 || loading}
-          onClick={ async () => {
+          onClick={async () => {
             if (!errorOccurred && value) {
               setLoading(true);
               try {
@@ -235,10 +250,13 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           step === 1 ? "slide_active" : "slide_next"
         }`}
       >
-        <p className="slide-heading">{pallet?.info || responseComment}</p>
+        <p className="slide-heading">{pallet?.info || responseComment || "Уберите паллету и нажмите завершить"}</p>
 
         {loading ? <Loader /> : null}
-        <button className="slide__button" onClick={type === "pallet" ? handleDelete : onClose}>
+        <button
+          className="slide__button"
+          onClick={type === "pallet" ? handleDelete : onClose}
+        >
           Завершить
         </button>
       </div>

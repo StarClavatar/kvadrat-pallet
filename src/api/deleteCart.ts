@@ -1,3 +1,5 @@
+const BASE_URL = import.meta.env.VITE_PALLET_API_URL;
+
 export const deleteCart = async (
   pincode: string,
   tsdUUID: string,
@@ -7,7 +9,7 @@ export const deleteCart = async (
   infoType?: string
 ) => {
   const response = await fetch(
-    "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/palletservice/deleteCart",
+    `${BASE_URL}/deleteCart`,
     {
       method: "POST",
       headers: {

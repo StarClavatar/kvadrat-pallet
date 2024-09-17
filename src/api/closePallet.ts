@@ -1,3 +1,5 @@
+const BASE_URL = import.meta.env.VITE_PALLET_API_URL;
+
 export const closePallet = async (
     pincode: string,
     tsdUUID: string,
@@ -6,7 +8,7 @@ export const closePallet = async (
     infoType?: string
   ) => {
     const response = await fetch(
-      "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/palletservice/close",
+      `${BASE_URL}/close`,
       {
         method: "POST",
         headers: {
