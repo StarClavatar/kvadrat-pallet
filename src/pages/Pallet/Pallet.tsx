@@ -90,7 +90,7 @@ const Pallet = () => {
 
   useScanDetection({
     onComplete: (code) => {
-      if (!showDelete && pallet?.palletState !== "закрыта" && pallet?.palletState !== "собрана" && !palletDataError && !isLoading && !isDialogOpen) {
+      if (!showDelete && pallet?.palletState !== "закрыта" && pallet?.palletState !== "собрана" && !palletDataError && !isLoading && !isDialogOpen && !closePalletPopup) {
         handleScan(String(code));
       }
     },
