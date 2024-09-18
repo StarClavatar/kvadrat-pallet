@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_SHIPMENT_API_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const fetchTruckInfo = async (
   pincode: string,
@@ -6,7 +6,7 @@ export const fetchTruckInfo = async (
   docId: string
 ): Promise<ITruckInfo> => {
   const response = await fetch(
-    `${BASE_URL}/truckinfo`,
+    `${BASE_URL}/shipservice/truckinfo`,
     {
       method: "POST",
       headers: {

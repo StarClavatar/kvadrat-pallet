@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_PALLET_API_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const deleteCart = async (
   pincode: string,
@@ -9,7 +9,7 @@ export const deleteCart = async (
   infoType?: string
 ) => {
   const response = await fetch(
-    `${BASE_URL}/deleteCart`,
+    `${BASE_URL}/palletservice/deleteCart`,
     {
       method: "POST",
       headers: {

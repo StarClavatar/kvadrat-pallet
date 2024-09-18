@@ -13,8 +13,9 @@ const NewPallet = () => {
     onComplete: (code) => {
       const normalizedCode = code.replace(/[^0-9]/g, "").toString();
       console.log(normalizedCode)
-      setDocID('Doc_Ogr#' + normalizedCode);
-      const encodedDocID = encodeURIComponent(docID);
+      const documentID = `Doc_Ogr#${normalizedCode}`
+      setDocID(`Doc_Ogr#${normalizedCode}`);
+      const encodedDocID = encodeURIComponent(documentID);
       navigate(`/truck-filling/${encodedDocID}`);
       setDocID("");
     }
@@ -34,7 +35,7 @@ const NewPallet = () => {
       <h2 className="new-pallet__heading">Отсканируйте штрих-код документа отгрузки</h2>
       <form className="pallet-form" onSubmit={handleSubmit}>
         <input
-          autoFocus
+          // autoFocus
           required
           placeholder="Номер отгрузки"
           className="input pallet-form__input"

@@ -1,6 +1,6 @@
 // import { TPallet } from "../Pallet/config";
 import "./TruckFilling.css";
-import { useState, useContext, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
@@ -25,7 +25,6 @@ const TruckFilling = () => {
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
   const [palletErrorText, setPalletErrorText] = useState<string>("");
-  const [inputValue, setInputValue] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [showPallets, setShowPallets] = useState<boolean>(false);
   const errorAudio = new Audio(errorSound);
@@ -74,22 +73,23 @@ const TruckFilling = () => {
         !palletDataError &&
         !closeShipmentPopup &&
         !InfoTypePopup &&
-        !isLoading
+        !isLoading && 
+        !isDialogOpen
       ) {
         handleScan(String(code));
       }
     },
   });
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
+  // const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  //   setInputValue(e.target.value);
+  // };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleScan(inputValue);
-    }
-  };
+  // const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter") {
+  //     handleScan(inputValue);
+  //   }
+  // };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -231,12 +231,12 @@ const TruckFilling = () => {
               </p>
             </div>
           </div>
-          <input
+          {/* <input
             type="text"
             value={inputValue}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-          />
+          /> */}
         </div>
         <div className="truck-filling-buttons">
           <button
@@ -254,6 +254,10 @@ const TruckFilling = () => {
           <button
             disabled={truckInfo.pallets.length === 0 ? true : false}
             className="truck-filling-button truck-filling-button_finish"
+            style={{
+              display: truckInfo.shipState === "Погрузка завершена" ? "none" : "",
+
+            }}
             onClick={() => setCloseShipmentPopup(true)}
           >
             Завершить

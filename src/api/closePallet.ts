@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_PALLET_API_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const closePallet = async (
     pincode: string,
@@ -8,7 +8,7 @@ export const closePallet = async (
     infoType?: string
   ) => {
     const response = await fetch(
-      `${BASE_URL}/close`,
+      `${BASE_URL}/palletservice/close`,
       {
         method: "POST",
         headers: {

@@ -1,4 +1,4 @@
-const PALLET_URL = import.meta.env.VITE_PALLET_API_URL
+const BASE_URL = import.meta.env.VITE_BASE_URL
 export const addCart = async (
   pincode: string,
   palletSSCC: string,
@@ -8,7 +8,7 @@ export const addCart = async (
   infoType?: string
 ) => {
   const response = await fetch(
-    `${PALLET_URL}/addCart`,
+    `${BASE_URL}/palletservice/addCart`,
     {
       method: "POST",
       headers: {

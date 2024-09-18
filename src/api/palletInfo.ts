@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_PALLET_API_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const fetchPalletInfo = async (
   pincode: string,
@@ -7,7 +7,7 @@ export const fetchPalletInfo = async (
   tsdUUID: string,
 ) => {
   const response = await fetch(
-    `${BASE_URL}/palletInfo`,
+    `${BASE_URL}/palletservice/palletInfo`,
     {
       method: "POST",
       headers: {
