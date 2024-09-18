@@ -9,7 +9,6 @@ import useScanDetection from "use-scan-detection";
 import errorSound from "../../assets/scanFailed.mp3";
 import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
-import { closePallet } from "../../api/closePallet";
 import { fetchTruckInfo } from "../../api/truckinfo";
 import { shipPallet } from "../../api/shipPallet";
 import { closeShipment } from "../../api/closeShipment";
@@ -20,7 +19,8 @@ const TruckFilling = () => {
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const [showPalletDelete, setShowPalletDelete] = useState<boolean>(false);
-  const {truckInfo, setTruckInfo, isLoading, setIsLoading} = useContext(ValueContext);
+  const { truckInfo, setTruckInfo, isLoading, setIsLoading } =
+    useContext(ValueContext);
 
   const params = useParams();
   const [palletDataError, setPalletDataError] = useState<boolean>(false);
@@ -69,7 +69,13 @@ const TruckFilling = () => {
 
   useScanDetection({
     onComplete: (code) => {
-      if (!showPalletDelete && !palletDataError && !closeShipmentPopup && !InfoTypePopup && !isLoading) {
+      if (
+        !showPalletDelete &&
+        !palletDataError &&
+        !closeShipmentPopup &&
+        !InfoTypePopup &&
+        !isLoading
+      ) {
         handleScan(String(code));
       }
     },
@@ -236,9 +242,9 @@ const TruckFilling = () => {
           <button
             className="truck-filling-button truck-filling-button_delete"
             disabled={truckInfo.pallets.length === 0 ? true : false}
-            // style={{
-            //   display: truckInfo.pallets.length === 0 ? "none" : "initial",
-            // }}
+            style={{
+              display: truckInfo.shipState === "Погрузка завершена" ? "none" : "",
+            }}
             onClick={() => {
               setShowPalletDelete(true);
             }}
@@ -325,13 +331,24 @@ const TruckFilling = () => {
                 <button
                   className="truck-filling-dialog-btn"
                   onClick={async () => {
-                    setTruckInfo(
-                      await closeShipment(
-                        String(pinAuthData?.pinCode),
-                        pinAuthData?.tsdUUID || "",
-                        params.docId || ""
-                      )
+                    setIsLoading(true);
+                    const response = await closeShipment(
+                      String(pinAuthData?.pinCode),
+                      pinAuthData?.tsdUUID || "",
+                      params.docId || "",
+                      truckInfo.info,
+                      "yes"
                     );
+                    setTruckInfo(response);
+                    setIsLoading(false);
+                    successAudio.play()
+                    setCloseShipmentPopup(false);
+                    if (response.error) {
+                      setIsLoading(false);
+                      setCloseShipmentPopup(false);
+                      setPalletErrorText(response.error);
+                      setPalletDataError(true);
+                    }
                   }}
                 >
                   Да
@@ -339,13 +356,16 @@ const TruckFilling = () => {
                 <button
                   className="truck-filling-dialog-btn"
                   onClick={async () => {
-                    const response = await closePallet(
+                    const response = await closeShipment(
                       String(pinAuthData?.pinCode),
                       pinAuthData?.tsdUUID || "",
-                      params.sscc || "",
+                      params.docId || "",
                       truckInfo.info,
                       "no"
                     );
+                    setTruckInfo(response);
+                    setIsLoading(false);
+                    setCloseShipmentPopup(false);
                     if (response.error) {
                       setCloseShipmentPopup(false);
                       setPalletErrorText(response.error);
@@ -390,8 +410,33 @@ const TruckFilling = () => {
       >
         <p className="truck-filling-dialog__text">{`Завершить погрузку?`}</p>
         <div className="truck-filling-dialog-buttons">
-          <button className="truck-filling-dialog-btn" onClick={() => setCloseShipmentPopup(false)}>Да</button>
-          <button className="truck-filling-dialog-btn" onClick={() => setCloseShipmentPopup(false)}>Нет</button>
+          <button
+            className="truck-filling-dialog-btn"
+            onClick={async () => {
+              const response = await closeShipment(
+                String(pinAuthData?.pinCode),
+                pinAuthData?.tsdUUID || "",
+                params.docId || ""
+              );
+              setTruckInfo(response);
+              setIsLoading(false);
+              successAudio.play()
+              setCloseShipmentPopup(false);
+              if (response.error) {
+                setCloseShipmentPopup(false);
+                setPalletErrorText(response.error);
+                setPalletDataError(true);
+              }
+            }}
+          >
+            Да
+          </button>
+          <button
+            className="truck-filling-dialog-btn"
+            onClick={() => setCloseShipmentPopup(false)}
+          >
+            Нет
+          </button>
         </div>
       </Popup>
       {/* Модальное окно удаления паллеты c infoType */}
@@ -444,7 +489,12 @@ const TruckFilling = () => {
                 </button>
               </>
             ) : (
-              <button className="pallet-dialog-btn" onClick={() => setInfoTypePopup(false)}>Продолжить</button>
+              <button
+                className="pallet-dialog-btn"
+                onClick={() => setInfoTypePopup(false)}
+              >
+                Продолжить
+              </button>
             )}
           </div>
         </Popup>

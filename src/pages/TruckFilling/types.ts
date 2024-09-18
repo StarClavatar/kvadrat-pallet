@@ -24,7 +24,7 @@ interface ITruckGroup {
     lastPalletSSCC: string;    // SSCC-код последней паллеты
     beginDate: string;         // Дата начала работы с фурой
     endDate: string;           // Дата завершения работы с фурой
-    shipState: "план" | "погрузка" | "загружена"; // Состояние фуры
+    shipState: "план" | "погрузка" | "загружена" | "Погрузка завершена"; // Состояние фуры
     department: string;        // Подразделение
     shipZone: string;          // Участок отгрузки
     truckNumber: string;       // Гос. номер фуры
