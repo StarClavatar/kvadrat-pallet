@@ -184,7 +184,6 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         }`}
       >
         <input
-          autoFocus
           onChange={(e) => setValue(e.target.value)}
           value={value}
           className="input box-delete__input"

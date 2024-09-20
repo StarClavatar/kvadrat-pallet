@@ -27,13 +27,6 @@ const Pallet = () => {
   const errorAudio = new Audio(errorSound);
   const [closePalletPopup, setClosePalletPopup] = useState<boolean>(false);
   const successAudio = new Audio(successSound);
-
-  if (isLoading) {
-    return (
-      <div style={{}}><Loader/></div>
-    )
-  }
-
   const scannedCode = useRef<string>();
   console.log(pallet);
   const handleScan = async (code: string) => {
@@ -111,6 +104,7 @@ const Pallet = () => {
 
   if (!pinAuthData?.tsdUUID) {
     navigate("/");
+    // return null
   }
 
   if (!pallet) {
