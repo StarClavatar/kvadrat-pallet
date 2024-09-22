@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, useContext, useEffect } from "react";
+import React, { ChangeEvent, useState, useContext, useEffect, KeyboardEvent, useRef } from "react";
 import "./EntryPage.css";
 import BackspaceIcon from "../../assets/backspaceIcon";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,13 @@ const EntryPage: React.FC = () => {
   const [pinError, setPinError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
+  const entryPageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (entryPageRef.current) {
+      entryPageRef.current.focus();
+    }
+  }, []);
 
   // Функция обработки нажатия на кнопку
   const handleButtonClick = (value: string | number) => {
@@ -39,7 +46,7 @@ const EntryPage: React.FC = () => {
   useEffect(() => {
     if (pinCode.length === 4) {
       setLoading(true);
-      const tsdUUID = localStorage.getItem('tsdUUID') ?? undefined;
+      const tsdUUID = localStorage.getItem("tsdUUID") ?? undefined;
       const controller = new AbortController();
       const signal = controller.signal;
 
@@ -56,7 +63,7 @@ const EntryPage: React.FC = () => {
           setPinAuthData(data);
           if (data.error.length === 0) {
             setLoading(false);
-            setPinCode('');
+            setPinCode("");
             localStorage.setItem("tsdUUID", String(data.tsdUUID));
             navigate("/workmode");
           } else {
@@ -76,8 +83,16 @@ const EntryPage: React.FC = () => {
     }
   }, [pinCode]);
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Backspace") {
+      setPinCode(pinCode.slice(0, -1));
+    } else if (!isNaN(Number(event.key))) {
+      setPinCode(pinCode + event.key);
+    }
+  };
+
   return (
-    <div className="entry-page">
+    <div className="entry-page" onKeyDown={handleKeyDown} tabIndex={0} ref={entryPageRef}>
       <input
         className="input pin-code"
         name="pin-code"
@@ -91,11 +106,7 @@ const EntryPage: React.FC = () => {
         value={pinCode}
         style={{ borderBottom: "2px solid #f6fa05" }}
       />
-      {pinError && (
-        <p className="pin-code-error shake-animation">
-          {pinError}
-        </p>
-      )}
+      {pinError && <p className="pin-code-error shake-animation">{pinError}</p>}
       {loading && <Loader size="s" />}
       <div className="numpad">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "backspace"].map((value) => (
