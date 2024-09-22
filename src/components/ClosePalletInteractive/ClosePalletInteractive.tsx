@@ -42,7 +42,6 @@ const ClosePalletInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         setStep(1);
       }
     },
-    averageWaitTime: 20,
   });
 
   const { pinAuthData } = useContext(PinContext);

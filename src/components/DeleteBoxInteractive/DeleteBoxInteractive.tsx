@@ -29,11 +29,11 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   pallet,
 }) => {
   const [step, setStep] = useState<number>(0); // Текущий шаг компонента
-  const [errorOccurred, setErrorOccurred] = useState<boolean>(false); // Флаг ошибки
+  const [errorOccurred, setErrorOccurred] = useState<boolean>(false); // состояние ошибки для открытия модального окна
   const successScanSound = new Audio(scanSuccessSound); // Звук успешного сканирования
-  const [deleteErrorText, setDeleteErrorText] = useState<string>(""); // Текст ошибки
+  const [deleteErrorText, setDeleteErrorText] = useState<string>(""); // Текст ошибки в модальном окне
   const [loading, setLoading] = useState<boolean>(false); // Состояние загрузки
-  const failedScanSound = new Audio(scanFailedSound); // Звук ошибки сканирования
+  const failedScanSound = new Audio(scanFailedSound); // Звук ошибки
   const { value, setValue, setIsLoading } = useContext(ValueContext); // Контекст для хранения значения сканирования
   const [responseComment, setResponseComment] = useState<string>(""); // Комментарий из ответа сервера
 
@@ -103,7 +103,6 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
         fetchScanned();
       }
     },
-    averageWaitTime: 20,
   });
 
   // Обработка кнопки "Завершить"
