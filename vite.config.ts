@@ -33,6 +33,12 @@ const pwaOptions: Partial<VitePWAOptions> = {
       },
     ],
   },
+  registerType: "prompt",
+  workbox: {
+    clientsClaim: true,
+    skipWaiting: false
+  },
+  injectRegister: 'auto',
   devOptions: {
     enabled: process.env.SW_DEV === "true",
     /* when using generateSW the PWA plugin will switch to classic */
