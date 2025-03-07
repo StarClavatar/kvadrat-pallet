@@ -13,6 +13,7 @@ import NewTruckFilling from "./pages/NewTruckFilling/NewTruckFilling.tsx";
 import ValueContext from "./context/valueContext.tsx";
 import TestPage from "./pages/testPage.tsx";
 import BoxAdmin from "./pages/BoxAdmin/BoxAdmin.tsx";
+import ScanCell from "./pages/ScanCell/ScanCell.tsx";
 import './pwa'
 
 const router = createBrowserRouter([
@@ -69,8 +70,28 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/scan-cell",
+    element: (
+      <ProtectedRoute>
+        <ScanCell />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/cell/:cellCode",
+    element: (
+      <ProtectedRoute>
+        <BoxAdmin />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/box-admin",
-    element: <BoxAdmin />
+    element: (
+      <ProtectedRoute>
+        <BoxAdmin />
+      </ProtectedRoute>
+    ),
   },
 ]);
 

@@ -5,6 +5,11 @@ type TProps = {
     children: ReactNode;
 }
 
+// Интерфейс для данных BoxAdmin
+interface IBoxAdminData {
+  cellCode: string;
+}
+
 type valueContextType = {
   value: string;
   setValue: Dispatch<SetStateAction<string>>;
@@ -14,6 +19,8 @@ type valueContextType = {
   setTruckInfo: Dispatch<SetStateAction<ITruckInfo>>;
   isLoading: boolean;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
+  boxAdminData: IBoxAdminData | null;
+  setBoxAdminData: Dispatch<SetStateAction<IBoxAdminData | null>>;
 };
 
 export const ValueContext = createContext<valueContextType>({
@@ -47,7 +54,9 @@ export const ValueContext = createContext<valueContextType>({
   },
   setTruckInfo: () => {},
   isLoading: false,
-  setIsLoading: () => {}
+  setIsLoading: () => {},
+  boxAdminData: null,
+  setBoxAdminData: () => {}
 });
 
 const FieldContext = ({ children }: TProps) => {
@@ -81,9 +90,21 @@ const FieldContext = ({ children }: TProps) => {
   })
 
   const [isLoading, setIsLoading] = useState(false);
+  const [boxAdminData, setBoxAdminData] = useState<IBoxAdminData | null>(null);
 
   return (
-    <ValueContext.Provider value={{ value, setValue, pallet, setPallet, truckInfo, setTruckInfo, isLoading, setIsLoading }}>
+    <ValueContext.Provider value={{ 
+      value, 
+      setValue, 
+      pallet, 
+      setPallet, 
+      truckInfo, 
+      setTruckInfo, 
+      isLoading, 
+      setIsLoading,
+      boxAdminData,
+      setBoxAdminData
+    }}>
       {children}
     </ValueContext.Provider>
   );
