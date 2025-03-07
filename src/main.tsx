@@ -12,6 +12,7 @@ import TruckFilling from "./pages/TruckFilling/TruckFilling.tsx";
 import NewTruckFilling from "./pages/NewTruckFilling/NewTruckFilling.tsx";
 import ValueContext from "./context/valueContext.tsx";
 import TestPage from "./pages/testPage.tsx";
+import BoxAdmin from "./pages/BoxAdmin/BoxAdmin.tsx";
 import './pwa'
 
 const router = createBrowserRouter([
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
         <TestPage />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/box-admin",
+    element: <BoxAdmin />
   },
 ]);
 

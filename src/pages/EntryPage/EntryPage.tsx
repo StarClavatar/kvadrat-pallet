@@ -6,6 +6,9 @@ import { PinContext, TPinAuthData } from "../../context/PinAuthContext";
 import { fetchPinAuth } from "../../api/pinAuth";
 import Loader from "../../components/Loader/Loader";
 
+// Админский пин-код (захардкоженный временно)
+const ADMIN_PIN = "2222";
+
 const EntryPage: React.FC = () => {
   const { setPinAuthData } = useContext(PinContext);
   const [pinCode, setPinCode] = useState<string>("");
@@ -45,6 +48,13 @@ const EntryPage: React.FC = () => {
   // здесь при наборе пин-кода из 4 цифр делаем запрос на получение данных авторизации
   useEffect(() => {
     if (pinCode.length === 4) {
+      // Проверка на админский пин-код
+      if (pinCode === ADMIN_PIN) {
+        setPinCode("");
+        navigate("/box-admin");
+        return;
+      }
+      
       setLoading(true);
       const tsdUUID = localStorage.getItem("tsdUUID") ?? undefined;
       const controller = new AbortController();

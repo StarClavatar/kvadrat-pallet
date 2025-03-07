@@ -1,0 +1,369 @@
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  outline: none;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  height: 100%;
+}
+
+.title {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.scanningStatus {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.statusIndicator {
+  padding: 10px 15px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  display: inline-block;
+  font-weight: bold;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.statusIndicator.active {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  border-left: 4px solid #1890ff;
+}
+
+.scanModeToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scanModeLabel {
+  font-weight: bold;
+  color: #333;
+}
+
+.scanModeButton {
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.scanModeButton.active {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+.scanModeButton:hover {
+  background-color: #40a9ff;
+  color: white;
+  border-color: #40a9ff;
+}
+
+.hiddenInput {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  z-index: -1;
+}
+
+.result {
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+
+.debug {
+  padding: 15px;
+  background-color: #fff8e1;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  word-break: break-all;
+  border-left: 4px solid #ffc107;
+}
+
+.keyLogContainer {
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #9e9e9e;
+}
+
+.keyLogTitle {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.keyLog {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.keyLogItem {
+  padding: 5px 0;
+  font-family: monospace;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 6px;
+}
+
+.processButton {
+  padding: 12px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  flex: 1;
+  box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+  margin-top: 16px;
+}
+
+.processButton:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(52, 152, 219, 0.3);
+}
+
+.processButton:active {
+  background-color: #2471a3;
+  transform: translateY(0);
+}
+
+.processButton:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.clearButton {
+  padding: 12px 20px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  flex: 1;
+  box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
+}
+
+.clearButton:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(231, 76, 60, 0.3);
+}
+
+.clearButton:active {
+  background-color: #a93226;
+  transform: translateY(0);
+}
+
+.clearButton:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.codeLabel {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.codeValue {
+  font-family: monospace;
+  font-size: 16px;
+}
+
+.instructions {
+  padding: 16px;
+  background-color: #edf7ff;
+  border-left: 4px solid #3498db;
+  border-radius: 8px;
+  font-size: 16px;
+  text-align: center;
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.instructions p {
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.inputContainer {
+  margin-bottom: 20px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.scanInput {
+  width: 100%;
+  padding: 14px 16px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  line-height: 1.6;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+  height: 54px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.scanInput:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  background-color: #ffffff;
+}
+
+.codesContainer {
+  margin-top: 24px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.codesContainer h2 {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.codesList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.codeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  border-left: 3px solid #3498db;
+}
+
+.codeItem:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.codeItem span {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+  color: #2c3e50;
+  word-break: break-all;
+}
+
+.removeButton {
+  background-color: transparent;
+  color: #e74c3c;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.removeButton:hover {
+  background-color: #ffebee;
+  color: #c0392b;
+}
+
+/* Медиа-запросы для адаптации под разные размеры экранов */
+@media (max-width: 480px) {
+  .container {
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .title {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  
+  .textareaContainer {
+    height: 50vh;
+  }
+  
+  .textarea {
+    font-size: 14px;
+    padding: 12px;
+  }
+  
+  .processButton,
+  .clearButton {
+    padding: 10px 16px;
+    font-size: 14px;
+    width: 100%;
+  }
+  
+  .instructions {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .codesList {
+    grid-template-columns: 1fr;
+  }
+} 
