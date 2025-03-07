@@ -15,6 +15,66 @@ interface CodeGroup {
   id: number;
 }
 
+// Интерфейс для данных ячейки в localStorage
+interface CellStorageData {
+  codesList: string[];
+  codeGroups: CodeGroup[];
+  currentGroupId: number;
+  lastUpdated: number; // Timestamp последнего обновления
+}
+
+// Функция для получения ключа localStorage для конкретной ячейки
+const getCellStorageKey = (cellCode: string) => `cell_data_${cellCode}`;
+
+// Функция для сохранения данных ячейки в localStorage
+const saveCellDataToStorage = (
+  cellCode: string, 
+  codesList: string[], 
+  codeGroups: CodeGroup[], 
+  currentGroupId: number
+) => {
+  if (!cellCode) return;
+  
+  const data: CellStorageData = {
+    codesList,
+    codeGroups,
+    currentGroupId,
+    lastUpdated: Date.now()
+  };
+  
+  try {
+    localStorage.setItem(getCellStorageKey(cellCode), JSON.stringify(data));
+  } catch (error) {
+    console.error('Ошибка при сохранении данных в localStorage:', error);
+  }
+};
+
+// Функция для загрузки данных ячейки из localStorage
+const loadCellDataFromStorage = (cellCode: string): CellStorageData | null => {
+  if (!cellCode) return null;
+  
+  try {
+    const storedData = localStorage.getItem(getCellStorageKey(cellCode));
+    if (!storedData) return null;
+    
+    return JSON.parse(storedData) as CellStorageData;
+  } catch (error) {
+    console.error('Ошибка при загрузке данных из localStorage:', error);
+    return null;
+  }
+};
+
+// Функция для очистки данных ячейки в localStorage
+const clearCellDataInStorage = (cellCode: string) => {
+  if (!cellCode) return;
+  
+  try {
+    localStorage.removeItem(getCellStorageKey(cellCode));
+  } catch (error) {
+    console.error('Ошибка при очистке данных в localStorage:', error);
+  }
+};
+
 const BoxAdmin = () => {
   const { boxAdminData, setBoxAdminData } = useContext(ValueContext);
   const { pinAuthData } = useContext(PinContext);
@@ -32,12 +92,35 @@ const BoxAdmin = () => {
   const successAudioRef = useRef<HTMLAudioElement | null>(null);
   const errorAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Получаем текущий код ячейки (из URL или из контекста)
+  const currentCellCode = urlCellCode || boxAdminData?.cellCode;
+
   // Устанавливаем код ячейки из URL-параметра в контекст, если он есть
   useEffect(() => {
     if (urlCellCode && (!boxAdminData?.cellCode || boxAdminData.cellCode !== urlCellCode)) {
       setBoxAdminData({ cellCode: urlCellCode });
     }
   }, [urlCellCode, boxAdminData, setBoxAdminData]);
+
+  // Загружаем данные из localStorage при монтировании компонента
+  useEffect(() => {
+    if (currentCellCode) {
+      const storedData = loadCellDataFromStorage(currentCellCode);
+      
+      if (storedData) {
+        setCodesList(storedData.codesList);
+        setCodeGroups(storedData.codeGroups);
+        setCurrentGroupId(storedData.currentGroupId);
+      }
+    }
+  }, [currentCellCode]);
+
+  // Сохраняем данные в localStorage при изменении данных
+  useEffect(() => {
+    if (currentCellCode) {
+      saveCellDataToStorage(currentCellCode, codesList, codeGroups, currentGroupId);
+    }
+  }, [currentCellCode, codesList, codeGroups, currentGroupId]);
 
   // Перенаправляем на страницу сканирования ячейки, если код ячейки не указан
   useEffect(() => {
@@ -173,8 +256,6 @@ const BoxAdmin = () => {
 
   // Функция для отправки данных на сервер
   const sendDataToServer = async () => {
-    const currentCellCode = urlCellCode || boxAdminData?.cellCode;
-    
     if (!currentCellCode || codesList.length === 0) {
       return;
     }
@@ -215,6 +296,11 @@ const BoxAdmin = () => {
       setCodeGroups([{ codes: [], id: 1 }]);
       setCurrentGroupId(1);
       
+      // Очищаем данные в localStorage
+      if (currentCellCode) {
+        clearCellDataInStorage(currentCellCode);
+      }
+      
       // Воспроизводим звук успеха
       playSound(true);
       
@@ -245,7 +331,6 @@ const BoxAdmin = () => {
   };
 
   // Получаем текущий код ячейки (из URL или из контекста)
-  const currentCellCode = urlCellCode || boxAdminData?.cellCode;
 
   // Общее количество отсканированных кодов
   const totalCodesCount = codesList.length;
@@ -337,7 +422,6 @@ const BoxAdmin = () => {
           <span>Новая группа</span>
         </button>
       </div>
-      
       <button
         className={styles.backButton}
         onClick={() => navigate("/scan-cell")}
