@@ -5,13 +5,14 @@ import { PinContext } from "../../context/PinAuthContext";
 
 const Workmode = () => {
   const {pinAuthData, setPinAuthData} = useContext(PinContext)
+  console.log(pinAuthData, "🖕🖕")
   return (
     <div className="workmode">
         <p className="workmode__employee">{pinAuthData?.workerName}</p>
       <div className="workmode__links">
-        <Link to={"/new-pallet"} className="link">Создание паллет </Link>
-        <Link to={"/new-truck-filling"} className="link">Загрузка фуры</Link>
-        <Link to={"/scan-cell"} className="link">Упаковка товаров</Link>
+        {pinAuthData?.operations.makePallets && <Link to={"/new-pallet"} className="link">Создание паллет </Link>}
+        {pinAuthData?.operations.shipment && <Link to={"/new-truck-filling"} className="link">Загрузка фуры</Link>}
+        {pinAuthData?.operations.inventory && <Link to={"/scan-cell"} className="link">Инвентаризация ячеек</Link>}
         {/* <Link to={"/playground"} className="link">Тест</Link> */}
       </div>
       <Link to={"/"} className="link_quit" onClick={() => setPinAuthData(undefined)}>Выйти</Link>

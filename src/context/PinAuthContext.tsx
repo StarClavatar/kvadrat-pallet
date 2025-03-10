@@ -11,6 +11,11 @@ export type TPinAuthData = {
     pinCode: number;
     workerName: string;
     position: string;
+    operations: {
+        makePallets: boolean;
+        shipment: boolean;
+        inventory: boolean;
+    }
 };
 
 type PinContextType = {

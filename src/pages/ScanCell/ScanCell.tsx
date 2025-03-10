@@ -2,7 +2,6 @@ import { useState, useContext, FormEvent, useRef, useEffect } from "react";
 import scanSuccessSound from "../../assets/scanSuccess.mp3";
 import scanErrorSound from "../../assets/scanFailed.mp3";
 import { useNavigate } from "react-router-dom";
-import { PinContext } from "../../context/PinAuthContext";
 import { ValueContext } from "../../context/valueContext";
 import Popup from "../../components/Popup/Popup";
 
@@ -10,7 +9,6 @@ const ScanCell = () => {
   const { setBoxAdminData } = useContext(ValueContext);
   const [cellCode, setCellCode] = useState<string>("");
   const navigate = useNavigate();
-  const { pinAuthData } = useContext(PinContext);
   const [popupError, setPopupError] = useState<boolean>(false);
   const [popupErrorText, setPopupErrorText] = useState<string>("");
   
