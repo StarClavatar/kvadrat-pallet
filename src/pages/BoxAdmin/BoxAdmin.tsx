@@ -6,8 +6,11 @@ import { ValueContext } from "../../context/valueContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { PinContext } from "../../context/PinAuthContext";
 
+const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
+
+
 // URL для отправки данных
-const API_URL = "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/markstowmscell";
+const API_URL = `${VITE_BASE_URL}/markstowmscell`;
 
 // Интерфейс для группы кодов
 interface CodeGroup {
