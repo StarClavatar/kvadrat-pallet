@@ -5,12 +5,7 @@ import scanErrorSound from "../../assets/scanFailed.mp3";
 import { ValueContext } from "../../context/valueContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { PinContext } from "../../context/PinAuthContext";
-
-const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
-
-
-// URL для отправки данных
-const API_URL = `${VITE_BASE_URL}/markstowmscell`;
+import { sendInventoryBoxesToServer } from "../../api/sentInventoryBoxes";
 
 // Интерфейс для группы кодов
 interface CodeGroup {
@@ -89,6 +84,8 @@ const BoxAdmin = () => {
   const [currentGroupId, setCurrentGroupId] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  // Состояние для отслеживания развернутых групп
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   
@@ -269,29 +266,14 @@ const BoxAdmin = () => {
     try {
       const tsdUUID = localStorage.getItem("tsdUUID");
       
-      const requestData = {
-        pinCode: pinAuthData?.pinCode,
+      // Используем функцию из API для отправки данных
+      const result = await sendInventoryBoxesToServer(
+        pinAuthData?.pinCode,
         tsdUUID,
-        cellCode: currentCellCode,
-        matrixCodes: codesList
-      };
-
-      // Отправляем запрос на сервер
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-      });
-
-      // Проверяем ответ
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при отправке данных');
-      }
-
-      const result = await response.json();
+        currentCellCode,
+        codesList
+      );
+      
       console.log('Успешный ответ:', result);
       
       // Очищаем список кодов и групп после успешной отправки
@@ -333,10 +315,16 @@ const BoxAdmin = () => {
     sendDataToServer();
   };
 
-  // Получаем текущий код ячейки (из URL или из контекста)
-
   // Общее количество отсканированных кодов
   const totalCodesCount = codesList.length;
+
+  // Функция для переключения состояния развернутости группы
+  const toggleGroupExpand = (groupId: number) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
 
   return (
     <div className={styles.container}>
@@ -376,7 +364,8 @@ const BoxAdmin = () => {
               <div key={group.id} className={styles.codeGroup}>
                 {groupIndex > 0 && <div className={styles.groupDivider}></div>}
                 <ul className={styles.codesList}>
-                  {group.codes.map((code, index) => (
+                  {/* Показываем только первый код всегда */}
+                  {group.codes.slice(0, 1).map((code, index) => (
                     <li key={`${group.id}-${index}`} className={styles.codeItem}>
                       <span>{code}</span>
                       <button
@@ -389,6 +378,47 @@ const BoxAdmin = () => {
                       </button>
                     </li>
                   ))}
+                  
+                  {/* Если есть больше 1 кода, показываем выпадающий список */}
+                  {group.codes.length > 1 && (
+                    <>
+                      <div 
+                        className={`${styles.dropdownControl} ${expandedGroups[group.id] ? styles.hidden : ''}`} 
+                        onClick={() => toggleGroupExpand(group.id)}
+                      >
+                        <span>Ещё {group.codes.length - 1}</span>
+                        <span className={styles.dropdownArrow}>↓</span>
+                      </div>
+                      
+                      {/* Выпадающий список с остальными кодами */}
+                      <div className={`${styles.expandableList} ${expandedGroups[group.id] ? styles.expanded : ''}`}>
+                        {group.codes.slice(1).map((code, index) => (
+                          <li key={`${group.id}-extra-${index}`} className={styles.codeItem}>
+                            <span>{code}</span>
+                            <button
+                              className={styles.removeButton}
+                              onClick={() => handleRemoveCode(code)}
+                              aria-label="Удалить код"
+                              disabled={isLoading}
+                            >
+                              ✕
+                            </button>
+                          </li>
+                        ))}
+                        
+                        {/* Кнопка "Скрыть" только в конце списка */}
+                        {expandedGroups[group.id] && (
+                          <div 
+                            className={styles.collapseButton} 
+                            onClick={() => toggleGroupExpand(group.id)}
+                          >
+                            <span>Скрыть</span>
+                            <span className={styles.dropdownArrow}>↑</span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </ul>
                 <div className={styles.groupCounter}>
                   Количество в группе: {group.codes.length}
