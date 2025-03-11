@@ -456,6 +456,10 @@
   width: 100%;
 }
 
+.dropdownArrowOpened {
+  transform: rotate(180deg);
+}
+
 .groupCounter {
   font-size: 0.9rem;
   color: #666;
