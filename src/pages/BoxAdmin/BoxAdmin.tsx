@@ -7,7 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PinContext } from "../../context/PinAuthContext";
 import { sendInventoryBoxesToServer } from "../../api/sentInventoryBoxes";
 import DropdownIcon from "../../assets/dropdownIcon";
-
+import cn from "classnames";
 // Интерфейс для группы кодов
 interface CodeGroup {
   codes: string[];
@@ -98,7 +98,9 @@ const BoxAdmin = () => {
   const errorAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Получаем текущий код ячейки (из URL или из контекста)
-  const currentCellCode = urlCellCode || boxAdminData?.cellCode;
+  const currentCellCode = urlCellCode 
+    ? decodeURIComponent(urlCellCode) 
+    : boxAdminData?.cellCode;
 
   // Устанавливаем код ячейки из URL-параметра в контекст, если он есть
   useEffect(() => {
@@ -170,6 +172,23 @@ const BoxAdmin = () => {
     }
   }, []);
 
+  // Возвращаем фокус на инпут при клике в любое место страницы
+  useEffect(() => {
+    const handleClick = () => {
+      if (inputRef.current && !isLoading) {
+        inputRef.current.focus();
+      }
+    };
+
+    // Добавляем обработчик клика на весь документ
+    document.addEventListener('click', handleClick);
+    
+    // Очищаем обработчик при размонтировании компонента
+    return () => {
+      document.removeEventListener('click', handleClick);
+    };
+  }, [isLoading]);
+
   // Функция для воспроизведения звука без задержки
   const playSound = (isSuccess: boolean) => {
     const audioElement = isSuccess
@@ -199,8 +218,26 @@ const BoxAdmin = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && scannedCodes.trim()) {
-      const code = scannedCodes.trim();
+    const trimmedCode = scannedCodes.trim();
+    if (e.key === "Enter" && trimmedCode) {
+      const code = trimmedCode;
+      console.log({
+        code: code,
+        currentCellCode: currentCellCode,
+      });
+
+      if (trimmedCode.length !== 38) {
+        setScannedCodes("");
+        return;
+      }
+
+      // Проверяем, не является ли код текущей ячейкой
+      // Используем точное сравнение с декодированным кодом ячейки
+      if (code === currentCellCode) {
+        playSound(false); // Звук ошибки
+        setScannedCodes(""); // Очищаем поле ввода
+        return;
+      }
 
       // Проверяем, есть ли код в общем списке
       if (!codesList.includes(code)) {
@@ -350,11 +387,10 @@ const BoxAdmin = () => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Упаковка товаров</h1>
 
       {currentCellCode && (
         <div className={styles.cellInfo}>
-          <span className={styles.cellLabel}>Ячейка:</span>
+          <span className={styles.title}>Ячейка:</span>
           <span className={styles.cellValue}>{currentCellCode}</span>
         </div>
       )}
@@ -367,7 +403,7 @@ const BoxAdmin = () => {
         value={scannedCodes}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        placeholder="Data Matrix код..."
+        placeholder="Отсканируйте код..."
         autoFocus
         disabled={isLoading}
       />
@@ -381,19 +417,16 @@ const BoxAdmin = () => {
       {totalCodesCount > 0 ? (
         <div className={styles.codesContainer}>
           <h2 className={styles.codesTitle}>
-            Отсканированные коды: {totalCodesCount}
+            Всего кодов:<span className={cn(styles.codesCount, styles.codesCountMl)}>{totalCodesCount}</span>
           </h2>
 
           {codeGroups.map(
             (group, groupIndex) =>
               group.codes.length > 0 && (
                 <div key={group.id} className={styles.codeGroup}>
-                  {groupIndex > 0 && (
-                    <div className={styles.groupDivider}></div>
-                  )}
                   <ul className={styles.codesList}>
                     {/* Показываем только первый код всегда */}
-                    {group.codes.slice(0, 1).map((code, index) => (
+                    {/* {group.codes.slice(0, 1).map((code, index) => (
                       <li
                         key={`${group.id}-${index}`}
                         className={styles.codeItem}
@@ -408,8 +441,8 @@ const BoxAdmin = () => {
                           ✕
                         </button>
                       </li>
-                    ))}
-
+                    ))} 
+                    */}
                     {/* Если есть больше 1 кода, показываем выпадающий список */}
                     {group.codes.length > 1 && (
                       <>
@@ -419,19 +452,43 @@ const BoxAdmin = () => {
                           }`}
                           onClick={() => toggleGroupExpand(group.id)}
                         >
-                          <span>В группе {group.codes.length} шт.</span>
+                          <span>
+                            В группе{" "}
+                            <span className={styles.codesCount}>
+                              {group.codes.length}
+                            </span>{" "}
+                            шт.
+                          </span>
                           <span className={styles.dropdownArrow}>
                             <DropdownIcon />
                           </span>
                         </div>
 
+                          {/* Кнопка "Скрыть" только в конце списка */}
+                          {expandedGroups[group.id] && (
+                            <div
+                              className={styles.collapseButton}
+                              onClick={() => toggleGroupExpand(group.id)}
+                            >
+                              <span>
+                            В группе{" "}
+                            <span className={styles.codesCount}>
+                              {group.codes.length}
+                            </span>{" "}
+                            шт.
+                              </span>
+                              <span className={styles.dropdownArrowOpened}>
+                                <DropdownIcon />
+                              </span>
+                            </div>
+                          )}
                         {/* Выпадающий список с остальными кодами */}
                         <div
                           className={`${styles.expandableList} ${
                             expandedGroups[group.id] ? styles.expanded : ""
                           }`}
                         >
-                          {group.codes.slice(1).map((code, index) => (
+                          {group.codes.map((code, index) => (
                             <li
                               key={`${group.id}-extra-${index}`}
                               className={styles.codeItem}
@@ -447,26 +504,10 @@ const BoxAdmin = () => {
                               </button>
                             </li>
                           ))}
-
-                          {/* Кнопка "Скрыть" только в конце списка */}
-                          {expandedGroups[group.id] && (
-                            <div
-                              className={styles.collapseButton}
-                              onClick={() => toggleGroupExpand(group.id)}
-                            >
-                              <span>Скрыть</span>
-                              <span className={styles.dropdownArrowOpened}>
-                                <DropdownIcon />
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </>
                     )}
                   </ul>
-                  <div className={styles.groupCounter}>
-                    Количество в группе: {group.codes.length}
-                  </div>
                 </div>
               )
           )}

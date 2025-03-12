@@ -16,6 +16,30 @@ const ScanCell = () => {
   const errorAudioRef = useRef<HTMLAudioElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
+  // Автофокус на поле ввода при загрузке
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+  
+  // Возвращаем фокус на инпут при клике в любое место страницы
+  useEffect(() => {
+    const handleClick = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+
+    // Добавляем обработчик клика на весь документ
+    document.addEventListener('click', handleClick);
+    
+    // Очищаем обработчик при размонтировании компонента
+    return () => {
+      document.removeEventListener('click', handleClick);
+    };
+  }, []);
+  
   // Инициализация аудио при монтировании компонента
   useEffect(() => {
     successAudioRef.current = new Audio(scanSuccessSound);
@@ -67,8 +91,11 @@ const ScanCell = () => {
         // Воспроизводим звук успеха
         playSound(true);
         
+        // Кодируем код ячейки для URL, чтобы избежать проблем с символами ? и другими
+        const encodedCellCode = encodeURIComponent(cellCode);
+        
         // Переходим на страницу с кодом ячейки в URL
-        navigate(`/cell/${cellCode}`);
+        navigate(`/cell/${encodedCellCode}`);
         
         // Очищаем поле ввода
         setCellCode("");
@@ -131,6 +158,7 @@ const ScanCell = () => {
           onKeyDown={handleKeyDown}
           onBlur={({ target }) => target.focus()}
           autoFocus
+          style={{ caretColor: 'transparent' }}
         />
         <button className="pallet-form__send-button" type="submit">
           Отправить
@@ -146,4 +174,4 @@ const ScanCell = () => {
   );
 };
 
-export default ScanCell; 
+export default ScanCell;

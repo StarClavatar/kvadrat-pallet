@@ -6,11 +6,14 @@
   "scripts": {
     "dev": "vite --host",
     "build": "rimraf dist && vite build",
+    "cloudflared": "cloudflared tunnel --url http://localhost:5173",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
     "@use-symbology-scanner/react": "^1.1.0",
+    "classnames": "^2.5.1",
+    "cn": "^0.1.1",
     "html5-qrcode": "^2.3.8",
     "localforage": "1.10.0",
     "match-sorter": "6.3.4",
