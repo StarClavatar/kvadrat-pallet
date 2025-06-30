@@ -212,39 +212,28 @@ const BoxAdmin = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRealInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    console.log({newValue, newValueLength: newValue.length})
     setScannedCodes(newValue);
-  };
+    e.target.value = "";
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const trimmedCode = scannedCodes.trim();
-    if (e.key === "Enter" && trimmedCode) {
-      const code = trimmedCode;
+    const trimmedCode = newValue.trim();
+    if (trimmedCode && (trimmedCode.length === 38 || trimmedCode.length === 85)) {
       console.log({
-        code: code,
+        code: trimmedCode,
         currentCellCode: currentCellCode,
       });
 
-      if (trimmedCode.length !== 38) {
+      if (trimmedCode === currentCellCode) {
+        playSound(false);
         setScannedCodes("");
         return;
       }
 
-      // Проверяем, не является ли код текущей ячейкой
-      // Используем точное сравнение с декодированным кодом ячейки
-      if (code === currentCellCode) {
-        playSound(false); // Звук ошибки
-        setScannedCodes(""); // Очищаем поле ввода
-        return;
-      }
+      if (!codesList.includes(trimmedCode)) {
+        setCodesList((prev) => [...prev, trimmedCode]);
 
-      // Проверяем, есть ли код в общем списке
-      if (!codesList.includes(code)) {
-        // Добавляем код в общий список
-        setCodesList((prev) => [...prev, code]);
-
-        // Добавляем код в текущую группу
         setCodeGroups((prevGroups) => {
           const updatedGroups = [...prevGroups];
           const currentGroupIndex = updatedGroups.findIndex(
@@ -254,28 +243,25 @@ const BoxAdmin = () => {
           if (currentGroupIndex !== -1) {
             updatedGroups[currentGroupIndex] = {
               ...updatedGroups[currentGroupIndex],
-              codes: [...updatedGroups[currentGroupIndex].codes, code],
+              codes: [...updatedGroups[currentGroupIndex].codes, trimmedCode],
             };
           }
 
           return updatedGroups;
         });
 
-        playSound(true); // Успешное сканирование
+        playSound(true);
       } else {
-        playSound(false); // Дублирование кода
+        playSound(false);
       }
 
-      // Очищаем поле ввода
       setScannedCodes("");
     }
   };
 
   const handleRemoveCode = (codeToRemove: string) => {
-    // Удаляем код из общего списка
     setCodesList((prev) => prev.filter((code) => code !== codeToRemove));
 
-    // Удаляем код из группы
     setCodeGroups((prevGroups) => {
       return prevGroups.map((group) => ({
         ...group,
@@ -286,7 +272,6 @@ const BoxAdmin = () => {
 
   // Функция для создания новой группы
   const handleNewGroup = () => {
-    // Создаем новую группу только если в текущей группе есть коды
     const currentGroup = codeGroups.find(
       (group) => group.id === currentGroupId
     );
@@ -296,15 +281,12 @@ const BoxAdmin = () => {
       setCodeGroups((prev) => [...prev, { codes: [], id: newGroupId }]);
       setCurrentGroupId(newGroupId);
 
-      // Воспроизводим звук успеха
       playSound(true);
 
-      // Возвращаем фокус на поле ввода
       if (inputRef.current) {
         inputRef.current.focus();
       }
     } else {
-      // Если в текущей группе нет кодов, показываем предупреждение
       alert("Сначала отсканируйте хотя бы один код для текущей группы");
       playSound(false);
     }
@@ -322,7 +304,6 @@ const BoxAdmin = () => {
     try {
       const tsdUUID = localStorage.getItem("tsdUUID");
 
-      // Используем функцию из API для отправки данных
       const result = await sendInventoryBoxesToServer(
         pinAuthData?.pinCode,
         tsdUUID,
@@ -332,29 +313,23 @@ const BoxAdmin = () => {
 
       console.log("Успешный ответ:", result);
 
-      // Очищаем список кодов и групп после успешной отправки
       setCodesList([]);
       setCodeGroups([{ codes: [], id: 1 }]);
       setCurrentGroupId(1);
 
-      // Очищаем данные в localStorage
       if (currentCellCode) {
         clearCellDataInStorage(currentCellCode);
       }
 
-      // Воспроизводим звук успеха
       playSound(true);
 
-      // Показываем уведомление об успехе
       alert("Коды успешно обработаны!");
     } catch (error) {
       console.error("Ошибка при отправке данных:", error);
       setError(error instanceof Error ? error.message : "Неизвестная ошибка");
 
-      // Воспроизводим звук ошибки
       playSound(false);
 
-      // Показываем уведомление об ошибке
       alert(
         `Ошибка: ${
           error instanceof Error ? error.message : "Неизвестная ошибка"
@@ -363,7 +338,6 @@ const BoxAdmin = () => {
     } finally {
       setIsLoading(false);
 
-      // Возвращаем фокус на поле ввода
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -395,18 +369,24 @@ const BoxAdmin = () => {
         </div>
       )}
 
+      {/* "Реальный" input (скрытый) */}
       <input
         ref={inputRef}
-        className={styles.scanInput}
         type="text"
         inputMode="none"
-        value={scannedCodes}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Отсканируйте код..."
+        style={{ position: 'absolute', opacity: 0, height: 0, width: 0 }}
+        onChange={handleRealInputChange}
         autoFocus
         disabled={isLoading}
       />
+
+      {/* "Фейковый" input (видимый) */}
+      <div
+        className={styles.scanInput}
+        onClick={() => inputRef.current?.focus()}
+      >
+        {scannedCodes || <span className={styles.placeholder}>Отсканируйте код...</span>}
+      </div>
 
       {error && (
         <div className={styles.errorMessage}>
@@ -425,26 +405,7 @@ const BoxAdmin = () => {
               group.codes.length > 0 && (
                 <div key={group.id} className={styles.codeGroup}>
                   <ul className={styles.codesList}>
-                    {/* Показываем только первый код всегда */}
-                    {/* {group.codes.slice(0, 1).map((code, index) => (
-                      <li
-                        key={`${group.id}-${index}`}
-                        className={styles.codeItem}
-                      >
-                        <span>{code}</span>
-                        <button
-                          className={styles.removeButton}
-                          onClick={() => handleRemoveCode(code)}
-                          aria-label="Удалить код"
-                          disabled={isLoading}
-                        >
-                          ✕
-                        </button>
-                      </li>
-                    ))} 
-                    */}
-                    {/* Если есть больше 1 кода, показываем выпадающий список */}
-                    {group.codes.length > 1 && (
+                    {group.codes.length > 0 && (
                       <>
                         <div
                           className={`${styles.dropdownControl} ${
@@ -464,7 +425,6 @@ const BoxAdmin = () => {
                           </span>
                         </div>
 
-                          {/* Кнопка "Скрыть" только в конце списка */}
                           {expandedGroups[group.id] && (
                             <div
                               className={styles.collapseButton}
@@ -482,7 +442,6 @@ const BoxAdmin = () => {
                               </span>
                             </div>
                           )}
-                        {/* Выпадающий список с остальными кодами */}
                         <div
                           className={`${styles.expandableList} ${
                             expandedGroups[group.id] ? styles.expanded : ""

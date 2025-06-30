@@ -1,0 +1,60 @@
+.confirmation-dialog-popup .popup-content {
+  background-color: rgba(30, 30, 30, 0.95);
+  border: 1px solid #00bfff;
+  padding: 20px;
+  width: 90%;
+}
+
+.confirmation-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-align: center;
+  width: 100%;
+  height: 92%;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  position: relative;
+  overflow: hidden;
+}
+
+.confirmation-dialog__text {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  white-space: pre-wrap;
+  color: #404040;
+  font-weight: bold;
+  /* text-shadow: 0 0 5px #000000; */
+}
+
+.confirmation-dialog__actions {
+  display: flex;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.confirmation-dialog__btn {
+  flex-grow: 1;
+  padding: 12px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirmation-dialog__btn--confirm {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+.confirmation-dialog__btn--cancel {
+  background-color: #f44336;
+  color: #fff;
+} 

@@ -1,5 +1,6 @@
 import { Dispatch, ReactNode, SetStateAction, createContext, useState } from "react";
 import { TPallet } from "../pages/Pallet/config";
+import { IOrder } from "../pages/Order/types";
 
 type TProps = {
     children: ReactNode;
@@ -21,6 +22,8 @@ type valueContextType = {
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   boxAdminData: IBoxAdminData | null;
   setBoxAdminData: Dispatch<SetStateAction<IBoxAdminData | null>>;
+  order: IOrder;
+  setOrder: Dispatch<SetStateAction<IOrder>>;
 };
 
 export const ValueContext = createContext<valueContextType>({
@@ -56,7 +59,23 @@ export const ValueContext = createContext<valueContextType>({
   isLoading: false,
   setIsLoading: () => {},
   boxAdminData: null,
-  setBoxAdminData: () => {}
+  setBoxAdminData: () => {},
+  order: {
+    error: "",
+    info: "",
+    infoType: "",
+    docNum: "",
+    beginDate: "",
+    endDate: "",
+    docState: "",
+    customer: "",
+    shippingDate: "",
+    enclosedInCart: 0,
+    activePallet: "",
+    goods: [],
+    pallets: [],
+  },
+  setOrder: () => {},
 });
 
 const FieldContext = ({ children }: TProps) => {
@@ -91,6 +110,21 @@ const FieldContext = ({ children }: TProps) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [boxAdminData, setBoxAdminData] = useState<IBoxAdminData | null>(null);
+  const [order, setOrder] = useState<IOrder>({
+    error: "",
+    info: "",
+    infoType: "",
+    docNum: "",
+    beginDate: "",
+    endDate: "",
+    docState: "",
+    customer: "",
+    shippingDate: "",
+    enclosedInCart: 0,
+    activePallet: "",
+    goods: [],
+    pallets: [],
+  });
 
   return (
     <ValueContext.Provider value={{ 
@@ -103,7 +137,9 @@ const FieldContext = ({ children }: TProps) => {
       isLoading, 
       setIsLoading,
       boxAdminData,
-      setBoxAdminData
+      setBoxAdminData,
+      order,
+      setOrder
     }}>
       {children}
     </ValueContext.Provider>

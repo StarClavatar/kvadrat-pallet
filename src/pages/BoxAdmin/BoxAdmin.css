@@ -1,7 +1,7 @@
 .box-admin-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100svh;
   padding: 16px;
   background-color: #f9f9f9;
   font-family: 'Roboto', sans-serif;
@@ -45,7 +45,7 @@
   overflow: auto;
   margin-bottom: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  max-height: 60vh;
+  max-height: 60svh;
 }
 
 .product-item {

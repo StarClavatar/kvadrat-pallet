@@ -11,7 +11,7 @@ import { addCart } from "../../api/addCart";
 import errorSound from "../../assets/scanFailed.mp3";
 import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
-import { closePallet } from "../../api/closePallet";
+import { closePallet } from "../../api/palletServiceClosePallet";
 import { ValueContext } from "../../context/valueContext";
 
 const Pallet = () => {

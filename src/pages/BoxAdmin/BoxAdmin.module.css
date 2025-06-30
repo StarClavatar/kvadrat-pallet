@@ -247,15 +247,15 @@
 
 .scanInput {
   width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   font-size: 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  box-sizing: border-box;
-  background-color: #f9f9f9;
-  transition: all 0.2s ease;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  caret-color: #fff;
+  display: flex;
+  align-items: center;
+  cursor: text;
+  outline: none;
 }
 
 .scanInput:focus {
@@ -395,7 +395,7 @@
   }
   
   .textareaContainer {
-    height: 50vh;
+    height: 50svh;
   }
   
   .textarea {
@@ -543,4 +543,8 @@
 .expandableList.expanded {
   max-height: 1000px;
   opacity: 1;
+}
+
+.placeholder {
+  color: #999;
 } 

@@ -1,0 +1,84 @@
+/* Стили для PalletDetails, наследующие часть от Order.css для консистентности */
+
+.pallet-identity {
+    padding: 10px;
+    border-bottom: 2px solid #BDBDBD;
+    width: 100%;
+}
+
+.pallet-identity__number {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.pallet-identity__info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.pallet-identity__type,
+.pallet-identity__status {
+    margin: 0;
+}
+
+.pallet-identity__count {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #0000FF; /* Синий цвет */
+}
+
+.pallet-identity__count span {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.pallet-details-main {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: #E0E0E0; /* Голубовато-серый фон для списка товаров */
+    padding: 10px;
+}
+
+.pallet-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.details-item {
+    background-color: #F5F5F5;
+    padding: 15px;
+    border: 2px solid #BDBDBD;
+}
+
+.details-item__info {
+    
+}
+
+.details-item__name {
+    font-weight: bold;
+    margin: 0;
+}
+
+.details-item__serial {
+    font-size: 0.9rem;
+    color: #696969;
+    margin: 5px 0 0 0;
+}
+
+.details-item__counts {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #0000FF; /* Синий цвет */
+}
+
+.pallet-buttons_details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background-color: #BDBDBD;
+} 

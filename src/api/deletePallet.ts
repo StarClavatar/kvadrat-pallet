@@ -1,19 +1,18 @@
 import { IOrder } from "../pages/Order/types";
 
-export interface IClosePalletResponse extends IOrder {
+export interface IDeletePalletResponse extends IOrder {
   error: string;
   info: string;
-  infoType: "yesNo" | "next" | "";
+  infoType: string;
 }
 
-export const closePallet = async (
+export const deletePallet = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
-  palletNum: string,
-  infoType: "yes" | "no" | "" = ""
-): Promise<IClosePalletResponse> => {
-  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/closePallet`, {
+  palletNum: string // This will be the scanned code
+): Promise<IDeletePalletResponse> => {
+  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/deletePallet`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,15 +22,13 @@ export const closePallet = async (
       tsdUUID,
       docNum,
       palletNum,
-      infoType,
     }),
   });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Ошибка сети или сервера" }));
-    return Promise.reject(error?.error || "Неизвестная ошибка при закрытии паллеты");
+    return Promise.reject(error?.error || "Неизвестная ошибка при удалении паллеты");
   }
 
   return response.json();
-};
-  
+}; 

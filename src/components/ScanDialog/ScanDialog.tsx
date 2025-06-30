@@ -9,7 +9,7 @@ type Props = {
   text: string;
 };
 
-const ScanDialog = ({ close, isOpen, cmd, text }: Props) => {
+const ScanDialog = ({ close, isOpen }: Props) => {
   const [value, setValue] = useState('')
   
   // useScanDetection({

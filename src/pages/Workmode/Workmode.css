@@ -7,9 +7,10 @@
 }
 
 .workmode__employee {
-    font-size: 6vw;
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
     font-weight: 500;
     margin: 12px 4px 0;
+    text-align: center;
 }
 
 .workmode__links {
@@ -37,4 +38,15 @@
     padding: 12px 24px;
     border-radius: 30px;
     margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+    .link {
+        font-size: 24px;
+        padding: 15px;
+    }
+
+    .link_quit {
+        padding: 10px 20px;
+    }
 }

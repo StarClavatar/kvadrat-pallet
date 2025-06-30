@@ -11,7 +11,7 @@ import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
 import { fetchTruckInfo } from "../../api/truckinfo";
 import { shipPallet } from "../../api/shipPallet";
-import { closeShipment } from "../../api/closeShipment";
+import { closeShipment } from "../../api/palletServiceCloseShipment";
 import { unshipPallet } from "../../api/unshipPallet";
 import { ValueContext } from "../../context/valueContext";
 

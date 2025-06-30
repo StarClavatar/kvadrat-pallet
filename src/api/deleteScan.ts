@@ -1,19 +1,19 @@
 import { IOrder } from "../pages/Order/types";
 
-export interface IClosePalletResponse extends IOrder {
+export interface IDeleteScanResponse extends IOrder {
   error: string;
   info: string;
-  infoType: "yesNo" | "next" | "";
+  infoType: string;
 }
 
-export const closePallet = async (
+export const deleteScan = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
   palletNum: string,
-  infoType: "yes" | "no" | "" = ""
-): Promise<IClosePalletResponse> => {
-  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/closePallet`, {
+  scanCod: string
+): Promise<IDeleteScanResponse> => {
+  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/deleteScan`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,15 +23,14 @@ export const closePallet = async (
       tsdUUID,
       docNum,
       palletNum,
-      infoType,
+      scanCod,
     }),
   });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Ошибка сети или сервера" }));
-    return Promise.reject(error?.error || "Неизвестная ошибка при закрытии паллеты");
+    return Promise.reject(error?.error || "Неизвестная ошибка при удалении скана");
   }
 
   return response.json();
-};
-  
+}; 

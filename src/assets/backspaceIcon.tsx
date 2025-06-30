@@ -1,7 +1,7 @@
-const BackspaceIcon = () => {
+const BackspaceIcon = ({color}: {color?: string}) => {
   return (
     <svg
-      fill="#000000"
+      fill={color || "#000000"}
       height="25px"
       width="25px"
       version="1.1"
