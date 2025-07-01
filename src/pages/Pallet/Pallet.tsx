@@ -6,13 +6,14 @@ import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
 import Group from "../../components/Group/Group";
 import { PinContext } from "../../context/PinAuthContext";
-import useScanDetection from "use-scan-detection";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 import { addCart } from "../../api/addCart";
 import errorSound from "../../assets/scanFailed.mp3";
 import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
 import { closePallet } from "../../api/palletServiceClosePallet";
 import { ValueContext } from "../../context/valueContext";
+import BackspaceIcon from "../../assets/backspaceIcon";
 
 const Pallet = () => {
   const { pinAuthData } = useContext(PinContext);
@@ -27,17 +28,16 @@ const Pallet = () => {
   const errorAudio = new Audio(errorSound);
   const [closePalletPopup, setClosePalletPopup] = useState<boolean>(false);
   const successAudio = new Audio(successSound);
-  const scannedCode = useRef<string>();
+  const scannedCodeRef = useRef<string>();
   console.log(pallet);
   const handleScan = async (code: string) => {
-    const normalizedCode = code.replace(/[^0-9]/g, "").toString();
-    scannedCode.current = normalizedCode;
+    scannedCodeRef.current = code;
     try {
       setIsLoading(true);
       const response: TPallet = await addCart(
         String(pinAuthData?.pinCode),
         String(params.sscc),
-        normalizedCode,
+        code,
         String(localStorage.getItem("tsdUUID"))
       );
 
@@ -81,13 +81,18 @@ const Pallet = () => {
     }
   };
 
-  useScanDetection({
-    onComplete: (code) => {
-      if (!showDelete && pallet?.palletState !== "закрыта" && pallet?.palletState !== "собрана" && !palletDataError && !isLoading && !isDialogOpen && !closePalletPopup) {
-        handleScan(String(code));
-      }
+  useCustomScanner(
+    (code) => {
+      handleScan(String(code));
     },
-  });
+    !showDelete &&
+      pallet?.palletState !== "закрыта" &&
+      pallet?.palletState !== "собрана" &&
+      !palletDataError &&
+      !isLoading &&
+      !isDialogOpen &&
+      !closePalletPopup
+  );
 
   function sumCartsOnCount(pallet: TPallet): number {
     return pallet.groups.reduce(
@@ -168,7 +173,7 @@ const Pallet = () => {
             className="exit-button"
             onClick={() => navigate("/new-pallet")}
           >
-            Выйти
+            <BackspaceIcon/>
           </button>
           <p className="pallet__user">{`${pinAuthData?.position} ${pinAuthData?.workerName}`}</p>
         </div>
@@ -264,7 +269,7 @@ const Pallet = () => {
                       await addCart(
                         String(pinAuthData?.pinCode),
                         params.sscc || "",
-                        String(scannedCode.current),
+                        String(scannedCodeRef.current),
                         pinAuthData?.tsdUUID || "",
                         pallet.info,
                         "yes"
@@ -280,7 +285,7 @@ const Pallet = () => {
                     const response = await addCart(
                       String(pinAuthData?.pinCode),
                       params.sscc || "",
-                      String(scannedCode.current),
+                      String(scannedCodeRef.current),
                       pinAuthData?.tsdUUID || "",
                       pallet.info,
                       "no"

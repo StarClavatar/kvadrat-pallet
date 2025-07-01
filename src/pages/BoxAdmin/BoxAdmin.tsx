@@ -8,6 +8,7 @@ import { PinContext } from "../../context/PinAuthContext";
 import { sendInventoryBoxesToServer } from "../../api/sentInventoryBoxes";
 import DropdownIcon from "../../assets/dropdownIcon";
 import cn from "classnames";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 // Интерфейс для группы кодов
 interface CodeGroup {
   codes: string[];
@@ -91,7 +92,6 @@ const BoxAdmin = () => {
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
     {}
   );
-  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const successAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -165,30 +165,6 @@ const BoxAdmin = () => {
     };
   }, []);
 
-  // Автофокус на поле ввода при загрузке
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, []);
-
-  // Возвращаем фокус на инпут при клике в любое место страницы
-  useEffect(() => {
-    const handleClick = () => {
-      if (inputRef.current && !isLoading) {
-        inputRef.current.focus();
-      }
-    };
-
-    // Добавляем обработчик клика на весь документ
-    document.addEventListener('click', handleClick);
-    
-    // Очищаем обработчик при размонтировании компонента
-    return () => {
-      document.removeEventListener('click', handleClick);
-    };
-  }, [isLoading]);
-
   // Функция для воспроизведения звука без задержки
   const playSound = (isSuccess: boolean) => {
     const audioElement = isSuccess
@@ -212,14 +188,11 @@ const BoxAdmin = () => {
     }
   };
 
-  const handleRealInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    console.log({newValue, newValueLength: newValue.length})
-    setScannedCodes(newValue);
-    e.target.value = "";
+  const handleScan = (scannedCode: string) => {
+    const trimmedCode = scannedCode.trim();
 
-    const trimmedCode = newValue.trim();
     if (trimmedCode && (trimmedCode.length === 38 || trimmedCode.length === 85)) {
+      setScannedCodes(trimmedCode);
       console.log({
         code: trimmedCode,
         currentCellCode: currentCellCode,
@@ -255,9 +228,11 @@ const BoxAdmin = () => {
         playSound(false);
       }
 
-      setScannedCodes("");
+      setTimeout(() => setScannedCodes(""), 300);
     }
-  };
+  }
+
+  useCustomScanner(handleScan, !isLoading)
 
   const handleRemoveCode = (codeToRemove: string) => {
     setCodesList((prev) => prev.filter((code) => code !== codeToRemove));
@@ -282,10 +257,6 @@ const BoxAdmin = () => {
       setCurrentGroupId(newGroupId);
 
       playSound(true);
-
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
     } else {
       alert("Сначала отсканируйте хотя бы один код для текущей группы");
       playSound(false);
@@ -337,10 +308,6 @@ const BoxAdmin = () => {
       );
     } finally {
       setIsLoading(false);
-
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
     }
   };
 
@@ -369,21 +336,9 @@ const BoxAdmin = () => {
         </div>
       )}
 
-      {/* "Реальный" input (скрытый) */}
-      <input
-        ref={inputRef}
-        type="text"
-        inputMode="none"
-        style={{ position: 'absolute', opacity: 0, height: 0, width: 0 }}
-        onChange={handleRealInputChange}
-        autoFocus
-        disabled={isLoading}
-      />
-
       {/* "Фейковый" input (видимый) */}
       <div
         className={styles.scanInput}
-        onClick={() => inputRef.current?.focus()}
       >
         {scannedCodes || <span className={styles.placeholder}>Отсканируйте код...</span>}
       </div>

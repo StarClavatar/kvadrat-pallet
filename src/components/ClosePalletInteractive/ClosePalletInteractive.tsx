@@ -7,7 +7,7 @@ import React, {
 } from "react";
 // import { BarCodeIcon } from "../../assets/barCodeIcon";
 import "./ClosePalletInteractive.css";
-import useScanDetection from "use-scan-detection";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 import scanSuccessSound from "../../assets/scanSuccess.mp3";
 import scanFailedSound from '../../assets/scanFailed.mp3'
 import { deleteCart } from "../../api/deleteCart";
@@ -34,14 +34,13 @@ const ClosePalletInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   const [deleteErrorText, setDeleteErrorText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const failedScanSound = new Audio(scanFailedSound)
-  useScanDetection({
-    onComplete: (code) => {
-      if (isPopupOpened && !errorOccurred) {
-        successScanSound.play();
-        setDeleteBoxValue(code.replace(/[^0-9]/g, ""));
-        setStep(1);
-      }
-    },
+  
+  useCustomScanner((code) => {
+    if (isPopupOpened && !errorOccurred) {
+      successScanSound.play();
+      setDeleteBoxValue(code);
+      setStep(1);
+    }
   });
 
   const { pinAuthData } = useContext(PinContext);
@@ -85,19 +84,7 @@ const ClosePalletInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           step === 2 ? "slide_error" : ""
         }`}
       >
-        {/* <input
-          autoFocus
-          onChange={(e) => setDeleteBoxValue(e.target.value)}
-          value={deleteBoxValue}
-          className="input box-delete__input"
-          type="number"
-          placeholder="Отсканируйте код коробки"
-        />
-        <div className="box-delete__image-wrapper">
-          <BarCodeIcon />
-        </div> */}
-
-        <h2 className=""></h2>
+        <p>Отсканируйте код коробки, которую нужно удалить</p>
         <button
           className="box-delete__next-button"
           disabled={Number(deleteBoxValue) < 1}

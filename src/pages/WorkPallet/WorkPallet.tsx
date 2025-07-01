@@ -14,7 +14,6 @@ import { deleteScan } from "../../api/deleteScan";
 import DeleteDialog from "../../components/DeleteDialog/DeleteDialog";
 import { closePallet } from "../../api/closePallet";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog";
-import { formatDate } from "../../utils/formatDate";
 
 const WorkPallet = () => {
   const { order, setOrder } = useContext(ValueContext);
@@ -255,7 +254,7 @@ const WorkPallet = () => {
             style={getStatusStyles(order.docState)}
           >
             <p className="work-work-pallet-block-status__text">
-              Отгрузка: {formatDate(order.shippingDate)}
+              Отгрузка: {order.shippingDate}
             </p>
              <p className="work-work-pallet-block-status__text">
               {order.customer}

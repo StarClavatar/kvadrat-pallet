@@ -1,7 +1,7 @@
 import React, { Dispatch, useContext, useState, useEffect } from "react";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import "./DeleteBoxInteractive.css";
-import useScanDetection from "use-scan-detection";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 import scanSuccessSound from "../../assets/scanSuccess.mp3";
 import scanFailedSound from "../../assets/scanFailed.mp3";
 import { deleteCart } from "../../api/deleteCart";
@@ -48,62 +48,63 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
     setDeleteErrorText("");
   };
 
-  // Обработка сканирования штрих-кода
-  useScanDetection({
-    onComplete: (code) => {
-      if (isPopupOpened && !errorOccurred) {
-        successScanSound.play();
-        const scannedCode = code.replace(/[^0-9]/g, ""); // Очищаем код от нецифровых символов
-        setValue(scannedCode);
+  const handleScan = (code: string) => {
+    successScanSound.play();
+    setValue(code);
 
-        const fetchScanned = async () => {
-          try {
-            setIsLoading(true);
-            if (type === "pallet") {
-              const response = await deleteCart(
-                String(pinAuthData?.pinCode),
-                String(pinAuthData?.tsdUUID),
-                String(params.sscc),
-                scannedCode
-              );
-              if (!response.error) {
-                setIsLoading(false);
-                setPallet(response);
-                setResponseComment(response.comment || response.info);
-                setStep(1); // Переход на следующий шаг только при успешном ответе
-              } else {
-                setIsLoading(false);
-                setDeleteErrorText(response.error);
-                setErrorOccurred(true);
-              }  
-            } else {
-              const response = await unshipPallet(
-                String(pinAuthData?.pinCode),
-                String(pinAuthData?.tsdUUID),
-                String(params.docId),
-                scannedCode
-              );
-              if (!response.error) {
-                setIsLoading(false);
-                setPallet(response); // Устанавливаем новое состояние паллета
-                setStep(1); // Переход на следующий шаг только при успешном ответе
-              } else {
-                setIsLoading(false);
-                setDeleteErrorText(response.error);
-                setErrorOccurred(true);
-              }
-            }
-            
-          } catch (error) {
+    const fetchScanned = async () => {
+      try {
+        setIsLoading(true);
+        if (type === "pallet") {
+          const response = await deleteCart(
+            String(pinAuthData?.pinCode),
+            String(pinAuthData?.tsdUUID),
+            String(params.sscc),
+            code
+          );
+          if (!response.error) {
             setIsLoading(false);
-            setDeleteErrorText("Ошибка сети, попробуйте снова.");
+            setPallet(response);
+            setResponseComment(response.comment || response.info);
+            setStep(1); // Переход на следующий шаг только при успешном ответе
+          } else {
+            setIsLoading(false);
+            setDeleteErrorText(response.error);
             setErrorOccurred(true);
           }
-        };
-        fetchScanned();
+        } else {
+          const response = await unshipPallet(
+            String(pinAuthData?.pinCode),
+            String(pinAuthData?.tsdUUID),
+            String(params.docId),
+            code
+          );
+          if (!response.error) {
+            setIsLoading(false);
+            setPallet(response); // Устанавливаем новое состояние паллета
+            setStep(1); // Переход на следующий шаг только при успешном ответе
+          } else {
+            setIsLoading(false);
+            setDeleteErrorText(response.error);
+            setErrorOccurred(true);
+          }
+        }
+      } catch (error) {
+        setIsLoading(false);
+        setDeleteErrorText("Ошибка сети, попробуйте снова.");
+        setErrorOccurred(true);
       }
+    };
+    fetchScanned();
+  };
+
+  // Обработка сканирования штрих-кода
+  useCustomScanner(
+    (code) => {
+      handleScan(code);
     },
-  });
+    isPopupOpened && !errorOccurred
+  );
 
   // Обработка кнопки "Завершить"
   const handleDelete = async () => {
@@ -182,63 +183,16 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
           step === 2 ? "slide_error" : ""
         }`}
       >
-        <input
-          onChange={(e) => setValue(e.target.value)}
-          value={value}
-          className="input box-delete__input"
-          type="number"
-          placeholder={`Отсканируйте код ${
+        <p className="delete-box-interactive-prompt">{`Отсканируйте код ${
             type === "pallet" ? "коробки" : "паллеты"
-          } `}
-        />
+          }`}</p>
         <div className="box-delete__image-wrapper">
           <BarCodeIcon />
         </div>
         <button
           className="box-delete__next-button"
           disabled={Number(value) < 1 || loading}
-          onClick={async () => {
-            if (!errorOccurred && value) {
-              setLoading(true);
-              try {
-                if (type === "pallet") {
-                  const response = await deleteCart(
-                    String(pinAuthData?.pinCode),
-                    String(pinAuthData?.tsdUUID),
-                    String(params.sscc),
-                    value
-                  );
-                  if (!response.error) {
-                    setPallet(response);
-                    setStep(1);
-                  } else {
-                    setDeleteErrorText(response.error);
-                    setErrorOccurred(true);
-                  }
-                } else {
-                  const response = await unshipPallet(
-                    String(pinAuthData?.pinCode),
-                    String(pinAuthData?.tsdUUID),
-                    String(params.docId),
-                    value
-                  );
-                  if (!response.error) {
-                    setPallet(response);
-                    setResponseComment(response.comment || response.info);
-                    setStep(1);
-                  } else {
-                    setDeleteErrorText(response.error);
-                    setErrorOccurred(true);
-                  }
-                }
-              } catch (error) {
-                setDeleteErrorText("Ошибка сети, попробуйте снова.");
-                setErrorOccurred(true);
-              } finally {
-                setLoading(false);
-              }
-            }
-          }}
+          onClick={handleDelete}
         >
           {loading ? "Загрузка..." : "Продолжить"}
         </button>

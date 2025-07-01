@@ -5,7 +5,7 @@ import "./NewPallet.css";
 import { useNavigate } from "react-router-dom";
 import { fetchPalletInfo } from "../../api/palletInfo";
 import { PinContext } from "../../context/PinAuthContext";
-import useScanDetection from "use-scan-detection";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 import { ValueContext } from "../../context/valueContext";
 import Popup from "../../components/Popup/Popup";
 
@@ -48,12 +48,9 @@ const NewPallet = () => {
     await handleFormAction(code);
   };
 
-  useScanDetection({
-    onComplete: async (code) => {
-      const normalizedCode = code.replace(/[^0-9]/g, "").toString();
-      await handleFormAction(normalizedCode);
-    },
-  });
+  useCustomScanner(async (code) => {
+    await handleFormAction(code);
+  }, !popupError);
 
   if (popupError) {
     audioError.play();
@@ -89,8 +86,7 @@ const NewPallet = () => {
           placeholder="SSCC-код"
           className="input pallet-form__input"
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
-          onBlur={({ target }) => target.focus()}
+          onChange={(e) => setCode(e.target.value)}
         />
         <button className="pallet-form__send-button" type="submit">
           Отправить

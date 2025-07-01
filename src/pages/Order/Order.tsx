@@ -12,7 +12,6 @@ import Popup from "../../components/Popup/Popup";
 import { closeShipment } from "../../api/closeShipment";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog";
 import { IPallet } from "./types";
-import { formatDate } from "../../utils/formatDate";
 
 const Order = () => {
   const { order, setOrder } = useContext(ValueContext);
@@ -211,7 +210,7 @@ const Order = () => {
             style={getStatusStyles(order.docState)}
           >
             <p className="order-block-status__text">
-              {`Отгрузка: ${formatDate(order.shippingDate)}`}
+              {`Отгрузка: ${order.shippingDate}`}
             </p>
             <p className="order-block-status__text">{order.customer}</p>
           </div>

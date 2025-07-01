@@ -24,7 +24,6 @@ import ViewPallet from "./pages/ViewPallet/ViewPallet";
 import OrderGoods from "./pages/OrderGoods/OrderGoods";
 import EntryPage from "./pages/EntryPage/EntryPage";
 import Root from "./routes/root";
-import Loader from "./components/Loader/Loader.tsx";
 
 const router = createBrowserRouter([
   {
@@ -158,7 +157,7 @@ const router = createBrowserRouter([
       {
         path: "/test",
         element: <ProtectedRoute><TestMode /></ProtectedRoute>
-      },
+      }
     ],
   },
 ]);

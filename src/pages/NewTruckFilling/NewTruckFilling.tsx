@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useScanDetection from "use-scan-detection";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 // import { fetchPalletInfo } from "../../api/palletInfo";
 // import { PinContext } from "../../context/PinAuthContext";
 
@@ -9,17 +9,12 @@ const NewPallet = () => {
   const navigate = useNavigate();
 //   const { pinAuthData } = useContext(PinContext);
 
-  useScanDetection({
-    onComplete: (code) => {
-      const normalizedCode = code.replace(/[^0-9]/g, "").toString();
-      console.log(normalizedCode)
-      const documentID = `Doc_Ogr#${normalizedCode}`
-      setDocID(`Doc_Ogr#${normalizedCode}`);
-      const encodedDocID = encodeURIComponent(documentID);
-      navigate(`/truck-filling/${encodedDocID}`);
-      setDocID("");
-    }
-  })
+  useCustomScanner((code) => {
+    console.log(code)
+    const encodedDocID = encodeURIComponent(code);
+    navigate(`/truck-filling/${encodedDocID}`);
+    setDocID("");
+  });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

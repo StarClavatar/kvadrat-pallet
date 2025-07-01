@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import "./TestMode.css";
@@ -7,7 +7,7 @@ import { useCustomScanner } from "../../hooks/useCustomScanner";
 const TestMode = () => {
   const navigate = useNavigate();
   const [code, setCode] = useState(" ");
-
+  const renderCount = useRef(0);
   const handleScan = (symbol: string) => {
     setCode(symbol);
     console.log("Отсканированный код:", symbol);
@@ -15,9 +15,12 @@ const TestMode = () => {
 
   useCustomScanner(handleScan);
 
+  renderCount.current += 1;
+
   return (
     <div className="test-mode">
       <h2 className="test-mode__heading">TestMode</h2>
+      <span>рендеры: {renderCount.current}</span>
       <p className="test-mode__text">тестим сканирование</p>
       <strong className="test-mode__code">{code.trim() === "" ? "порожняк" : code}</strong>
       <input

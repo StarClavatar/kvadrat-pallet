@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Popup from "../../components/Popup/Popup";
 import DeleteBoxInteractive from "../../components/DeleteBoxInteractive/DeleteBoxInteractive";
 import { PinContext } from "../../context/PinAuthContext";
-import useScanDetection from "use-scan-detection";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 import errorSound from "../../assets/scanFailed.mp3";
 import successSound from "../../assets/scanSuccess.mp3";
 import Loader from "../../components/Loader/Loader";
@@ -14,6 +14,7 @@ import { shipPallet } from "../../api/shipPallet";
 import { closeShipment } from "../../api/palletServiceCloseShipment";
 import { unshipPallet } from "../../api/unshipPallet";
 import { ValueContext } from "../../context/valueContext";
+import BackspaceIcon from "../../assets/backspaceIcon";
 
 const TruckFilling = () => {
   const { pinAuthData } = useContext(PinContext);
@@ -35,15 +36,14 @@ const TruckFilling = () => {
 
   const scannedCode = useRef<string>();
   const handleScan = async (code: string) => {
-    const normalizedCode = code.replace(/[^0-9]/g, "").toString();
-    scannedCode.current = normalizedCode;
+    scannedCode.current = code;
     try {
       setIsLoading(true);
       const response: ITruckInfo = await shipPallet(
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
         String(params.docId),
-        normalizedCode
+        code
       );
 
       if (response.info) {
@@ -66,20 +66,17 @@ const TruckFilling = () => {
     }
   };
 
-  useScanDetection({
-    onComplete: (code) => {
-      if (
-        !showPalletDelete &&
-        !palletDataError &&
-        !closeShipmentPopup &&
-        !InfoTypePopup &&
-        !isLoading && 
-        !isDialogOpen
-      ) {
-        handleScan(String(code));
-      }
+  useCustomScanner(
+    (code) => {
+      handleScan(String(code));
     },
-  });
+    !showPalletDelete &&
+      !palletDataError &&
+      !closeShipmentPopup &&
+      !InfoTypePopup &&
+      !isLoading &&
+      !isDialogOpen
+  );
 
   // const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
   //   setInputValue(e.target.value);
@@ -171,7 +168,7 @@ const TruckFilling = () => {
             className="exit-button"
             onClick={() => navigate("/new-truck-filling")}
           >
-            Выйти
+            <BackspaceIcon/>
           </button>
           <p className="pallet__user">{`${pinAuthData?.position} ${pinAuthData?.workerName}`}</p>
         </div>

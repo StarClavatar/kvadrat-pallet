@@ -4,7 +4,6 @@ import "../Order/Order.css"; // Reuse styles
 import { useNavigate } from "react-router-dom";
 import { PinContext } from "../../context/PinAuthContext";
 import BackspaceIcon from "../../assets/backspaceIcon";
-import { formatDate } from "../../utils/formatDate";
 
 const OrderGoods = () => {
   const { order } = useContext(ValueContext);
@@ -50,7 +49,7 @@ const OrderGoods = () => {
           style={getStatusStyles(order.docState)}
         >
           <p className="order-block-status__text">
-            {`Отгрузка: ${formatDate(order.shippingDate)}`}
+            {`Отгрузка: ${order.shippingDate}`}
           </p>
           <p className="order-block-status__text">{order.customer}</p>
         </div>
@@ -61,31 +60,21 @@ const OrderGoods = () => {
               {order.goods?.map((good, index) => (
                 <div key={index} className="group">
                   <div className="group__name-container">
-                    <p className="group__name" style={{ whiteSpace: "normal" }}>
-                      {good.productName}
-                    </p>
+                    <p className="group__name" style={{whiteSpace: 'normal'}}>{good.productName}</p>
                   </div>
                   <p className="group__count">Серия: {good.produсtSerial}</p>
-                  <p className="group__count group__count_task">
-                    Нужно: {" "}
-                    <strong style={{ color: "#000" }}>
-                      {good.amount && `${good.amount} шт. `}
-                      {good.enclosedInCart && <span className="group__count group__count_enclosed">{` (${good.enclosedInCart} в кор.)`}<br /></span>}
-                      {good.approxCart && <span>{`(${good.approxCart})`}</span>}
-                    </strong>
-                  </p>
                   <p className="group__count">
                     Собрано:{" "}
                     <strong style={{ color: "#275dff" }}>
-                      {`${good.itemsOnCount} шт. (${good.palletOnCount} пал. + ${good.cartsOnCount} кор. + ${good.itemsOnFree} шт.) `}
+                      {good.cartsOnCount} кор. ({good.itemsOnCount} шт.)
                     </strong>
                   </p>
-
-                <div className="group-count-col">
-                    <span>Нужно: {}</span>
-                    
-                </div>
-
+                   <p className="group__count">
+                    Нужно:{" "}
+                    <strong style={{ color: "#000" }}>
+                      {good.approxCart}
+                    </strong>
+                  </p>
                 </div>
               ))}
             </div>
@@ -96,8 +85,8 @@ const OrderGoods = () => {
       <footer className="order-buttons">
         <button
           className="order-button"
-          style={{ gridColumn: "1 / -1" }}
-          onClick={() => navigate("/order")}
+          style={{gridColumn: '1 / -1'}}
+          onClick={() => navigate('/order')}
         >
           Назад к паллетам
         </button>
@@ -106,4 +95,4 @@ const OrderGoods = () => {
   );
 };
 
-export default OrderGoods;
+export default OrderGoods; 

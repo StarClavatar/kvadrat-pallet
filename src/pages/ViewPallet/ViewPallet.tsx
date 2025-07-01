@@ -5,7 +5,6 @@ import { PinContext } from "../../context/PinAuthContext";
 import "../WorkPallet/WorkPallet.css"; // Reuse styles
 import { IPallet } from "../Order/types";
 import BackspaceIcon from "../../assets/backspaceIcon";
-import { formatDate } from "../../utils/formatDate";
 
 const ViewPallet = () => {
   const { order } = useContext(ValueContext);
@@ -59,7 +58,7 @@ const ViewPallet = () => {
             style={getStatusStyles(order.docState)}
           >
             <p className="work-work-pallet-block-status__text">
-              Отгрузка: {formatDate(order.shippingDate)}
+              Отгрузка: {order.shippingDate}
             </p>
              <p className="work-work-pallet-block-status__text">
               {order.customer}

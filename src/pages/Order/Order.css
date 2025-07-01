@@ -88,7 +88,7 @@
 
 .group__name {
   /* font-weight: bold; */
-  margin: 0;
+  margin: 0 0 5px 0;
 }
 
 .group__name-container {
@@ -99,20 +99,9 @@
 
 .group__count {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.9em;
   width: 100%;
   text-align: center;
-}
-
-.group__count_task {
-  font-size: 14px;
-  width: 100%;
-  text-align: center;
-  display: inline;
-}
-
-.group__count_enclosed {
-  font-weight: normal;
 }
 
 .group__count_carts {
@@ -346,6 +335,8 @@
   right: 0;
 }
 
+
+
 @media (max-width: 768px) {
   .order-page {
     padding: 10px;
@@ -372,22 +363,5 @@
     width: 100%;
     padding: 15px;
     font-size: 1.1em;
-  }
-}
-
-@media (max-width: 320px) {
-  .group__count {
-    font-size: 13px; /* Slightly smaller font for small screens */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .group__count-label {
-    margin-bottom: 2px; /* Add some space between label and value */
-  }
-
-  .group__count strong {
-    text-align: center;
   }
 }
