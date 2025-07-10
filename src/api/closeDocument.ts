@@ -6,18 +6,18 @@ export interface ICloseShipmentResponse extends IOrder {
     infoType: "yesNo" | "next" | "";
 }
 
-export const closeShipment = async (
+export const closeDocument = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
   infoType: "yes" | "no" | "" = ""
 ): Promise<ICloseShipmentResponse> => {
-  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/closeShipment`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/closeDocument`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
       pinCode,
       tsdUUID,
       docNum,

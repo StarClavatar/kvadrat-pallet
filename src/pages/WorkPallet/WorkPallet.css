@@ -56,7 +56,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #fff;
+    background-color: khaki;
     font-size: 1.2rem;
     font-weight: bold;
 }
@@ -128,6 +128,7 @@
     padding: 6px;
     /* margin-bottom: 10px; */
     border-radius: 4px;
+    margin-bottom: 6px;
 }
 
 .work-pallet-details-item__name {

@@ -27,6 +27,7 @@ export interface IPallet {
     produсtSerial: string;
     isMono: boolean;
     details: IPalletDetail[];
+    itemsOnFree: number;
 }
 
 export interface IOrder {

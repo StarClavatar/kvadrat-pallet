@@ -1,57 +1,59 @@
 import process from "node:process";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import type { VitePWAOptions } from "vite-plugin-pwa";
 import react from "@vitejs/plugin-react";
 
-const pwaOptions: Partial<VitePWAOptions> = {
-  mode: "development",
-  base: "/",
-  includeAssets: ["*.png", "*.mp3"],
-  includeManifestIcons: true,
-  manifest: {
-    name: "Паллетная Агрегация Квадрат-С",
-    short_name: "Паллетная агрегация",
-    description: "Работа с паллетами сотрудниками склада с помощью ТСД",
-    theme_color: "#ffffff",
-    icons: [
-      {
-        src: "pwa-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        src: "pwa-512x512.png",
-        sizes: "512x512",
-        type: "image/png",
-      },
-      {
-        src: "pwa-512x512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any maskable",
-      },
-    ],
-  },
-  registerType: "prompt",
-  workbox: {
-    clientsClaim: true,
-    skipWaiting: false
-  },
-  injectRegister: 'auto',
-  devOptions: {
-    enabled: process.env.SW_DEV === "true",
-    /* when using generateSW the PWA plugin will switch to classic */
-    type: "module",
-    navigateFallback: "index.html",
-  },
-};
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  base: process.env.BASE_URL || "/",
-  build: {
-    sourcemap: process.env.SOURCE_MAP === "true",
-  },
-  plugins: [react(), VitePWA(pwaOptions)],
+  const pwaOptions: Partial<VitePWAOptions> = {
+    mode: "development",
+    base: "/",
+    includeAssets: ["*.png", "*.mp3"],
+    includeManifestIcons: true,
+    manifest: {
+      name: env.VITE_APP_NAME,
+      short_name: env.VITE_APP_SHORT_NAME,
+      description: "Работа с паллетами сотрудниками склада с помощью ТСД",
+      theme_color: "#ffffff",
+      icons: [
+        {
+          src: "pwa-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "pwa-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+        },
+        {
+          src: "pwa-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable",
+        },
+      ],
+    },
+    registerType: "prompt",
+    workbox: {
+      clientsClaim: true,
+      skipWaiting: false,
+    },
+    injectRegister: "auto",
+    devOptions: {
+      enabled: env.SW_DEV === "true",
+      type: "module",
+      navigateFallback: "index.html",
+    },
+  };
+
+  return {
+    base: "/",
+    build: {
+      sourcemap: env.SOURCE_MAP === "true",
+    },
+    plugins: [react(), VitePWA(pwaOptions)],
+  };
 });

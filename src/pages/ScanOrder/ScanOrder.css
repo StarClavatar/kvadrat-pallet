@@ -46,6 +46,13 @@
   color: lightgray;
 }
 
+.create-pallet-link {
+  color: #fff;
+  text-decoration: underline;
+  font-weight: bold;
+  color: #4958ff;
+}
+
 .form__send-button {
   max-width: 80%;
   background-color: rgba(0, 0, 0, 0.2);

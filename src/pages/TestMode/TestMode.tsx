@@ -13,7 +13,7 @@ const TestMode = () => {
     console.log("Отсканированный код:", symbol);
   };
 
-  useCustomScanner(handleScan);
+  useCustomScanner(handleScan, true, true);
 
   renderCount.current += 1;
 

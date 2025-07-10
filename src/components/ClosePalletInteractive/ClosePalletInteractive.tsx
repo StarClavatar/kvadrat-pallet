@@ -36,11 +36,11 @@ const ClosePalletInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   const failedScanSound = new Audio(scanFailedSound)
   
   useCustomScanner((code) => {
-    if (isPopupOpened && !errorOccurred) {
-      successScanSound.play();
+      if (isPopupOpened && !errorOccurred) {
+        successScanSound.play();
       setDeleteBoxValue(code);
-      setStep(1);
-    }
+        setStep(1);
+      }
   });
 
   const { pinAuthData } = useContext(PinContext);

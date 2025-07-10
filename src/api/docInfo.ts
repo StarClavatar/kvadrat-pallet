@@ -1,3 +1,5 @@
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 export const fetchDocInfo = async (
   pinCode: string,
   docNum: string,
@@ -5,7 +7,7 @@ export const fetchDocInfo = async (
 ) => {
   try {
     const response = await fetch(
-      "https://markbaddev.kvadrat-c.org/mark_bad_dev/hs/orderservice/docinfo",
+      `${BASE_URL}/orderservice/docinfo`,
       {
         method: "POST",
         headers: {

@@ -49,53 +49,53 @@ const DeleteBoxInteractive: React.FC<DeleteBoxInteractiveProps> = ({
   };
 
   const handleScan = (code: string) => {
-    successScanSound.play();
+        successScanSound.play();
     setValue(code);
 
-    const fetchScanned = async () => {
-      try {
-        setIsLoading(true);
-        if (type === "pallet") {
-          const response = await deleteCart(
-            String(pinAuthData?.pinCode),
-            String(pinAuthData?.tsdUUID),
-            String(params.sscc),
+        const fetchScanned = async () => {
+          try {
+            setIsLoading(true);
+            if (type === "pallet") {
+              const response = await deleteCart(
+                String(pinAuthData?.pinCode),
+                String(pinAuthData?.tsdUUID),
+                String(params.sscc),
             code
-          );
-          if (!response.error) {
+              );
+              if (!response.error) {
+                setIsLoading(false);
+                setPallet(response);
+                setResponseComment(response.comment || response.info);
+                setStep(1); // Переход на следующий шаг только при успешном ответе
+              } else {
+                setIsLoading(false);
+                setDeleteErrorText(response.error);
+                setErrorOccurred(true);
+              }  
+            } else {
+              const response = await unshipPallet(
+                String(pinAuthData?.pinCode),
+                String(pinAuthData?.tsdUUID),
+                String(params.docId),
+            code
+              );
+              if (!response.error) {
+                setIsLoading(false);
+                setPallet(response); // Устанавливаем новое состояние паллета
+                setStep(1); // Переход на следующий шаг только при успешном ответе
+              } else {
+                setIsLoading(false);
+                setDeleteErrorText(response.error);
+                setErrorOccurred(true);
+              }
+            }
+          } catch (error) {
             setIsLoading(false);
-            setPallet(response);
-            setResponseComment(response.comment || response.info);
-            setStep(1); // Переход на следующий шаг только при успешном ответе
-          } else {
-            setIsLoading(false);
-            setDeleteErrorText(response.error);
+            setDeleteErrorText("Ошибка сети, попробуйте снова.");
             setErrorOccurred(true);
           }
-        } else {
-          const response = await unshipPallet(
-            String(pinAuthData?.pinCode),
-            String(pinAuthData?.tsdUUID),
-            String(params.docId),
-            code
-          );
-          if (!response.error) {
-            setIsLoading(false);
-            setPallet(response); // Устанавливаем новое состояние паллета
-            setStep(1); // Переход на следующий шаг только при успешном ответе
-          } else {
-            setIsLoading(false);
-            setDeleteErrorText(response.error);
-            setErrorOccurred(true);
-          }
-        }
-      } catch (error) {
-        setIsLoading(false);
-        setDeleteErrorText("Ошибка сети, попробуйте снова.");
-        setErrorOccurred(true);
-      }
-    };
-    fetchScanned();
+        };
+        fetchScanned();
   };
 
   // Обработка сканирования штрих-кода

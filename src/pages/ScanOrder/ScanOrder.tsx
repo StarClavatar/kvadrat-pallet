@@ -16,6 +16,7 @@ const ScanOrder = () => {
   const [code, setCode] = useState<string>("");
   const navigate = useNavigate();
   const { pinAuthData } = useContext(PinContext);
+  const { isLoading, setIsLoading } = useContext(ValueContext);
   const [popupError, setPopupError] = useState<boolean>(false);
   const [popupErrorText, setPopupErrorText] = useState<string>("");
 
@@ -24,7 +25,11 @@ const ScanOrder = () => {
 
   const handleFormAction = async (code: string) => {
     setCode(code);
-    if (popupError) return;
+    setIsLoading(true);
+    if (popupError) {
+      setIsLoading(false);
+      return;
+    }
     if (code?.length > 0) {
       const response = await fetchDocInfo(
         String(pinAuthData?.pinCode),
@@ -37,19 +42,24 @@ const ScanOrder = () => {
         setOrder(response);
         navigate(`/order`);
         setCode("");
+        setIsLoading(false);
       } else {
         setPopupErrorText(response.error);
         setPopupError(true);
         setCode("");
+        setIsLoading(false);
       }
     }
   };
   const handleSubmit = async (symbol: string) => {
+    setIsLoading(true);
     setCode(symbol);
-    await handleFormAction(symbol);
+    await handleFormAction(symbol).finally(() => {
+      setIsLoading(false);
+    });
   };
 
-  useCustomScanner(handleFormAction);
+  useCustomScanner(handleFormAction, !isLoading && !popupError);
 
   if (popupError) {
     audioError.play();
@@ -86,6 +96,7 @@ const ScanOrder = () => {
         value={code}
         onChange={(e) => setCode(e.target.value)}
       />
+
       <button className="form__send-button" onClick={() => handleSubmit(code)}>
         Отправить
       </button>

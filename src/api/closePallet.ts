@@ -8,23 +8,23 @@ export interface IClosePalletResponse extends IOrder {
 
 export const closePallet = async (
   pinCode: string,
-  tsdUUID: string,
+    tsdUUID: string,
   docNum: string,
   palletNum: string,
   infoType: "yes" | "no" | "" = ""
 ): Promise<IClosePalletResponse> => {
   const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/closePallet`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
       pinCode,
       tsdUUID,
       docNum,
       palletNum,
       infoType,
-    }),
+        }),
   });
 
   if (!response.ok) {
@@ -32,6 +32,6 @@ export const closePallet = async (
     return Promise.reject(error?.error || "Неизвестная ошибка при закрытии паллеты");
   }
 
-  return response.json();
-};
+    return response.json();
+  };
   

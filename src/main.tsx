@@ -30,118 +30,118 @@ const router = createBrowserRouter([
     path: "/",
     element: <Root />,
     children: [
-      {
-        path: "/",
-        element: <App />,
-      },
-      {
-        path: "/workmode",
-        element: (
-          <ProtectedRoute>
-            <Workmode />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/new-pallet",
-        element: (
-          <ProtectedRoute>
-            <NewPallet />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/pallet/:sscc",
-        element: (
-          <ProtectedRoute>
-            <Pallet />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/new-truck-filling",
-        element: (
-          <ProtectedRoute>
-            <NewTruckFilling />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/truck-filling/:docId",
-        element: (
-          <ProtectedRoute>
-            <TruckFilling />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/scan-cell",
-        element: (
-          <ProtectedRoute>
-            <ScanCell />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/cell/:cellCode",
-        element: (
-          <ProtectedRoute>
-            <BoxAdmin />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/box-admin",
-        element: (
-          <ProtectedRoute>
-            <BoxAdmin />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/scan-order",
-        element: (
-          <ProtectedRoute>
-            <ScanOrder />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/order",
-        element: (
-          <ProtectedRoute>
-            <Order />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/pallet-details/:palletId",
-        element: (
-          <ProtectedRoute>
-            <PalletDetails />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/scan-pallet",
-        element: (
-          <ProtectedRoute>
-            <ScanPallet />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/work-pallet/:palletId",
+  {
+    path: "/",
+    element: <App />,
+  },
+  {
+    path: "/workmode",
+    element: (
+      <ProtectedRoute>
+        <Workmode />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/new-pallet",
+    element: (
+      <ProtectedRoute>
+        <NewPallet />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/pallet/:sscc",
+    element: (
+      <ProtectedRoute>
+        <Pallet />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/new-truck-filling",
+    element: (
+      <ProtectedRoute>
+        <NewTruckFilling />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/truck-filling/:docId",
+    element: (
+      <ProtectedRoute>
+        <TruckFilling />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/scan-cell",
+    element: (
+      <ProtectedRoute>
+        <ScanCell />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/cell/:cellCode",
+    element: (
+      <ProtectedRoute>
+        <BoxAdmin />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/box-admin",
+    element: (
+      <ProtectedRoute>
+        <BoxAdmin />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/scan-order",
+    element: (
+      <ProtectedRoute>
+        <ScanOrder />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/order",
+    element: (
+      <ProtectedRoute>
+        <Order />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/pallet-details/:palletId",
+    element: (
+      <ProtectedRoute>
+        <PalletDetails />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/scan-pallet",
+    element: (
+      <ProtectedRoute>
+        <ScanPallet />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/work-pallet/:palletId",
         element: <ProtectedRoute><WorkPallet /></ProtectedRoute>,
-      },
-      {
-        path: "/test-mode",
-        element: (
-          <ProtectedRoute>
-            <TestMode />
-          </ProtectedRoute>
-        ),
-      },
+  },
+  {
+    path: "/test-mode",
+    element: (
+      <ProtectedRoute>
+        <TestMode />
+      </ProtectedRoute>
+    ),
+  },
       {
         path: "/view-pallet/:palletId",
         element: <ProtectedRoute><ViewPallet /></ProtectedRoute>,

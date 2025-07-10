@@ -9,9 +9,10 @@ import { deletePallet } from "../../api/deletePallet";
 import successSound from "../../assets/scanSuccess.mp3";
 import errorSound from "../../assets/scanFailed.mp3";
 import Popup from "../../components/Popup/Popup";
-import { closeShipment } from "../../api/closeShipment";
+import { closeDocument } from "../../api/closeDocument";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog";
 import { IPallet } from "./types";
+import { formatDate } from "../../utils/formatDate";
 
 const Order = () => {
   const { order, setOrder } = useContext(ValueContext);
@@ -23,11 +24,14 @@ const Order = () => {
   const [popupErrorText, setPopupErrorText] = useState<string>("");
   const [popupSuccess, setPopupSuccess] = useState<boolean>(false);
   const [popupSuccessText, setPopupSuccessText] = useState<string>("");
-  const [confirmation, setConfirmation] = useState<{info: string, infoType: 'yesNo' | 'next' | ''} | null>(null);
+  const [confirmation, setConfirmation] = useState<{
+    info: string;
+    infoType: "yesNo" | "next" | "";
+  } | null>(null);
 
   const successAudio = new Audio(successSound);
   const errorAudio = new Audio(errorSound);
-  
+
   const getStatusStyles = (status: string) => {
     switch (status) {
       case "в работе":
@@ -44,93 +48,82 @@ const Order = () => {
   };
 
   const handlePalletClick = (pallet: IPallet) => {
-    // if (pallet.isClosed) {
-      navigate(`/view-pallet/${pallet.palletNum}`);
-    // } else {
-    //   navigate(`/work-pallet/${pallet.palletNum}`);
-    // }
+    navigate(`/view-pallet/${pallet.palletNum}`);
   };
 
   const handleDeletePallet = async (scannedCode: string) => {
-    setIsDeletingPallet(false); // Close dialog
+    setIsDeletingPallet(false);
     try {
-        const docNumForRequest = order.docNum.startsWith("00")
-            ? order.docNum.substring(2)
-            : order.docNum;
+      const response = await deletePallet(
+        String(pinAuthData?.pinCode),
+        String(localStorage.getItem("tsdUUID")),
+        order.docNum,
+        scannedCode
+      );
 
-        const response = await deletePallet(
-            String(pinAuthData?.pinCode),
-            String(localStorage.getItem("tsdUUID")),
-            docNumForRequest,
-            scannedCode // The scanned pallet number
-        );
-
-        if (!response.error) {
-            successAudio.play();
-            setOrder(response);
-            setPopupSuccessText("Паллета успешно удалена.");
-            setPopupSuccess(true);
-        } else {
-            errorAudio.play();
-            setPopupErrorText(response.error);
-            setPopupError(true);
-        }
-    } catch (err) {
+      if (!response.error) {
+        successAudio.play();
+        setOrder(response);
+        setPopupSuccessText("Паллета успешно удалена.");
+        setPopupSuccess(true);
+      } else {
         errorAudio.play();
-        setPopupErrorText(String(err));
+        setPopupErrorText(response.error);
         setPopupError(true);
+      }
+    } catch (err) {
+      errorAudio.play();
+      setPopupErrorText(String(err));
+      setPopupError(true);
     }
   };
 
   const handleCloseShipmentClick = async () => {
     try {
-        const docNumForRequest = order.docNum.startsWith("00")
-            ? order.docNum.substring(2)
-            : order.docNum;
+      const response = await closeDocument(
+        String(pinAuthData?.pinCode),
+        String(localStorage.getItem("tsdUUID")),
+        order.docNum
+      );
 
-        const response = await closeShipment(
-            String(pinAuthData?.pinCode),
-            String(localStorage.getItem("tsdUUID")),
-            docNumForRequest
-        );
-
-        if (response.error) {
-            setPopupErrorText(response.error);
-            setPopupError(true);
-        } else if (response.infoType) {
-            setConfirmation({ info: response.info, infoType: response.infoType });
-        } else {
-            successAudio.play();
-            setOrder(response);
-        }
-    } catch (err) {
-        setPopupErrorText(String(err));
+      if (response.error) {
+        setPopupErrorText(response.error);
         setPopupError(true);
+      } else if (response.infoType) {
+        setConfirmation({ info: response.info, infoType: response.infoType });
+      } else {
+        successAudio.play();
+        setOrder(response);
+      }
+    } catch (err) {
+      setPopupErrorText(String(err));
+      setPopupError(true);
     }
   };
 
   const onConfirmCloseShipment = async (confirmType: "yes" | "no") => {
     setConfirmation(null);
     try {
-        const docNumForRequest = order.docNum.startsWith("00") ? order.docNum.substring(2) : order.docNum;
-        
-        const response = await closeShipment(
-            String(pinAuthData?.pinCode),
-            String(localStorage.getItem("tsdUUID")),
-            docNumForRequest,
-            confirmType
-        );
+      const response = await closeDocument(
+        String(pinAuthData?.pinCode),
+        String(localStorage.getItem("tsdUUID")),
+        order.docNum,
+        confirmType
+      );
 
-        if (response.error) {
-            setPopupErrorText(response.error);
-            setPopupError(true);
-        } else {
-            successAudio.play();
-            setOrder(response);
-        }
-    } catch (err) {
-        setPopupErrorText(String(err));
+      if (response.error) {
+        setPopupErrorText(response.error);
         setPopupError(true);
+      } else {
+        successAudio.play();
+        setOrder(response);
+        if (confirmType === "yes") {
+          navigate("/scan-order");
+        }
+      }
+    } catch (err) {
+      setPopupErrorText(String(err));
+      setPopupError(true);
     }
   };
 
@@ -144,14 +137,14 @@ const Order = () => {
         prompt="Отсканируйте ШК паллеты для удаления."
       />
       {confirmation && (
-          <ConfirmationDialog
-              isOpen={!!confirmation}
-              onClose={() => setConfirmation(null)}
-              info={confirmation.info}
-              infoType={confirmation.infoType}
-              onConfirm={() => onConfirmCloseShipment("yes")}
-              onCancel={() => onConfirmCloseShipment("no")}
-          />
+        <ConfirmationDialog
+          isOpen={!!confirmation}
+          onClose={() => setConfirmation(null)}
+          info={confirmation.info}
+          infoType={confirmation.infoType}
+          onConfirm={() => onConfirmCloseShipment("yes")}
+          onCancel={() => onConfirmCloseShipment("no")}
+        />
       )}
       <Popup
         isOpen={popupError}
@@ -184,18 +177,24 @@ const Order = () => {
           </button>
         </div>
       </Popup>
-      
+
       <div className="order">
         <div className="order-info">
           <div className="order-user">
-            <button className="exit-button" onClick={() => navigate("/workmode")}>
+            <button
+              className="exit-button"
+              onClick={() => navigate("/workmode")}
+            >
               <BackspaceIcon color="#ffffff" />
             </button>
             <p className="pallet__user">{`${pinAuthData?.position} ${pinAuthData?.workerName}`}</p>
           </div>
 
           <header className="order-block order-block-about">
-            <button className="order-text-button" onClick={() => navigate('/order-goods')}>
+            <button
+              className="order-text-button"
+              onClick={() => navigate("/order-goods")}
+            >
               <span className="order-text">Заказ № {order.docNum}</span>
             </button>
             <span
@@ -209,10 +208,10 @@ const Order = () => {
             className="order-block order-block-status"
             style={getStatusStyles(order.docState)}
           >
-            <p className="order-block-status__text">
-              {`Отгрузка: ${order.shippingDate}`}
-            </p>
             <p className="order-block-status__text">{order.customer}</p>
+            <p className="order-block-status__text">
+              {`Отгрузка: ${formatDate(order.shippingDate)}`}
+            </p>
           </div>
 
           <main className="order-main order-block-boxes">
@@ -221,22 +220,24 @@ const Order = () => {
                 {order.pallets.map((pallet) => (
                   <div
                     key={pallet.palletNum}
-                    className={`group ${pallet.isClosed && 'pallet-closed'} ${pallet.isMono && 'pallet-mono'}`}
+                    className={`group ${pallet.isClosed && "pallet-closed"} ${
+                      pallet.isMono && "pallet-mono"
+                    }`}
                     onClick={() => handlePalletClick(pallet)}
                   >
                     <div className="group__name-container">
                       <p className="group__name">{pallet.palletNum}</p>
-                      <p className="group__name">{pallet.isClosed ? "Закрыта" : "В работе"}</p>
+                      <p className="group__name">
+                        {pallet.isClosed ? "Закрыта" : "В работе"}
+                      </p>
                     </div>
                     <p className="group__count">{pallet.productName}</p>
                     <p className="group__count">
                       собрано:{" "}
-                      <strong
-                        style={{ color: "#275dff" }}
-                      >
+                      <strong style={{ color: "#275dff" }}>
                         {pallet.cartsOnPallet} кор.{" "}
                       </strong>{" "}
-                      ({pallet.itemsOnPallet} шт.)
+                      ({pallet.itemsOnPallet} шт. + {pallet.itemsOnFree} шт.)
                     </p>
                   </div>
                 ))}

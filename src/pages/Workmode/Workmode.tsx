@@ -6,6 +6,7 @@ import { PinContext } from "../../context/PinAuthContext";
 const Workmode = () => {
   const {pinAuthData, setPinAuthData} = useContext(PinContext)
   console.log(pinAuthData, "🖕🖕")
+
   return (
     <div className="workmode">
         <p className="workmode__employee">{pinAuthData?.workerName}</p>

@@ -14,6 +14,7 @@ import { deleteScan } from "../../api/deleteScan";
 import DeleteDialog from "../../components/DeleteDialog/DeleteDialog";
 import { closePallet } from "../../api/closePallet";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog";
+import { formatDate } from "../../utils/formatDate";
 
 const WorkPallet = () => {
   const { order, setOrder } = useContext(ValueContext);
@@ -61,13 +62,11 @@ const WorkPallet = () => {
 
   const handleScan = async (scannedCode: string) => {
     try {
-      const docNumForRequest = order.docNum.startsWith("00")
-        ? order.docNum.substring(2)
-        : order.docNum;
+      
       const response = await addScan(
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
-        docNumForRequest,
+        order.docNum,
         palletId!,
         scannedCode
       );
@@ -90,13 +89,10 @@ const WorkPallet = () => {
   const handleDeleteScan = async (scannedCode: string) => {
     setIsDeletingScan(false); // Close dialog immediately
     try {
-        const docNumForRequest = order.docNum.startsWith("00")
-            ? order.docNum.substring(2)
-            : order.docNum;
         const response = await deleteScan(
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
-            docNumForRequest,
+            order.docNum,
             palletId!,
             scannedCode
         );
@@ -121,14 +117,10 @@ const WorkPallet = () => {
 
   const handleClosePalletClick = async () => {
     try {
-        const docNumForRequest = order.docNum.startsWith("00")
-            ? order.docNum.substring(2)
-            : order.docNum;
-
         const response = await closePallet(
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
-            docNumForRequest,
+            order.docNum,
             palletId!
         );
 
@@ -150,12 +142,12 @@ const WorkPallet = () => {
   const onConfirmClosePallet = async (confirmType: "yes" | "no") => {
     setConfirmation(null);
     try {
-        const docNumForRequest = order.docNum.startsWith("00") ? order.docNum.substring(2) : order.docNum;
+        
         
         const response = await closePallet(
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
-            docNumForRequest,
+            order.docNum,
             palletId!,
             confirmType
         );
@@ -166,6 +158,9 @@ const WorkPallet = () => {
         } else {
             successAudio.play();
             setOrder(response);
+            if (confirmType === "yes") {
+                navigate("/order");
+            }
         }
     } catch (err) {
         setPopupErrorText(String(err));
@@ -253,11 +248,11 @@ const WorkPallet = () => {
             className="work-work-pallet-block work-work-pallet-block-status"
             style={getStatusStyles(order.docState)}
           >
-            <p className="work-work-pallet-block-status__text">
-              Отгрузка: {order.shippingDate}
-            </p>
              <p className="work-work-pallet-block-status__text">
               {order.customer}
+            </p>
+            <p className="work-work-pallet-block-status__text">
+              Отгрузка: {formatDate(order.shippingDate)}
             </p>
           </div>
 

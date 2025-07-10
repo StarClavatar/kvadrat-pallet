@@ -4,6 +4,7 @@ import "../Order/Order.css"; // Reuse styles
 import { useNavigate } from "react-router-dom";
 import { PinContext } from "../../context/PinAuthContext";
 import BackspaceIcon from "../../assets/backspaceIcon";
+import { formatDate } from "../../utils/formatDate";
 
 const OrderGoods = () => {
   const { order } = useContext(ValueContext);
@@ -24,6 +25,8 @@ const OrderGoods = () => {
         return {};
     }
   };
+
+  console.log(order.goods[0].produсtSerial.split(' до ')[0]);
 
   return (
     <div className="order">
@@ -48,10 +51,10 @@ const OrderGoods = () => {
           className="order-block order-block-status"
           style={getStatusStyles(order.docState)}
         >
-          <p className="order-block-status__text">
-            {`Отгрузка: ${order.shippingDate}`}
-          </p>
           <p className="order-block-status__text">{order.customer}</p>
+          <p className="order-block-status__text">
+            {`Отгрузка: ${formatDate(order.shippingDate)}`}
+          </p>
         </div>
 
         <main className="order-main order-block-boxes">
@@ -62,18 +65,25 @@ const OrderGoods = () => {
                   <div className="group__name-container">
                     <p className="group__name" style={{whiteSpace: 'normal'}}>{good.productName}</p>
                   </div>
-                  <p className="group__count">Серия: {good.produсtSerial}</p>
+                  <p className="group__count group__count_serial">Серия: {good.produсtSerial.split(' до ')[0]}</p>
                   <p className="group__count">
                     Собрано:{" "}
+                    {/* {good.palletOnCount ? `${good.palletOnCount} палл. ` : ''} */}
                     <strong style={{ color: "#275dff" }}>
-                      {good.cartsOnCount} кор. ({good.itemsOnCount} шт.)
+                      {good.itemsOnCount} шт.
+                       <br />
+                       {`${good.palletOnCount ? `${good.palletOnCount} пал. ` : ''} ${good.cartsOnCount ? `${good.cartsOnCount} кор. ` : ''} ${good.itemsOnFree ? `+(${good.itemsOnFree} шт.)` : ''}`}
                     </strong>
                   </p>
+                  {/* <p className="group__count">
+                    Всего шт: {good.amount}
+                  </p> */}
                    <p className="group__count">
                     Нужно:{" "}
                     <strong style={{ color: "#000" }}>
-                      {good.approxCart}
+                      {good.amount} шт. ({good.approxCart})
                     </strong>
+                    
                   </p>
                 </div>
               ))}

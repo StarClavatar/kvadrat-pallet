@@ -91,7 +91,8 @@ const Pallet = () => {
       !palletDataError &&
       !isLoading &&
       !isDialogOpen &&
-      !closePalletPopup
+      !closePalletPopup,
+      true
   );
 
   function sumCartsOnCount(pallet: TPallet): number {
