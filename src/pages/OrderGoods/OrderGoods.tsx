@@ -26,7 +26,7 @@ const OrderGoods = () => {
     }
   };
 
-  console.log(order.goods[0].produсtSerial.split(' до ')[0]);
+  console.log(order.goods[0].produсtSerial.split(" до ")[0]);
 
   return (
     <div className="order">
@@ -63,27 +63,33 @@ const OrderGoods = () => {
               {order.goods?.map((good, index) => (
                 <div key={index} className="group">
                   <div className="group__name-container">
-                    <p className="group__name" style={{whiteSpace: 'normal'}}>{good.productName}</p>
+                    <p className="group__name" style={{ whiteSpace: "normal" }}>
+                      {good.productName}
+                    </p>
                   </div>
-                  <p className="group__count group__count_serial">Серия: {good.produсtSerial.split(' до ')[0]}</p>
+                  <p className="group__count group__count_serial">
+                    Серия: {good.produсtSerial.split(" до ")[0]}
+                  </p>
+                  {/* <p className="group__count">
+                    Всего шт: {good.amount}
+                  </p> */}
+                  <p className="group__count">
+                    Нужно:{" "}
+                    <strong style={{ color: "#000" }}>
+                      {good.amount} шт. ({good.approxCart})
+                    </strong>
+                  </p>
                   <p className="group__count">
                     Собрано:{" "}
                     {/* {good.palletOnCount ? `${good.palletOnCount} палл. ` : ''} */}
                     <strong style={{ color: "#275dff" }}>
                       {good.itemsOnCount} шт.
-                       <br />
-                       {`${good.palletOnCount ? `${good.palletOnCount} пал. ` : ''} ${good.cartsOnCount ? `${good.cartsOnCount} кор. ` : ''} ${good.itemsOnFree ? `+(${good.itemsOnFree} шт.)` : ''}`}
+                      {`${
+                        good.palletOnCount ? `${good.palletOnCount} пал. ` : ""
+                      } (${
+                        good.cartsOnCount ? `${good.cartsOnCount} кор. ` : ""
+                      } ${good.itemsOnFree ? `+${good.itemsOnFree} шт.` : ""})`}
                     </strong>
-                  </p>
-                  {/* <p className="group__count">
-                    Всего шт: {good.amount}
-                  </p> */}
-                   <p className="group__count">
-                    Нужно:{" "}
-                    <strong style={{ color: "#000" }}>
-                      {good.amount} шт. ({good.approxCart})
-                    </strong>
-                    
                   </p>
                 </div>
               ))}
@@ -95,8 +101,8 @@ const OrderGoods = () => {
       <footer className="order-buttons">
         <button
           className="order-button"
-          style={{gridColumn: '1 / -1'}}
-          onClick={() => navigate('/order')}
+          style={{ gridColumn: "1 / -1" }}
+          onClick={() => navigate("/order")}
         >
           Назад к паллетам
         </button>
@@ -105,4 +111,4 @@ const OrderGoods = () => {
   );
 };
 
-export default OrderGoods; 
+export default OrderGoods;

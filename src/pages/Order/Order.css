@@ -1,3 +1,4 @@
+
 .order-page {
   padding: 20px;
   font-family: sans-serif;
@@ -83,8 +84,14 @@
 }
 
 .pallet-mono {
-  background-color: rgba(187, 216, 250, 0.78);
+  background-color: rgba(187, 216, 250, 0.78)!important;
 }
+
+.pallet-closed {
+  background-color: rgba(255, 255, 255, 0.5);
+
+}
+
 
 .group__name {
   /* font-weight: bold; */
@@ -101,7 +108,7 @@
   margin: 0;
   font-size: 0.9em;
   width: 100%;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .group__count_carts {
@@ -109,6 +116,10 @@
   font-weight: bold;
   color: #007bff;
   text-align: right;
+}
+
+.group__count_serial {
+  text-align: center;
 }
 
 /* Inherited styles from Pallet.css for consistency */

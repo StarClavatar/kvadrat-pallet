@@ -106,6 +106,13 @@ const ScanOrder = () => {
       >
         <BackspaceIcon color="#fff" />
       </button>
+      <button
+        className="exit-button_new-pallet"
+        onClick={() => navigate("/workmode")}
+      >
+        Выбор режима работы
+      </button>
+      <div></div>
     </div>
   );
 };

@@ -206,7 +206,9 @@ const Order = () => {
           </header>
           <div
             className="order-block order-block-status"
-            style={getStatusStyles(order.docState)}
+            style={getStatusStyles(
+              order.docState
+            )}
           >
             <p className="order-block-status__text">{order.customer}</p>
             <p className="order-block-status__text">
@@ -222,7 +224,7 @@ const Order = () => {
                     key={pallet.palletNum}
                     className={`group ${pallet.isClosed && "pallet-closed"} ${
                       pallet.isMono && "pallet-mono"
-                    }`}
+                    } ${pallet.isClosed && "pallet-closed"}`}
                     onClick={() => handlePalletClick(pallet)}
                   >
                     <div className="group__name-container">
@@ -233,11 +235,10 @@ const Order = () => {
                     </div>
                     <p className="group__count">{pallet.productName}</p>
                     <p className="group__count">
-                      собрано:{" "}
+                      собрано: {pallet.itemsOnPallet} шт. {" "}
                       <strong style={{ color: "#275dff" }}>
-                        {pallet.cartsOnPallet} кор.{" "}
+                        ({pallet.cartsOnPallet} кор. + {pallet.itemsOnFree} шт.)
                       </strong>{" "}
-                      ({pallet.itemsOnPallet} шт. + {pallet.itemsOnFree} шт.)
                     </p>
                   </div>
                 ))}

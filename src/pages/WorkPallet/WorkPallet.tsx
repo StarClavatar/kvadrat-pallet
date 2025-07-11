@@ -17,7 +17,7 @@ import ConfirmationDialog from "../../components/ConfirmationDialog/Confirmation
 import { formatDate } from "../../utils/formatDate";
 
 const WorkPallet = () => {
-  const { order, setOrder } = useContext(ValueContext);
+  const { order, setOrder, setIsLoading } = useContext(ValueContext);
   const { pinAuthData } = useContext(PinContext);
   const { palletId } = useParams<{ palletId: string }>();
   const navigate = useNavigate();
@@ -61,8 +61,8 @@ const WorkPallet = () => {
   };
 
   const handleScan = async (scannedCode: string) => {
+    setIsLoading(true);
     try {
-      
       const response = await addScan(
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
@@ -83,11 +83,14 @@ const WorkPallet = () => {
       errorAudio.play();
       setPopupErrorText("Ошибка " + err);
       setPopupError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteScan = async (scannedCode: string) => {
-    setIsDeletingScan(false); // Close dialog immediately
+    setIsDeletingScan(false);
+    setIsLoading(true);
     try {
         const response = await deleteScan(
             String(pinAuthData?.pinCode),
@@ -101,8 +104,6 @@ const WorkPallet = () => {
             setOrder(response);
             setPopupSuccessText("Товар успешно удален. Не забудьте убрать его с паллеты.");
             setPopupSuccess(true);
-            // setTimeout(() => setPopupSuccess(false), 5000); 
-            // setPopupSuccess(false); 
         } else {
             errorAudio.play();
             setPopupErrorText(response.error);
@@ -112,6 +113,8 @@ const WorkPallet = () => {
         errorAudio.play();
         setPopupErrorText(String(err));
         setPopupError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,8 +145,6 @@ const WorkPallet = () => {
   const onConfirmClosePallet = async (confirmType: "yes" | "no") => {
     setConfirmation(null);
     try {
-        
-        
         const response = await closePallet(
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
@@ -157,10 +158,11 @@ const WorkPallet = () => {
             setPopupError(true);
         } else {
             successAudio.play();
-            setOrder(response);
             if (confirmType === "yes") {
-                navigate("/order");
-            }
+              console.log("navigate to order");
+              navigate("/order");
+          }
+            setOrder(response);
         }
     } catch (err) {
         setPopupErrorText(String(err));
@@ -278,7 +280,7 @@ const WorkPallet = () => {
                     </p>
                   </div>
                   <div className="work-pallet-details-item__counts">
-                    <p className="work-pallet-details-item__count_main"><strong>{item.cartsOnCount} кор. </strong> ({item.itemsOnCount} шт.)</p>
+                    <p className="work-pallet-details-item__count_main"><strong style={{}}>{item.cartsOnCount} кор. </strong> ({item.itemsOnCount} шт.)</p>
                     <p className="work-pallet-details-item__count_additional">+{item.itemsOnFree}шт.</p>
                   </div>
                 </div>
