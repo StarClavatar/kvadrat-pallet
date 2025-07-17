@@ -18,7 +18,6 @@ const Order = () => {
   const { order, setOrder } = useContext(ValueContext);
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
-
   const [isDeletingPallet, setIsDeletingPallet] = useState(false);
   const [popupError, setPopupError] = useState<boolean>(false);
   const [popupErrorText, setPopupErrorText] = useState<string>("");
