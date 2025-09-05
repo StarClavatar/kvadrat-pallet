@@ -15,6 +15,7 @@ export type TPinAuthData = {
         makePallets: boolean;
         shipment: boolean;
         inventory: boolean;
+        workOrder: boolean;
     }
 };
 

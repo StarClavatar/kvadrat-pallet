@@ -31,6 +31,8 @@ const ViewPallet = () => {
         return { backgroundColor: "#add8e6", color: "#00008b" };
       case "закрыт":
         return { backgroundColor: "lightgrey", color: "#a9a9a9" };
+      case "закрыта":
+        return { backgroundColor: "lightgrey", color: "#a9a9a9" };
       default:
         return {};
     }
@@ -110,8 +112,9 @@ const ViewPallet = () => {
                   <p className="work-pallet-details-item__count_main">
                     {activePallet?.itemsOnPallet} шт.{" "}
                     <strong>
-                      ({item.cartsOnCount} кор. + {activePallet?.itemsOnFree}{" "}
-                      шт.)
+                      {`(${item.cartsOnCount} кор. ${
+                        item.itemsOnFree > 0 ? `+ ${item.itemsOnFree} шт.` : ""
+                      })`}
                     </strong>
                   </p>
                 </div>
