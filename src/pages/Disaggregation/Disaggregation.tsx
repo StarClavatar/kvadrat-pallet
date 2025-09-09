@@ -23,6 +23,7 @@ const Disaggregation = () => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [popupMessage, setPopupMessage] = useState<string>('');
   const [popupType, setPopupType] = useState<'success' | 'error'>('success');
+  const [manualCode, setManualCode] = useState<string>('');
   
   // Аудио рефы
   const successAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -89,24 +90,47 @@ const Disaggregation = () => {
 
   // Обработчик сканирования
   const handleScan = (scannedCode: string) => {
+    addCode(scannedCode);
+  };
+
+  // Функция добавления кода (общая для сканирования и ручного ввода)
+  const addCode = (code: string) => {
+    // Очищаем код от пробелов
+    const cleanCode = code.trim();
+    
     // Проверяем длину кода (должен быть 20 символов)
-    if (scannedCode.length !== 20) {
+    if (cleanCode.length !== 20) {
       playSound(false);
       showMessage('Код должен содержать 20 символов', 'error');
       return;
     }
 
     // Проверяем, что код не дублируется
-    if (codes.includes(scannedCode)) {
+    if (codes.includes(cleanCode)) {
       playSound(false);
       showMessage('Этот код уже добавлен', 'error');
       return;
     }
 
     // Добавляем код в список
-    setCodes(prev => [...prev, scannedCode]);
+    setCodes(prev => [...prev, cleanCode]);
     playSound(true);
     showMessage('Код успешно добавлен', 'success');
+  };
+
+  // Обработчик ручного ввода кода
+  const handleManualCodeAdd = () => {
+    if (manualCode.trim()) {
+      addCode(manualCode);
+      setManualCode(''); // Очищаем поле ввода после добавления
+    }
+  };
+
+  // Обработчик нажатия Enter в поле ввода
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleManualCodeAdd();
+    }
   };
 
   // Показать сообщение
@@ -222,17 +246,42 @@ const Disaggregation = () => {
         <p className="disaggregation__user">{`${pinAuthData?.position} ${pinAuthData?.workerName}`}</p>
       </div>
 
-      {/* Подпись с кнопкой очистки */}
-      <div className="disaggregation__subtitle">
-        <p>Разагрегация коробок</p>
-        {codes.length > 0 && (
+      {/* Компактная секция с заголовком и инструкцией */}
+      <div className="disaggregation__compact-header">
+        <div className="disaggregation__title-row">
+          <p className="disaggregation__title">Разагрегация коробов</p>
+          {codes.length > 0 && (
+            <button
+              className="disaggregation__clear-btn"
+              onClick={clearAllCodes}
+            >
+              Очистить
+            </button>
+          )}
+        </div>
+        <p className="disaggregation__instruction">Сканируйте или введите код</p>
+      </div>
+
+      {/* Поле для ручного ввода кода */}
+      <div className="disaggregation__manual-input">
+        <div className="disaggregation__input-container">
+          <input
+            type="text"
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Код (20 символов)"
+            className="disaggregation__input"
+            maxLength={20}
+          />
           <button
-            className="disaggregation__clear-btn"
-            onClick={clearAllCodes}
+            className="disaggregation__add-btn"
+            onClick={handleManualCodeAdd}
+            disabled={!manualCode.trim()}
           >
-            Очистить всё
+            +
           </button>
-        )}
+        </div>
       </div>
 
       {/* Список кодов */}

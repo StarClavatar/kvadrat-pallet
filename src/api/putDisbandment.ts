@@ -27,7 +27,7 @@ export const putDisbandment = async (
   const response = await fetch(
     `${BASE_URL}/Disbandment/putDisbandment`,
     {
-      method: "PUT",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },

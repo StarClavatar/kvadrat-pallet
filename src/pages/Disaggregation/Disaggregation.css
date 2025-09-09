@@ -39,6 +39,9 @@
   padding: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
+  position: absolute;
+  top: 4px;
+  left: 4px;
 }
 
 .exit-button:hover {
@@ -55,35 +58,48 @@
   text-align: end;
 }
 
-/* Подпись с кнопкой очистки */
-.disaggregation__subtitle {
-  padding: 12px 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
+/* Компактная секция заголовка */
+.disaggregation__compact-header {
+  padding: 8px 20px;
+  background: rgba(128, 128, 128, 0.3);
+  border-bottom: 1px solid rgba(192, 192, 192, 0.2);
 }
 
-.disaggregation__subtitle p {
+.disaggregation__title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.disaggregation__title {
   margin: 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.disaggregation__instruction {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 400;
 }
 
 .disaggregation__clear-btn {
   background: rgba(220, 53, 69, 0.8);
   color: white;
   border: 1px solid rgba(220, 53, 69, 0.6);
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 11px;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 10px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .disaggregation__clear-btn:hover {
@@ -148,6 +164,72 @@
 /* Класс для анимации исчезновения */
 .disaggregation__message--hiding {
   animation: slideUp 0.3s ease-in forwards;
+}
+
+/* Поле для ручного ввода кода */
+.disaggregation__manual-input {
+  padding: 8px 20px;
+  background: rgba(128, 128, 128, 0.4);
+  border-bottom: 1px solid rgba(192, 192, 192, 0.3);
+}
+
+.disaggregation__input-container {
+  position: relative;
+}
+
+.disaggregation__input {
+  width: 100%;
+  padding: 12px 50px 12px 16px; /* Место справа для кнопки */
+  border: 1px solid rgba(192, 192, 192, 0.6);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  color: #1a1a1a;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.disaggregation__input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  background: rgba(255, 255, 255, 1);
+}
+
+.disaggregation__input::placeholder {
+  color: rgba(108, 117, 125, 0.8);
+  font-family: inherit;
+}
+
+.disaggregation__add-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 44px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.disaggregation__add-btn:hover:not(:disabled) {
+  background: #218838;
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+}
+
+.disaggregation__add-btn:disabled {
+  background: rgba(108, 117, 125, 0.6);
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Список кодов */
