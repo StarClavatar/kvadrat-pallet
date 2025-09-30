@@ -28,6 +28,7 @@ export interface IPallet {
     isMono: boolean;
     details: IPalletDetail[];
     itemsOnFree: number;
+    itemsOnCount?: number;
 }
 
 export interface IOrder {

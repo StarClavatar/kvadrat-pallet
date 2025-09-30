@@ -110,7 +110,7 @@ const ViewPallet = () => {
                 </div>
                 <div className="work-pallet-details-item__counts">
                   <p className="work-pallet-details-item__count_main">
-                    {activePallet?.itemsOnPallet} шт.{" "}
+                    {item.itemsOnCount} шт.{" "}
                     <strong>
                       {`(${item.cartsOnCount} кор. ${
                         item.itemsOnFree > 0 ? `+ ${item.itemsOnFree} шт.` : ""
