@@ -1,4 +1,3 @@
-// main.tsx
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import Workmode from "./pages/Workmode/Workmode.tsx";
@@ -22,9 +21,11 @@ import WorkPallet from "./pages/WorkPallet/WorkPallet.tsx";
 import TestMode from "./pages/TestMode/TestMode.tsx";
 import ViewPallet from "./pages/ViewPallet/ViewPallet";
 import OrderGoods from "./pages/OrderGoods/OrderGoods";
-import EntryPage from "./pages/EntryPage/EntryPage";
 import Root from "./routes/root";
 import Disaggregation from "./pages/Disaggregation/Disaggregation";
+import BoxAggregation from "./pages/BoxAggregation/BoxAggregation";
+import ScanBox from "./pages/ScanBox/ScanBox";
+import CreateBox from "./pages/CreateBox/CreateBox";
 
 const router = createBrowserRouter([
   {
@@ -162,6 +163,18 @@ const router = createBrowserRouter([
       {
         path: "/disaggregation",
         element: <ProtectedRoute><Disaggregation /></ProtectedRoute>
+      },
+      {
+        path: "/box-aggregation",
+        element: <ProtectedRoute><BoxAggregation /></ProtectedRoute>
+      },
+      {
+        path: "/scan-box",
+        element: <ProtectedRoute><ScanBox /></ProtectedRoute>
+      },
+      {
+        path: "/create-box",
+        element: <ProtectedRoute><CreateBox /></ProtectedRoute>
       }
     ],
   },

@@ -1,0 +1,272 @@
+.box-aggregation {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  background-color: #f0f2f5;
+}
+
+.box-aggregation-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.box-aggregation-user {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  flex-shrink: 0;
+}
+
+.exit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+.exit-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.pallet__user {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.box-aggregation-main {
+  flex-grow: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Стили для экрана сканирования, аналогичные NewPallet.css - УДАЛЕНЫ */
+
+.box-aggregation-scan-prompt {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.box-aggregation-scan-prompt h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.box-aggregation-scan-prompt p {
+  font-size: 20px;
+}
+
+.box-aggregation-error-text {
+  margin-top: 20px;
+  color: #ffcdd2;
+  font-weight: bold;
+  font-size: 22px;
+}
+
+.box-aggregation-content {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.box-aggregation-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.box-aggregation-block__title {
+  font-size: 16px;
+  color: #888;
+}
+
+.box-aggregation-block__text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.box-aggregation-product-info {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 8px;
+  border-radius: 8px;
+  margin: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.box-aggregation-product-info__name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.box-aggregation-product-info__detail {
+  color: #555;
+  margin: 0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.box-aggregation-product-info__detail-title {
+  margin: 0;
+  margin-bottom: 4px;
+}
+
+.box-aggregation-product-info__detail-count {
+  flex-direction: row;
+  color: #000;
+  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 18px;
+}
+
+.box-aggregation-product-info__button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    background-color: rgb(29, 25, 106);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.print-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.print-button:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.edit-pack-count-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    background-color: #00346b5f;
+}
+
+.pack-count-input {
+    width: 80%;
+    margin: 15px auto;
+    padding: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.quantity-dialog-btn {
+  width: 40%;
+  padding: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  background-color: #d32f2f;
+  color: #fff;
+  margin-top: 20px;
+  transition: .3s;
+}
+
+.quantity-dialog-btn:nth-child(2) {
+  background-color: #66bb6a;
+}
+
+.update-pack-count-btn:disabled {
+  opacity: 0.5;
+}
+
+.pack-count-input:focus {
+    border-color: #007bff;
+}
+
+.box-aggregation-buttons {
+  padding: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.order-button {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.order-button:hover {
+  background-color: #0056b3;
+}
+
+.pallet-block-about {
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+  /* align-items: center; */
+}
+
+.pallet-block-status__doc-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+  /* align-items: center; */
+}
+/* Import pallet styles */
+@import url("../Pallet/Pallet.css");

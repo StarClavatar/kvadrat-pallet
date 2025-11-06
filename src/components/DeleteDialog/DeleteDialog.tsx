@@ -9,9 +9,11 @@ interface DeleteDialogProps {
   onScan: (scannedCode: string) => void;
   title: string;
   prompt: string;
+  withoutInput?: boolean;
+  autoSubmit?: boolean; // Если true, то после сканирования автоматически отправит код на сервер
 }
 
-const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, onClose, onScan, title, prompt }) => {
+const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, onClose, onScan, title, prompt, withoutInput = false, autoSubmit = false }) => {
   const [displayedCode, setDisplayedCode] = useState<string>('');
 
   useEffect(() => {
@@ -22,9 +24,9 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, onClose, onScan, ti
 
   const internalScanHandler = (scannedCode: string) => {
     setDisplayedCode(scannedCode);
-    // setTimeout(() => {
-    //   onScan(scannedCode);
-    // }, 1500);
+    if (autoSubmit) {
+      onScan(scannedCode);
+    }
   };
 
   useCustomScanner(internalScanHandler, isOpen);
@@ -46,18 +48,23 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, onClose, onScan, ti
             {displayedCode.trim() === '' ? 'отсканируйте код' : displayedCode}
           </div>
         </div>
+        {!withoutInput && (
+          <>
         <p className="delete-dialog__manual-input-prompt">Или введите вручную:</p>
-        <input 
-          type="text" 
-          className="delete-dialog__manual-input" 
-          value={displayedCode} 
-          onChange={(e) => setDisplayedCode(e.target.value)}
-          placeholder="Введите код"
-        />
+          <input 
+            type="text" 
+            className="delete-dialog__manual-input" 
+            value={displayedCode} 
+            onChange={(e) => setDisplayedCode(e.target.value)}
+            placeholder="Введите код"
+          />
+          </>
+        )}
         <div className="delete-dialog__actions">
           <button className="delete-dialog__btn delete-dialog__btn--cancel" onClick={onClose}>
             Отмена
           </button>
+          {!autoSubmit && (
           <button 
             className="delete-dialog__btn delete-dialog__btn--confirm" 
             onClick={handleManualSubmit}
@@ -65,6 +72,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ isOpen, onClose, onScan, ti
           >
             Подтвердить
           </button>
+          )}
         </div>
       </div>
     </Popup>

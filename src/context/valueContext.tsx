@@ -11,6 +11,21 @@ interface IBoxAdminData {
   cellCode: string;
 }
 
+export interface ICartData {
+  error: string;
+  info: string;
+  infoType: string;
+  docNum: string;
+  docDate: string;
+  docState: string;
+  SSCC: string;
+  prodName: string;
+  GTIN: string;
+  serial: string;
+  packCount: number;
+  collectedCount: number;
+}
+
 type valueContextType = {
   value: string;
   setValue: Dispatch<SetStateAction<string>>;
@@ -24,6 +39,8 @@ type valueContextType = {
   setBoxAdminData: Dispatch<SetStateAction<IBoxAdminData | null>>;
   order: IOrder;
   setOrder: Dispatch<SetStateAction<IOrder>>;
+  cartData: ICartData | null;
+  setCartData: Dispatch<SetStateAction<ICartData | null>>;
 };
 
 export const ValueContext = createContext<valueContextType>({
@@ -73,8 +90,11 @@ export const ValueContext = createContext<valueContextType>({
     activePallet: "",
     goods: [],
     pallets: [],
+    enclosedInCart: 0
   },
   setOrder: () => {},
+  cartData: null,
+  setCartData: () => {},
 });
 
 const FieldContext = ({ children }: TProps) => {
@@ -122,7 +142,9 @@ const FieldContext = ({ children }: TProps) => {
     activePallet: "",
     goods: [],
     pallets: [],
+    enclosedInCart: 0
   });
+  const [cartData, setCartData] = useState<ICartData | null>(null);
 
   return (
     <ValueContext.Provider value={{ 
@@ -137,7 +159,9 @@ const FieldContext = ({ children }: TProps) => {
       boxAdminData,
       setBoxAdminData,
       order,
-      setOrder
+      setOrder,
+      cartData,
+      setCartData
     }}>
       {children}
     </ValueContext.Provider>
