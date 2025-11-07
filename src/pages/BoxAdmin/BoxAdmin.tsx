@@ -182,7 +182,6 @@ const BoxAdmin = () => {
       // Обрабатываем возможные ошибки
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
-          console.log("Ошибка воспроизведения звука:", error);
         });
       }
     }

@@ -1,0 +1,108 @@
+.update-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    width: auto;
+    max-width: 450px;
+    margin: 0 auto;
+
+    background: rgba(44, 44, 46, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    z-index: 1000;
+    animation: slide-up 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-sizing: border-box;
+}
+
+.update-prompt__text {
+    text-align: center;
+}
+
+.update-prompt__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.update-prompt__subtitle {
+    margin: 4px 0 0;
+    font-size: 15px;
+    opacity: 0.8;
+}
+
+.update-prompt__buttons {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+}
+
+.update-prompt__button {
+    flex-grow: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.update-prompt__button:active {
+    transform: scale(0.97);
+}
+
+.update-prompt__button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.update-prompt__button--confirm {
+    background-color: #007aff;
+    color: #fff;
+    min-height: 44px; /* Чтобы кнопка не сжималась при появлении лоадера */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button-loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(150px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

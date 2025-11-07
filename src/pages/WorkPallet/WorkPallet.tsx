@@ -159,7 +159,6 @@ const WorkPallet = () => {
         } else {
             successAudio.play();
             if (confirmType === "yes") {
-              console.log("navigate to order");
               navigate("/order");
           }
             setOrder(response);

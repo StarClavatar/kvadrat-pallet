@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { PinContext, TPinAuthData } from "../../context/PinAuthContext";
 import { fetchPinAuth } from "../../api/pinAuth";
 import Loader from "../../components/Loader/Loader";
+// import UpdatePrompt from "../../components/UpdatePrompt/UpdatePrompt"; // Больше не нужен здесь
 
 const EntryPage: React.FC = () => {
   const { setPinAuthData } = useContext(PinContext);
@@ -13,6 +14,7 @@ const EntryPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const entryPageRef = useRef<HTMLDivElement>(null);
+  // const [showTestPrompt, setShowTestPrompt] = useState(false); // УДАЛЕНО
 
   useEffect(() => {
     if (entryPageRef.current) {

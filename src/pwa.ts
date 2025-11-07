@@ -2,8 +2,9 @@ import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    if (confirm('Доступна новая версия приложения. Обновить?')) {
-      updateSW()
-    }
+    // Отправляем кастомное событие, на которое подпишется React-компонент
+    document.dispatchEvent(
+      new CustomEvent('swUpdate', { detail: updateSW })
+    );
   },
 })
