@@ -234,7 +234,7 @@
   justify-content: center;
 }
 
-.order-button {
+/* .order-button {
   width: 100%;
   padding: 15px;
   font-size: 18px;
@@ -249,7 +249,7 @@
 
 .order-button:hover {
   background-color: #0056b3;
-}
+} */
 
 .pallet-block-about {
   justify-content: space-between;
