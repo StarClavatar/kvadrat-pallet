@@ -5,7 +5,7 @@ import './ConfirmationDialog.css';
 interface ConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  info: string;
+  info: React.ReactNode;
   infoType: 'yesNo' | 'next' | '';
   onConfirm: () => void;
   onCancel?: () => void;
@@ -22,7 +22,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   return (
     <Popup isOpen={isOpen} onClose={onClose} containerClassName="confirmation-dialog-popup">
       <div className="confirmation-dialog">
-        <p className="confirmation-dialog__text">{info.split('\\n').map((line, i) => <span key={i}>{line}<br/></span>)}</p>
+        <div className="confirmation-dialog__text">{info}</div>
         <div className="confirmation-dialog__actions">
           {infoType === 'yesNo' ? (
             <>

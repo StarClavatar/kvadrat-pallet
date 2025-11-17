@@ -41,6 +41,10 @@ type valueContextType = {
   setOrder: Dispatch<SetStateAction<IOrder>>;
   cartData: ICartData | null;
   setCartData: Dispatch<SetStateAction<ICartData | null>>;
+  initialCartInfo: ICartData | null;
+  setInitialCartInfo: Dispatch<SetStateAction<ICartData | null>>;
+  initialScanCode: string | null;
+  setInitialScanCode: Dispatch<SetStateAction<string | null>>;
 };
 
 export const ValueContext = createContext<valueContextType>({
@@ -95,6 +99,10 @@ export const ValueContext = createContext<valueContextType>({
   setOrder: () => {},
   cartData: null,
   setCartData: () => {},
+  initialCartInfo: null,
+  setInitialCartInfo: () => {},
+  initialScanCode: null,
+  setInitialScanCode: () => {},
 });
 
 const FieldContext = ({ children }: TProps) => {
@@ -145,6 +153,8 @@ const FieldContext = ({ children }: TProps) => {
     enclosedInCart: 0
   });
   const [cartData, setCartData] = useState<ICartData | null>(null);
+  const [initialCartInfo, setInitialCartInfo] = useState<ICartData | null>(null);
+  const [initialScanCode, setInitialScanCode] = useState<string | null>(null);
 
   return (
     <ValueContext.Provider value={{ 
@@ -161,7 +171,11 @@ const FieldContext = ({ children }: TProps) => {
       order,
       setOrder,
       cartData,
-      setCartData
+      setCartData,
+      initialCartInfo,
+      setInitialCartInfo,
+      initialScanCode,
+      setInitialScanCode
     }}>
       {children}
     </ValueContext.Provider>

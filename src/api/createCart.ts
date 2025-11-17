@@ -34,5 +34,15 @@ export const createCart = async (
     },
     body: JSON.stringify(body),
   });
-  return response.json();
+
+  try {
+    const data = await response.clone().json();
+    return data;
+  } catch (error) {
+    const text = await response.text();
+    if (text) {
+      return { error: text };
+    }
+    return { error: "Не удалось обработать ответ сервера" };
+  }
 };

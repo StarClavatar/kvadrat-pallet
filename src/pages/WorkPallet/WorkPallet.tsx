@@ -15,9 +15,10 @@ import DeleteDialog from "../../components/DeleteDialog/DeleteDialog";
 import { closePallet } from "../../api/closePallet";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog";
 import { formatDate } from "../../utils/formatDate";
+import { createCart } from "../../api/createCart";
 
 const WorkPallet = () => {
-  const { order, setOrder, setIsLoading } = useContext(ValueContext);
+  const { order, setOrder, setIsLoading, setInitialCartInfo, setInitialScanCode } = useContext(ValueContext);
   const { pinAuthData } = useContext(PinContext);
   const { palletId } = useParams<{ palletId: string }>();
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const WorkPallet = () => {
   const [popupSuccess, setPopupSuccess] = useState<boolean>(false);
   const [popupSuccessText, setPopupSuccessText] = useState<string>("");
   const [confirmation, setConfirmation] = useState<{info: string, infoType: 'yesNo' | 'next' | ''} | null>(null);
+  const [jumpConfirmation, setJumpConfirmation] = useState<{info: string, error: string, docUUID: string, scannedCode: string} | null>(null);
 
   const successAudio = new Audio(successSound);
   const errorAudio = new Audio(errorSound);
@@ -70,20 +72,60 @@ const WorkPallet = () => {
         palletId!,
         scannedCode
       );
-      if (!response.error) {
-        successAudio.play();
+      
+      const responseData = response as any;
 
-        setOrder(response);
-      } else {
+      if (responseData.infoType === 'jump/yesNo') {
+        setJumpConfirmation({ 
+          info: responseData.info, 
+          error: responseData.error, 
+          docUUID: responseData.docUUID,
+          scannedCode: scannedCode
+        });
+      } else if (responseData.error) {
         errorAudio.play();
-        setPopupErrorText(response.error);
+        setPopupErrorText(responseData.error);
         setPopupError(true);
+      } else {
+        successAudio.play();
+        setOrder(response);
       }
     } catch (err) {
       errorAudio.play();
       setPopupErrorText("Ошибка " + err);
       setPopupError(true);
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleJumpConfirm = async () => {
+    if (!jumpConfirmation) return;
+    setIsLoading(true);
+    try {
+      const response = await createCart(
+        String(pinAuthData?.pinCode),
+        String(localStorage.getItem("tsdUUID")),
+        jumpConfirmation.scannedCode,
+        undefined, 
+        jumpConfirmation.docUUID
+      );
+      if (response.error) {
+        errorAudio.play();
+        setPopupErrorText(response.error);
+        setPopupError(true);
+      } else {
+        successAudio.play();
+        setInitialCartInfo(response);
+        setInitialScanCode(jumpConfirmation.scannedCode);
+        navigate("/create-box");
+      }
+    } catch (err) {
+      errorAudio.play();
+      setPopupErrorText("Ошибка " + err);
+      setPopupError(true);
+    } finally {
+      setJumpConfirmation(null);
       setIsLoading(false);
     }
   };
@@ -169,7 +211,7 @@ const WorkPallet = () => {
     }
   };
 
-  useCustomScanner(handleScan, !popupError && !isDeletingScan && !popupSuccess && !confirmation);
+  useCustomScanner(handleScan, !popupError && !isDeletingScan && !popupSuccess && !confirmation && !jumpConfirmation);
 
   if (popupError) {
     return (
@@ -200,6 +242,22 @@ const WorkPallet = () => {
         title="Удаление товара"
         prompt="Отсканируйте ШК/DM товара, который нужно удалить с паллеты."
       />
+
+      {jumpConfirmation && (
+        <ConfirmationDialog
+            isOpen={!!jumpConfirmation}
+            onClose={() => setJumpConfirmation(null)}
+            info={
+              <>
+                {jumpConfirmation.error && <p style={{ color: 'red', fontWeight: 'bold' }}>{jumpConfirmation.error}</p>}
+                <p>{jumpConfirmation.info}</p>
+              </>
+            }
+            infoType="yesNo"
+            onConfirm={handleJumpConfirm}
+            onCancel={() => setJumpConfirmation(null)}
+        />
+      )}
       
       {confirmation && (
         <ConfirmationDialog

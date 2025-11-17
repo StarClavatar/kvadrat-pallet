@@ -12,7 +12,7 @@ import { ICartData } from "../../context/valueContext";
 import Loader from "../../components/Loader/Loader";
 
 const CreateBox = () => {
-    const { setCartData, isLoading, setIsLoading } = useContext(ValueContext);
+    const { setCartData, isLoading, setIsLoading, initialCartInfo, setInitialCartInfo, initialScanCode, setInitialScanCode } = useContext(ValueContext);
     const [scanCode, setScanCode] = useState<string>("");
     const [manualInput, setManualInput] = useState<string>(""); // Для ручного ввода
     const navigate = useNavigate();
@@ -24,6 +24,18 @@ const CreateBox = () => {
 
     const audioSuccess = new Audio(successSound);
     const audioError = new Audio(errorSound);
+
+    useEffect(() => {
+        if (initialCartInfo && initialScanCode) {
+            setProductInfo(initialCartInfo);
+            setScanCode(initialScanCode);
+        }
+        // Очищаем данные из контекста при размонтировании, чтобы избежать их повторного использования
+        return () => {
+            setInitialCartInfo(null);
+            setInitialScanCode(null);
+        };
+    }, [initialCartInfo, initialScanCode, setInitialCartInfo, setInitialScanCode]);
 
     const handleInitialScan = async (scannedCode: string) => {
         if (!scannedCode) return;
@@ -55,8 +67,13 @@ const CreateBox = () => {
         handleInitialScan(manualInput);
     };
 
-    const handleFinalSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+    const handleCreateCart = async () => {
+        if (!packCount.trim()) {
+            audioError.play();
+            setPopupErrorText("Необходимо указать количество");
+            setPopupError(true);
+            return;
+        }
         setIsLoading(true);
         try {
             const response = await createCart(
@@ -84,6 +101,11 @@ const CreateBox = () => {
         }
     };
 
+    const handleFinalSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        handleCreateCart();
+    };
+
     useCustomScanner(handleInitialScan, !productInfo && !isLoading && !popupError);
 
     useEffect(() => {
@@ -94,6 +116,9 @@ const CreateBox = () => {
                 setPackCount(current => current + event.key);
             } else if (event.key === 'Backspace') {
                 setPackCount(current => current.slice(0, -1));
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                handleCreateCart();
             }
         };
 
@@ -102,7 +127,7 @@ const CreateBox = () => {
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [productInfo, setPackCount]);
+    }, [productInfo, packCount, scanCode, pinAuthData]);
 
 
     if (isLoading) return <Loader />;

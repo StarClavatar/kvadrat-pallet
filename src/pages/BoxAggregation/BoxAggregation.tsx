@@ -38,6 +38,13 @@ const BoxAggregation = () => {
   const successAudio = new Audio(successSound);
   const errorAudio = new Audio(errorSound);
 
+  useEffect(() => {
+    // Очищаем cartData при выходе со страницы
+    return () => {
+      setCartData(null);
+    };
+  }, [setCartData]);
+
   const handleScanPack = async (scanCode: string) => {
     if (!cartData) return;
     try {
@@ -49,21 +56,20 @@ const BoxAggregation = () => {
         scanCode
       );
 
-      if (response.error) {
+      if (response && (typeof response === "string" || response.error)) {
         errorAudio.play();
-        setPopupErrorText(response.error);
+        setPopupErrorText(
+          typeof response === "string" ? response : response.error
+        );
         setPopupError(true);
-        setIsLoading(false);
       } else {
         successAudio.play();
         setCartData(response);
-        setIsLoading(false);
       }
     } catch (err) {
       errorAudio.play();
       setPopupErrorText("Сетевая ошибка");
       setPopupError(true);
-      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
