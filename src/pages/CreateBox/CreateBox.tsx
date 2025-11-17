@@ -47,6 +47,13 @@ const CreateBox = () => {
                 scannedCode
             );
 
+            if (response.SSCC.length > 0) {
+                audioSuccess.play();
+                setCartData(response);
+                navigate('/box-aggregation');
+                return;
+            }
+
             if (response.error) {
                 audioError.play();
                 setPopupErrorText(response.error);
