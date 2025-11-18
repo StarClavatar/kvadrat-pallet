@@ -8,6 +8,7 @@ import { useCustomScanner } from "../../hooks/useCustomScanner";
 import { ValueContext } from "../../context/valueContext";
 import Popup from "../../components/Popup/Popup";
 import { getCart } from "../../api/getCart";
+import CameraScanner from "../../components/CameraScanner/CameraScanner";
 
 const ScanBox = () => {
   const { setCartData } = useContext(ValueContext);
@@ -81,14 +82,17 @@ const ScanBox = () => {
       <h2 className="new-pallet__heading">Отсканируйте товар <br /> или незавершённый короб</h2>
       <p className="new-pallet__description"></p>
       <form className="pallet-form" onSubmit={handleSubmit}>
-        <input
-          required
-          type="text"
-          placeholder="Отсканируйте код короба"
-          className="input pallet-form__input"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
+        <div className="pallet-form__input-container">
+          <input
+            required
+            type="text"
+            placeholder="Отсканируйте код короба"
+            className="input pallet-form__input"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+        </div>
+          <CameraScanner onScan={handleFormAction} formats={["Code128", "DataMatrix"]}/>
         <button className="pallet-form__send-button" type="submit">
           Отправить
         </button>

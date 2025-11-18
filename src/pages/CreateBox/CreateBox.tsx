@@ -45,7 +45,7 @@ const CreateBox = () => {
                 String(pinAuthData?.pinCode),
                 String(localStorage.getItem("tsdUUID")),
                 scannedCode
-            );
+            ); 
 
             if (response.error) {
                 audioError.play();

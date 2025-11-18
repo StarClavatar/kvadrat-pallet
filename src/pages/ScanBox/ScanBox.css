@@ -10,22 +10,33 @@
 }
 
 .new-pallet__heading {
-    font-size: 6vw;
-    text-transform: uppercase;
     text-align: center;
-    color: #fff ;
+    color: white;
+    font-size: 20px;
+}
+
+.new-pallet__description {
+    text-align: center;
+    color: rgb(155, 155, 155);
 }
 
 .pallet-form {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 48px;
     align-items: center;
-    margin-top: 20px;
+}
+
+.pallet-form__input-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .pallet-form__input {
-    width: 90%;
+    width: 100%;
+    padding-right: 50px; /* Добавим отступ для иконки */
     height: 40px;
     border: none;
     outline: none;
@@ -39,14 +50,23 @@
     text-align: center;
 }
 
+.pallet-form__input-container > button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 90%;
+}
+
+
 .pallet-form__send-button {
-    max-width: min-content;
-    background-color: rgba(0, 0, 0, 0.2);
+    width: 100%;
+    background-color: #007bff;
+    color: white;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     padding: 24px 48px;
     font-size: 16px;
-    color: #fff;
     border-radius: 20px;
     text-transform: uppercase;
     border: 2px solid white;
