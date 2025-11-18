@@ -451,7 +451,9 @@ const BoxAggregation = () => {
             </div>
           </>
 
-          <div className="pallet-buttons">
+          <div className="pallet-buttons" style={{
+                display: cartData.docState === "завершён" || cartData.collectedCount === 0 ? "none" : "initial",
+              }}>
             <button
               className="pallet-button pallet-button_delete"
               onClick={() => setIsDeleting(true)}
