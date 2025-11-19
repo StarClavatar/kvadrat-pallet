@@ -117,7 +117,7 @@ const BoxAggregation = () => {
         setPopupError(true);
       } else {
         successAudio.play();
-        setCartData(response); // Просто обновляем данные
+        setCartData(response);
       }
     } catch (err) {
       errorAudio.play();
@@ -147,36 +147,6 @@ const BoxAggregation = () => {
           info: response.info,
           infoType: response.infoType,
         });
-      }
-    } catch (err) {
-      errorAudio.play();
-      setPopupErrorText("Сетевая ошибка");
-      setPopupError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const confirmPrintLabel = async () => {
-    if (!cartData || !printConfirmation) return;
-    try {
-      setIsLoading(true);
-      setPrintConfirmation(null);
-      const response = await printCartLabel(
-        String(pinAuthData?.pinCode),
-        String(localStorage.getItem("tsdUUID")),
-        cartData.SSCC,
-        printConfirmation.info,
-        printConfirmation.infoType
-      );
-
-      if (response.error) {
-        errorAudio.play();
-        setPopupErrorText(response.error);
-        setPopupError(true);
-      } else {
-        successAudio.play();
-        // Можно показать финальный success popup, если нужно
       }
     } catch (err) {
       errorAudio.play();
@@ -321,13 +291,7 @@ const BoxAggregation = () => {
               className="pallet-dialog-btn"
               onClick={() => setPrintConfirmation(null)}
             >
-              Отмена
-            </button>
-            <button
-              className="pallet-dialog-btn knopka-yes"
-              onClick={confirmPrintLabel}
-            >
-              Печать
+              Закрыть
             </button>
           </div>
         </Popup>

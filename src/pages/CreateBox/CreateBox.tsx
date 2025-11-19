@@ -47,14 +47,11 @@ const CreateBox = () => {
                 scannedCode
             );
 
-            if (response.SSCC.length > 0) {
+            if (response.SSCC && response.SSCC.length > 0) {
                 audioSuccess.play();
                 setCartData(response);
                 navigate('/box-aggregation');
-                return;
-            }
-
-            if (response.error) {
+            } else if (response.error) {
                 audioError.play();
                 setPopupErrorText(response.error);
                 setPopupError(true);
@@ -153,6 +150,7 @@ const CreateBox = () => {
     if (productInfo) {
         return (
             <div className="new-pallet">
+                <h2 className="new-pallet__heading">Создание короба</h2>
                 <h2 className="new-pallet__heading" style={{ marginBottom: "20px" }}>{productInfo.prodName}</h2>
                 <p className="product-info__serial">Серия: {productInfo.serial}</p>
                 <form className="pallet-form" onSubmit={handleFinalSubmit}>
@@ -180,7 +178,7 @@ const CreateBox = () => {
 
     return (
         <div className="new-pallet">
-            <h2 className="new-pallet__heading">Создание короба</h2>
+            <h2 className="new-pallet__heading">Выбор или создание короба</h2>
             <form className="pallet-form" onSubmit={handleInitialSubmit}>
                 <input
                   required
