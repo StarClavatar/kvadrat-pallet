@@ -27,6 +27,8 @@ import BoxAggregation from "./pages/BoxAggregation/BoxAggregation";
 import ScanBox from "./pages/ScanBox/ScanBox";
 import CreateBox from "./pages/CreateBox/CreateBox";
 
+import KitAggregation from "./pages/KitAggregation/KitAggregation.tsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -175,7 +177,11 @@ const router = createBrowserRouter([
       {
         path: "/create-box",
         element: <ProtectedRoute><CreateBox /></ProtectedRoute>
-      }
+      },
+      {
+        path: "/set-aggregation",
+        element: <ProtectedRoute><KitAggregation /></ProtectedRoute>
+      },
     ],
   },
 ]);

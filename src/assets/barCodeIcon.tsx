@@ -1,9 +1,9 @@
 //@ts-ignore
-export const BarCodeIcon = () => {
+export const BarCodeIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => {
   return (
 	<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
 	xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	viewBox="0 0 24 24" enableBackground="new 0 0 24 24" xmlSpace="preserve">
+	viewBox="0 0 24 24" enableBackground="new 0 0 24 24" xmlSpace="preserve" width={width} height={height}>
 <g>
 	<path fill="#303C42" d="M22,3h-1.5C20.2236328,3,20,3.2236328,20,3.5S20.2236328,4,20.5,4H22c0.5517578,0,1,0.4487305,1,1v1.5
 		C23,6.7763672,23.2236328,7,23.5,7S24,6.7763672,24,6.5V5C24,3.8969727,23.1025391,3,22,3z"/>

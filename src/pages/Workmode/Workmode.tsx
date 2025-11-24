@@ -17,6 +17,7 @@ const Workmode = () => {
         {pinAuthData?.operations.inventory && <Link to={"/scan-cell"} className="link">Инвентаризация ячеек</Link>}
         <Link to={"/disaggregation"} className="link">Разагрегация</Link>
         <Link className="link" to={"/create-box"}>Агрегация коробов</Link>
+        <Link className="link" to={"/set-aggregation"}>Агрегация набора</Link>
         {/* {process.env.NODE_ENV === "development" && <Link autoFocus to={"/test-mode"} className="link">Тест</Link>} */}
       </div>
       <Link to={"/"} className="link_quit" onClick={() => setPinAuthData(undefined)}>Выйти</Link>

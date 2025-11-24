@@ -5,19 +5,35 @@ import { BarCodeIcon } from "../../assets/barCodeIcon";
 import styles from "./CameraScanner.module.css";
 
 interface CameraScannerProps {
-  onScan: (result: string) => void;
+  onScan: (results: string[]) => void;
+  className?: string;
+  textButton?: string;
+  expectedCount?: number; // Limit for detection
+  iconWidth?: number;
+  iconHeight?: number;
+  existingCodes?: string[]; // List of already scanned codes to check for duplicates
+  targetTotal?: number; // Total items needed in the set (for progress display)
 }
 
-const CameraScanner = ({ onScan }: CameraScannerProps) => {
+const CameraScanner = ({ 
+  onScan, 
+  className, 
+  textButton, 
+  expectedCount = 1, 
+  iconWidth = 24, 
+  iconHeight = 24,
+  existingCodes = [],
+  targetTotal
+}: CameraScannerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [scanResult, setScanResult] = useState<{ text: string; image: string } | null>(null);
+  const [scanResult, setScanResult] = useState<{ texts: string[]; image: string; newCount: number; dupCount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  
   const successAudio = new Audio(successSound);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const requestRef = useRef<number>();
 
   const startCamera = async () => {
     setError(null);
@@ -35,7 +51,7 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
         video.srcObject = stream;
         video.onloadedmetadata = () => {
           video.play();
-          requestAnimationFrame(scanFrame);
+          requestRef.current = requestAnimationFrame(scanFrame);
         };
       }
     } catch (err) {
@@ -45,6 +61,9 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
   };
 
   const stopCamera = () => {
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+    }
     const video = videoRef.current;
     if (video) {
       if (video.srcObject) {
@@ -56,9 +75,24 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
     }
   };
 
+  const cleanCode = (text: string) => text.trim().replace(/\((00|01|21|93)\)/g, "$1");
+
+  const loadImage = (file: File): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  };
+
   const drawBarcodeOnCanvas = (
     barcodes: ReadResult[],
-    source: HTMLImageElement | HTMLVideoElement,
+    source: ImageBitmap | HTMLImageElement | HTMLVideoElement,
     container: HTMLElement
   ) => {
     const canvas = canvasRef.current;
@@ -66,15 +100,27 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    const sourceWidth = (source as HTMLVideoElement).videoWidth || (source as HTMLImageElement).naturalWidth;
-    const sourceHeight = (source as HTMLVideoElement).videoHeight || (source as HTMLImageElement).naturalHeight;
-    
+    // Unified size access
+    let sourceWidth: number;
+    let sourceHeight: number;
+
+    if (source instanceof HTMLVideoElement) {
+        sourceWidth = source.videoWidth;
+        sourceHeight = source.videoHeight;
+    } else if (source instanceof ImageBitmap) {
+        sourceWidth = source.width;
+        sourceHeight = source.height;
+    } else {
+        sourceWidth = source.naturalWidth;
+        sourceHeight = source.naturalHeight;
+    }
+
     const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
 
     const scale = Math.min(containerWidth / sourceWidth, containerHeight / sourceHeight);
     const scaledWidth = sourceWidth * scale;
     const scaledHeight = sourceHeight * scale;
-    
+
     const offsetX = (containerWidth - scaledWidth) / 2;
     const offsetY = (containerHeight - scaledHeight) / 2;
 
@@ -83,9 +129,21 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(source, offsetX, offsetY, scaledWidth, scaledHeight);
 
+    const currentBatchCodes: string[] = [];
+
     barcodes.forEach((barcode) => {
-      const { topLeft, topRight, bottomRight, bottomLeft } = barcode.position;
+      const text = cleanCode(barcode.text);
       
+      // Check duplicates
+      const isGlobalDuplicate = existingCodes.includes(text);
+      const isBatchDuplicate = currentBatchCodes.includes(text);
+      
+      if (!isBatchDuplicate) {
+        currentBatchCodes.push(text);
+      }
+
+      const { topLeft, topRight, bottomRight, bottomLeft } = barcode.position;
+
       const transformPoint = (p: { x: number; y: number }) => ({
         x: p.x * scale + offsetX,
         y: p.y * scale + offsetY,
@@ -99,7 +157,14 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
       ctx.lineTo(pt[2].x, pt[2].y);
       ctx.lineTo(pt[3].x, pt[3].y);
       ctx.closePath();
-      ctx.strokeStyle = "#4caf50";
+      
+      // Color logic
+      if (isGlobalDuplicate || isBatchDuplicate) {
+        ctx.strokeStyle = "#FFD700"; // Gold for duplicates
+      } else {
+        ctx.strokeStyle = "#4caf50"; // Green for new
+      }
+      
       ctx.lineWidth = 3;
       ctx.stroke();
     });
@@ -129,21 +194,37 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
       try {
-        const results = await readBarcodes(imageData);
+        const results = await readBarcodes(imageData, {
+            maxNumberOfSymbols: expectedCount,
+            formats: ["DataMatrix", "QRCode"],
+            tryHarder: true
+        });
+
         if (results.length > 0) {
           const imageWithBarcode = drawBarcodeOnCanvas(results, video, container);
           stopCamera();
           successAudio.play();
           if (imageWithBarcode) {
-            setScanResult({ text: results[0].text.trim().replace(/^\((00|01)\)/, "$1"), image: imageWithBarcode });
+            const texts = results.map(r => cleanCode(r.text));
+            
+            const dedupedTexts = [...new Set(texts)];
+            const newCount = dedupedTexts.filter(t => !existingCodes.includes(t)).length;
+            const dupCount = dedupedTexts.length - newCount;
+
+            setScanResult({ 
+              texts: dedupedTexts, 
+              image: imageWithBarcode,
+              newCount,
+              dupCount
+            });
           }
-          return; // Выходим из цикла
+          return;
         }
       } catch (err) {
-        // Ignore errors to continue scanning
+        // Ignore errors
       }
     }
-    requestAnimationFrame(scanFrame);
+    requestRef.current = requestAnimationFrame(scanFrame);
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,20 +236,60 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
     setScanResult(null);
 
     try {
-      const results = await readBarcodes(file);
+      // Use createImageBitmap if available for correct orientation handling
+      let imageSource: ImageBitmap | HTMLImageElement;
+      
+      try {
+        if (typeof createImageBitmap !== 'undefined') {
+          imageSource = await createImageBitmap(file);
+        } else {
+          imageSource = await loadImage(file);
+        }
+      } catch (e) {
+        console.error("Error loading image:", e);
+        // Fallback
+        imageSource = await loadImage(file);
+      }
+
+      // Create temporary canvas to get ImageData for detection
+      // This ensures we scan exactly what we will draw (correct orientation)
+      const tempCanvas = document.createElement('canvas');
+      const w = (imageSource instanceof ImageBitmap) ? imageSource.width : imageSource.naturalWidth;
+      const h = (imageSource instanceof ImageBitmap) ? imageSource.height : imageSource.naturalHeight;
+      
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) throw new Error("Canvas context error");
+      
+      tempCtx.drawImage(imageSource, 0, 0);
+      const imageData = tempCtx.getImageData(0, 0, w, h);
+
+      const results = await readBarcodes(imageData, {
+        maxNumberOfSymbols: expectedCount,
+        formats: ["DataMatrix", "QRCode"],
+        tryHarder: true
+      });
+
       if (results.length > 0) {
-        const image = new Image();
-        image.onload = () => {
           const container = canvasRef.current?.parentElement;
           if (!container) return;
-          
-          const imageWithBarcode = drawBarcodeOnCanvas(results, image, container);
+
+          const imageWithBarcode = drawBarcodeOnCanvas(results, imageSource, container);
           successAudio.play();
           if (imageWithBarcode) {
-            setScanResult({ text: results[0].text.trim().replace(/^\((00|01)\)/, "$1"), image: imageWithBarcode });
+             const texts = results.map(r => cleanCode(r.text));
+             const dedupedTexts = [...new Set(texts)];
+             const newCount = dedupedTexts.filter(t => !existingCodes.includes(t)).length;
+             const dupCount = dedupedTexts.length - newCount;
+
+             setScanResult({ 
+               texts: dedupedTexts, 
+               image: imageWithBarcode,
+               newCount,
+               dupCount
+             });
           }
-        };
-        image.src = URL.createObjectURL(file);
       } else {
         alert("Коды не найдены на изображении.");
         startCamera();
@@ -182,7 +303,7 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
 
   const handleConfirm = () => {
     if (scanResult) {
-      onScan(scanResult.text);
+      onScan(scanResult.texts);
       handleClose();
     }
   };
@@ -193,7 +314,7 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
     setScanResult(null);
     setError(null);
   };
-  
+
   useEffect(() => {
     if (isModalOpen) {
       startCamera();
@@ -206,8 +327,8 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
 
   return (
     <>
-      <button type="button" onClick={() => setIsModalOpen(true)} className={styles.scanButton}>
-        <BarCodeIcon />
+      <button type="button" onClick={() => setIsModalOpen(true)} className={`${styles.scanButton} ${className || ""}`}>
+        {textButton ? <span style={{ display: "inline-block", alignItems: "center", gap: "10px" }}>{textButton} <BarCodeIcon width={iconWidth} height={iconHeight} /></span> : <BarCodeIcon width={iconWidth} height={iconHeight} />}
       </button>
 
       {isModalOpen && (
@@ -216,33 +337,61 @@ const CameraScanner = ({ onScan }: CameraScannerProps) => {
             <button type="button" className={styles.closeButton} onClick={handleClose}>
               &times;
             </button>
-            <h3 className={styles.modalTitle}>Сканирование кода</h3>
-            
+            {/* <h3 className={styles.modalTitle}>Сканирование</h3> */}
+
             {error && <p className={styles.errorText}>{error}</p>}
-            
+
             <div className={styles.scannerContainer}>
-                {!scanResult && <video ref={videoRef} playsInline muted className={styles.video} />}
-                {scanResult && <img src={scanResult.image} alt="Scanned code" className={styles.resultImage} />}
-                <canvas ref={canvasRef} style={{ display: "none" }} />
+              {!scanResult && <video ref={videoRef} playsInline muted className={styles.video} />}
+              {scanResult && <img src={scanResult.image} alt="Scanned code" className={styles.resultImage} />}
+              <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
 
             {scanResult ? (
               <div className={styles.resultActions}>
-                <p className={styles.resultText}><b>Распознано:</b> {scanResult.text}</p>
-                <button type="button" onClick={handleConfirm} className={styles.actionButton}>Подтвердить</button>
-                <button type="button" onClick={startCamera} className={styles.actionButton}>Сканировать снова</button>
+                
+                <div className={styles.infoBlock}>
+                  <h3 className={styles.modalTitle}>Результат сканирования</h3>
+                  <p className={styles.detailsText}>
+                    Найдено кодов: <b>{scanResult.texts.length}</b>
+                    <br />
+                    <span style={{color: "#2e7d32", fontWeight: "bold"}}>Новых: {scanResult.newCount}</span>
+                    {" • "}
+                    <span style={{color: "#f57f17", fontWeight: "bold"}}>Повторов: {scanResult.dupCount}</span>
+                  </p>
+                  {targetTotal && (
+                     <p className={styles.detailsText} style={{marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '8px'}}>
+                       Прогресс набора: {existingCodes.length} → {Math.min(existingCodes.length + scanResult.newCount, targetTotal)} / {targetTotal}
+                     </p>
+                  )}
+                </div>
+
+                <div className={styles.buttonsRow}>
+                  <button type="button" onClick={startCamera} className={`${styles.actionButton} ${styles.secondaryButton}`}>Переснять</button>
+                  
+                  <button 
+                    type="button" 
+                    onClick={handleConfirm} 
+                    className={styles.actionButton}
+                    disabled={scanResult.newCount === 0}
+                    style={scanResult.newCount === 0 ? {opacity: 0.5, cursor: 'not-allowed'} : {}}
+                  >
+                    {scanResult.newCount > 0 ? `Добавить (+${scanResult.newCount})` : 'Нет новых'}
+                  </button>
+                </div>
+
               </div>
             ) : (
               <div className={styles.actions}>
                 <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.actionButton}>
-                    Выбрать из галереи
+                  Выбрать из галереи
                 </button>
                 <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    style={{ display: "none" }}
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  style={{ display: "none" }}
                 />
               </div>
             )}
