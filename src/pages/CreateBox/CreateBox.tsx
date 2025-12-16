@@ -52,6 +52,7 @@ const CreateBox = () => {
                 setCartData(response);
                 navigate('/box-aggregation');
             } else if (response.error) {
+                console.log("ЗДОРОВЕННЫЙ ХУЙ",response.error);
                 audioError.play();
                 setPopupErrorText(response.error);
                 setPopupError(true);
@@ -116,6 +117,9 @@ const CreateBox = () => {
         if (!productInfo) return; // Слушатель активен только на экране ввода количества
 
         const handleKeyDown = (event: KeyboardEvent) => {
+            // Предотвращаем дублирование ввода если фокус уже в инпуте
+            if (event.target instanceof HTMLInputElement) return;
+
             if (event.key >= '0' && event.key <= '9') {
                 setPackCount(current => current + event.key);
             } else if (event.key === 'Backspace') {

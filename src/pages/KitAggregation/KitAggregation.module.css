@@ -17,9 +17,22 @@
 
 .title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 16px;
   font-weight: 600;
   text-align: center;
+}
+
+.docNum {
+  font-size: 16px;
+  margin: 0;
+  margin-top: 4px;
+}
+
+.docName {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  margin-top: 4px;
 }
 
 .progressSection {
@@ -78,7 +91,7 @@
   padding: 12px;
   border-radius: 12px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  /* grid-template-columns: 1fr auto; */
   align-items: center;
   gap: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -87,7 +100,7 @@
 
 .codeText {
   font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #333;
   word-break: break-all;
   line-height: 1.4;
@@ -96,7 +109,7 @@
   border-radius: 6px;
   border: 1px solid #eee;
 }
-
+/* 
 .removeButton {
   background: none;
   border: none;
@@ -110,7 +123,7 @@
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s;
-}
+} */
 
 .removeButton:active {
   background-color: #ffebee;
@@ -148,7 +161,7 @@
 }
 
 .liveScanButton {
-  background-color: #e58d02; /* Оранжевый для отличия */
+  background-color: #7cc654 !important; /* Оранжевый для отличия */
   color: white;
 }
 
@@ -177,4 +190,82 @@
   color: #f44336;
   text-align: center;
   font-size: 0.9rem;
+}
+
+/* Success Popup Styles */
+.successPopup {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  
+  /* Centering and Sizing override for .popup__inner */
+  width: 85% !important;
+  max-width: 340px !important;
+  height: auto !important;
+  align-self: center !important;
+  margin: 0 !important;
+  overflow: visible !important; /* Allow icon to pop out if needed */
+}
+
+.successContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.successIcon {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: white;
+  font-size: 36px;
+  box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+  animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.successTitle {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.successMessage {
+  font-size: 1.1rem;
+  color: #555;
+  margin: 0 0 24px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.successButton {
+  background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+  color: white;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.successButton:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }

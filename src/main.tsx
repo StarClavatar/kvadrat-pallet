@@ -26,8 +26,8 @@ import Disaggregation from "./pages/Disaggregation/Disaggregation";
 import BoxAggregation from "./pages/BoxAggregation/BoxAggregation";
 import ScanBox from "./pages/ScanBox/ScanBox";
 import CreateBox from "./pages/CreateBox/CreateBox";
-
 import KitAggregation from "./pages/KitAggregation/KitAggregation.tsx";
+import ScanDocKit from "./pages/ScanDocKit/ScanDocKit.tsx";
 
 const router = createBrowserRouter([
   {
@@ -182,6 +182,10 @@ const router = createBrowserRouter([
         path: "/set-aggregation",
         element: <ProtectedRoute><KitAggregation /></ProtectedRoute>
       },
+      {
+        path: "/scan-doc-kit",
+        element: <ProtectedRoute><ScanDocKit /></ProtectedRoute>
+      }
     ],
   },
 ]);

@@ -11,7 +11,8 @@ export interface ScanResultData {
 export const processScanImage = async (
   file: File,
   existingCodes: string[],
-  targetTotal: number
+  targetTotal: number,
+  validGtins?: string[] // Optional validation
 ): Promise<ScanResultData> => {
   // Calculate how many we still need
   const currentCount = existingCodes.length;
@@ -76,6 +77,18 @@ export const processScanImage = async (
   const foundCodes: string[] = [];
   const newCodes: string[] = [];
   const duplicateCodes: string[] = [];
+
+  // Check for invalid GTINs if validGtins provided
+  if (validGtins && validGtins.length > 0) {
+     const invalidCodes = results.filter(r => {
+        const text = r.text.trim().replace(/\((00|01|21|93)\)/g, "$1");
+        return !validGtins.some(gtin => text.includes(gtin));
+     });
+
+     if (invalidCodes.length > 0) {
+         throw new Error("Найдены товары, не соответствующие набору (GTIN не совпадает).");
+     }
+  }
 
   results.forEach((result) => {
     const text = result.text.trim().replace(/\((00|01|21|93)\)/g, "$1");

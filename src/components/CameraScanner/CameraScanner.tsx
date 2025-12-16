@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { readBarcodes, type ReadResult } from "zxing-wasm/reader";
+import { readBarcodes, ReaderOptions, type ReadResult } from "zxing-wasm/reader";
 import successSound from "../../assets/scanSuccess.mp3";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import styles from "./CameraScanner.module.css";
@@ -8,11 +8,15 @@ interface CameraScannerProps {
   onScan: (results: string[]) => void;
   className?: string;
   textButton?: string;
-  expectedCount?: number; // Limit for detection
+  expectedCount?: number; // лимит распознавания кодов
   iconWidth?: number;
   iconHeight?: number;
-  existingCodes?: string[]; // List of already scanned codes to check for duplicates
-  targetTotal?: number; // Total items needed in the set (for progress display)
+  existingCodes?: string[];
+  targetTotal?: number;
+  formats?: ReaderOptions["formats"];
+  closeOnScan?: boolean; // если есть параметр, то пропускаем окошко подтверждения и сразу вызываем onScan
+  scannerText?: string;
+  validateCode?: (code: string) => boolean; // Функция валидации кода (например, проверка GTIN)
 }
 
 const CameraScanner = ({ 
@@ -23,17 +27,24 @@ const CameraScanner = ({
   iconWidth = 24, 
   iconHeight = 24,
   existingCodes = [],
-  targetTotal
+  targetTotal,
+  formats = ["DataMatrix", "QRCode"],
+  closeOnScan = false,
+  scannerText,
+  validateCode
 }: CameraScannerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [scanResult, setScanResult] = useState<{ texts: string[]; image: string; newCount: number; dupCount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const successAudio = new Audio(successSound);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null); // For image capture
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null); // For real-time overlay
   const requestRef = useRef<number>();
+  const toastTimeoutRef = useRef<NodeJS.Timeout>();
 
   const startCamera = async () => {
     setError(null);
@@ -77,6 +88,12 @@ const CameraScanner = ({
 
   const cleanCode = (text: string) => text.trim().replace(/\((00|01|21|93)\)/g, "$1");
 
+  const showToast = (message: string) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage(message);
+    toastTimeoutRef.current = setTimeout(() => setToastMessage(null), 2000);
+  };
+
   const loadImage = (file: File): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -90,6 +107,77 @@ const CameraScanner = ({
     });
   };
 
+  // Draws on the overlay canvas (transparent)
+  const drawOverlay = (
+    barcodes: ReadResult[],
+    video: HTMLVideoElement,
+    container: HTMLElement
+  ) => {
+    const canvas = overlayCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+    
+    canvas.width = containerWidth;
+    canvas.height = containerHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    
+    // Simulate object-fit: contain
+    const scale = Math.min(containerWidth / sourceWidth, containerHeight / sourceHeight);
+    const scaledWidth = sourceWidth * scale;
+    // const scaledHeight = sourceHeight * scale; // Unused but consistent with logic
+
+    const offsetX = (containerWidth - scaledWidth) / 2;
+    const offsetY = (containerHeight - (sourceHeight * scale)) / 2;
+
+    const currentBatchCodes: string[] = [];
+
+    barcodes.forEach((barcode) => {
+      const text = cleanCode(barcode.text);
+      
+      const isValid = validateCode ? validateCode(text) : true;
+      const isGlobalDuplicate = existingCodes.includes(text);
+      const isBatchDuplicate = currentBatchCodes.includes(text);
+      
+      if (!isBatchDuplicate) {
+        currentBatchCodes.push(text);
+      }
+
+      const { topLeft, topRight, bottomRight, bottomLeft } = barcode.position;
+      
+      const transformPoint = (p: { x: number; y: number }) => ({
+        x: p.x * scale + offsetX,
+        y: p.y * scale + offsetY,
+      });
+
+      const pt = [transformPoint(topLeft), transformPoint(topRight), transformPoint(bottomRight), transformPoint(bottomLeft)];
+
+      ctx.beginPath();
+      ctx.moveTo(pt[0].x, pt[0].y);
+      ctx.lineTo(pt[1].x, pt[1].y);
+      ctx.lineTo(pt[2].x, pt[2].y);
+      ctx.lineTo(pt[3].x, pt[3].y);
+      ctx.closePath();
+      
+      if (!isValid) {
+        ctx.strokeStyle = "#f44336"; // Red
+      } else if (isGlobalDuplicate || isBatchDuplicate) {
+        ctx.strokeStyle = "#FFD700"; // Gold
+      } else {
+        ctx.strokeStyle = "#4caf50"; // Green
+      }
+      
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    });
+  };
+
+  // Draws on the hidden processing canvas to generate the result image
   const drawBarcodeOnCanvas = (
     barcodes: ReadResult[],
     source: ImageBitmap | HTMLImageElement | HTMLVideoElement,
@@ -97,10 +185,9 @@ const CameraScanner = ({
   ) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return null;
 
-    // Unified size access
     let sourceWidth: number;
     let sourceHeight: number;
 
@@ -134,7 +221,7 @@ const CameraScanner = ({
     barcodes.forEach((barcode) => {
       const text = cleanCode(barcode.text);
       
-      // Check duplicates
+      const isValid = validateCode ? validateCode(text) : true;
       const isGlobalDuplicate = existingCodes.includes(text);
       const isBatchDuplicate = currentBatchCodes.includes(text);
       
@@ -158,14 +245,15 @@ const CameraScanner = ({
       ctx.lineTo(pt[3].x, pt[3].y);
       ctx.closePath();
       
-      // Color logic
-      if (isGlobalDuplicate || isBatchDuplicate) {
-        ctx.strokeStyle = "#FFD700"; // Gold for duplicates
+      if (!isValid) {
+        ctx.strokeStyle = "#f44336";
+      } else if (isGlobalDuplicate || isBatchDuplicate) {
+        ctx.strokeStyle = "#FFD700";
       } else {
-        ctx.strokeStyle = "#4caf50"; // Green for new
+        ctx.strokeStyle = "#4caf50";
       }
       
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 5;
       ctx.stroke();
     });
 
@@ -185,7 +273,7 @@ const CameraScanner = ({
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     if (ctx && video.readyState === video.HAVE_ENOUGH_DATA) {
       canvas.width = video.videoWidth;
@@ -196,29 +284,73 @@ const CameraScanner = ({
       try {
         const results = await readBarcodes(imageData, {
             maxNumberOfSymbols: expectedCount,
-            formats: ["DataMatrix", "QRCode"],
+            formats: formats,
             tryHarder: true
         });
 
+        // Always update overlay if results found or clear if not
         if (results.length > 0) {
-          const imageWithBarcode = drawBarcodeOnCanvas(results, video, container);
-          stopCamera();
-          successAudio.play();
-          if (imageWithBarcode) {
-            const texts = results.map(r => cleanCode(r.text));
-            
-            const dedupedTexts = [...new Set(texts)];
-            const newCount = dedupedTexts.filter(t => !existingCodes.includes(t)).length;
-            const dupCount = dedupedTexts.length - newCount;
+            drawOverlay(results, video, container);
+        } else {
+             // Clear overlay if nothing found
+             const oCanvas = overlayCanvasRef.current;
+             const oCtx = oCanvas?.getContext('2d');
+             if (oCanvas && oCtx) {
+                 oCtx.clearRect(0, 0, oCanvas.width, oCanvas.height);
+             }
+        }
 
-            setScanResult({ 
-              texts: dedupedTexts, 
-              image: imageWithBarcode,
-              newCount,
-              dupCount
-            });
+        if (results.length > 0) {
+          const texts = results.map(r => cleanCode(r.text));
+          
+          let validResults = results;
+          if (validateCode) {
+              const invalidCodes = results.filter(r => !validateCode!(cleanCode(r.text)));
+              if (invalidCodes.length > 0) {
+                  // Show feedback for invalid codes
+                  if (!toastMessage) { 
+                     showToast("Неверный товар (GTIN не совпадает)");
+                  }
+                  // We continue scanning, but we filter out invalid ones for the count check below
+              }
+              validResults = results.filter(r => validateCode!(cleanCode(r.text)));
           }
-          return;
+
+          const validTexts = validResults.map(r => cleanCode(r.text));
+          const uniqueValidTexts = [...new Set(validTexts)];
+
+          // Check if we have enough VALID codes
+          if (uniqueValidTexts.length >= expectedCount) {
+              // Capture snapshot with ALL results (valid + invalid so user sees what happened)
+              const imageWithBarcode = drawBarcodeOnCanvas(results, video, container);
+              stopCamera();
+              successAudio.play();
+              
+              const validDedupedTexts = [...new Set(validTexts)];
+              
+              if (closeOnScan) {
+                 onScan(validDedupedTexts);
+                 handleClose();
+                 return;
+              }
+    
+              if (imageWithBarcode) {
+                const newCount = validDedupedTexts.filter(t => !existingCodes.includes(t)).length;
+                const dupCount = validDedupedTexts.length - newCount;
+    
+                setScanResult({ 
+                  texts: validDedupedTexts, 
+                  image: imageWithBarcode,
+                  newCount,
+                  dupCount
+                });
+              }
+              return;
+          } else {
+             // Not enough valid codes yet, continue scanning
+             requestRef.current = requestAnimationFrame(scanFrame);
+             return;
+          }
         }
       } catch (err) {
         // Ignore errors
@@ -259,7 +391,7 @@ const CameraScanner = ({
       
       tempCanvas.width = w;
       tempCanvas.height = h;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
       if (!tempCtx) throw new Error("Canvas context error");
       
       tempCtx.drawImage(imageSource, 0, 0);
@@ -272,14 +404,33 @@ const CameraScanner = ({
       });
 
       if (results.length > 0) {
+          
+          const texts = results.map(r => cleanCode(r.text));
+
+          // Validation Logic for File
+          if (validateCode) {
+            const invalidCodes = texts.filter(t => !validateCode(t));
+            if (invalidCodes.length > 0) {
+                 alert("Найдены товары, не соответствующие набору (GTIN не совпадает).");
+                 startCamera(); // Restart camera
+                 return;
+            }
+          }
+
+          const dedupedTexts = [...new Set(texts)];
+
+          if (closeOnScan) {
+             onScan(dedupedTexts);
+             handleClose();
+             return;
+          }
+
           const container = canvasRef.current?.parentElement;
           if (!container) return;
 
           const imageWithBarcode = drawBarcodeOnCanvas(results, imageSource, container);
           successAudio.play();
           if (imageWithBarcode) {
-             const texts = results.map(r => cleanCode(r.text));
-             const dedupedTexts = [...new Set(texts)];
              const newCount = dedupedTexts.filter(t => !existingCodes.includes(t)).length;
              const dupCount = dedupedTexts.length - newCount;
 
@@ -313,6 +464,8 @@ const CameraScanner = ({
     setIsModalOpen(false);
     setScanResult(null);
     setError(null);
+    setToastMessage(null);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
   };
 
   useEffect(() => {
@@ -328,7 +481,7 @@ const CameraScanner = ({
   return (
     <>
       <button type="button" onClick={() => setIsModalOpen(true)} className={`${styles.scanButton} ${className || ""}`}>
-        {textButton ? <span style={{ display: "inline-block", alignItems: "center", gap: "10px" }}>{textButton} <BarCodeIcon width={iconWidth} height={iconHeight} /></span> : <BarCodeIcon width={iconWidth} height={iconHeight} />}
+        {textButton ? <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>{textButton} <BarCodeIcon width={iconWidth} height={iconHeight} /></span> : <BarCodeIcon width={iconWidth} height={iconHeight} />}
       </button>
 
       {isModalOpen && (
@@ -337,13 +490,26 @@ const CameraScanner = ({
             <button type="button" className={styles.closeButton} onClick={handleClose}>
               &times;
             </button>
+            {scannerText && (
+                <div className={styles.modalTitle}>
+                    {scannerText}
+                </div>
+            )}
             {/* <h3 className={styles.modalTitle}>Сканирование</h3> */}
 
             {error && <p className={styles.errorText}>{error}</p>}
+            
+            {/* Toast Message */}
+            {toastMessage && <div className={styles.toast}>{toastMessage}</div>}
 
             <div className={styles.scannerContainer}>
               {!scanResult && <video ref={videoRef} playsInline muted className={styles.video} />}
+              {/* Overlay Canvas for real-time AR feedback */}
+              {!scanResult && <canvas ref={overlayCanvasRef} className={styles.overlayCanvas} />}
+              
               {scanResult && <img src={scanResult.image} alt="Scanned code" className={styles.resultImage} />}
+              
+              {/* Hidden canvas for processing and final image generation */}
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
 
