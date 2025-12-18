@@ -81,9 +81,11 @@ const ScanDocKit = () => {
             onScan={handleCameraScan} 
             className={styles.cameraButton}
             textButton="Сканировать камерой"
+            scannerText="Сканируйте номер заказа"
             expectedCount={1}
-            formats={["Code128"]}
+            formats={["Code128", "DataMatrix"]}
             closeOnScan={true}
+            defaultOpen={true}
          />
       </div>
 

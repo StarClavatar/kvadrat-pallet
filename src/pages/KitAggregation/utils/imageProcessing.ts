@@ -1,4 +1,5 @@
 import { readBarcodes, ReadResult, ReaderOptions } from "zxing-wasm/reader";
+import { GetDocResponse } from "../../../api/kitservice/getDoc";
 
 export interface ScanResultData {
   processedImage: string; // Base64 image with boxes
@@ -12,14 +13,13 @@ export const processScanImage = async (
   file: File,
   existingCodes: string[],
   targetTotal: number,
-  validGtins?: string[] // Optional validation
+  docData: GetDocResponse | undefined // Need full doc data for counts validation
 ): Promise<ScanResultData> => {
   // Calculate how many we still need
   const currentCount = existingCodes.length;
   const neededCount = Math.max(1, targetTotal - currentCount);
 
-  // 1. Load Image safely handling EXIF orientation via createImageBitmap if supported
-  // This ensures the image is rotated correctly before we process it or draw it.
+  // 1. Load Image
   let imageSource: ImageBitmap | HTMLImageElement;
   let width: number;
   let height: number;
@@ -30,7 +30,6 @@ export const processScanImage = async (
       width = imageSource.width;
       height = imageSource.height;
     } else {
-      // Fallback for older browsers (less likely to handle EXIF correctly automatically, but best effort)
       const img = await loadImage(file);
       imageSource = img;
       width = img.naturalWidth;
@@ -51,23 +50,21 @@ export const processScanImage = async (
     throw new Error("Could not get canvas context");
   }
 
-  // 3. Draw Image (baking in the orientation)
+  // 3. Draw Image
   ctx.drawImage(imageSource, 0, 0);
 
   // 4. Get ImageData for scanning
-  // This ensures zxing sees exactly what we drew (pixel-for-pixel)
   const imageData = ctx.getImageData(0, 0, width, height);
 
-  // 5. Read barcodes from the ImageData
+  // 5. Read barcodes
   const readerOptions: ReaderOptions = {
     tryHarder: true,
     formats: ["DataMatrix"],
-    maxNumberOfSymbols: neededCount, // Строгий лимит на основе оставшихся слотов
+    maxNumberOfSymbols: targetTotal + 5, // Allow finding more to filter them later
   };
 
   let results: ReadResult[] = [];
   try {
-    // Note: zxing-wasm readBarcodes(imageData) works with the pixel data
     results = await readBarcodes(imageData, readerOptions);
   } catch (e) {
     console.error("Error reading barcodes:", e);
@@ -77,32 +74,60 @@ export const processScanImage = async (
   const foundCodes: string[] = [];
   const newCodes: string[] = [];
   const duplicateCodes: string[] = [];
-
-  // Check for invalid GTINs if validGtins provided
-  if (validGtins && validGtins.length > 0) {
-     const invalidCodes = results.filter(r => {
-        const text = r.text.trim().replace(/\((00|01|21|93)\)/g, "$1");
-        return !validGtins.some(gtin => text.includes(gtin));
-     });
-
-     if (invalidCodes.length > 0) {
-         throw new Error("Найдены товары, не соответствующие набору (GTIN не совпадает).");
-     }
+  
+  // Create a tracking map for items added in this session
+  // AND existing items to check global limits
+  const sessionCounts: Record<string, number> = {};
+  
+  // Initialize with existing codes
+  if (docData?.kitDetail) {
+      docData.kitDetail.forEach(item => {
+          sessionCounts[item.GTIN] = existingCodes.filter(c => c.includes(item.GTIN)).length;
+      });
   }
+
+  const validGtins = docData?.kitDetail?.map(d => d.GTIN) || [];
 
   results.forEach((result) => {
     const text = result.text.trim().replace(/\((00|01|21|93)\)/g, "$1");
     foundCodes.push(text);
 
-    // Check against global existing codes
-    const isGlobalDuplicate = existingCodes.includes(text);
-    // Check against current batch (duplicates within the same photo)
-    const isBatchDuplicate = newCodes.includes(text);
+    // Validation Logic
+    let isValid = false;
+    let isRed = false;
+    
+    // 1. Check GTIN existence
+    const matchedItem = docData?.kitDetail?.find(d => text.includes(d.GTIN));
+    
+    if (matchedItem) {
+        // 2. Check duplicates
+        const isGlobalDuplicate = existingCodes.includes(text);
+        const isBatchDuplicate = newCodes.includes(text); // Check against *accepted* new codes
 
-    if (isGlobalDuplicate || isBatchDuplicate) {
-      duplicateCodes.push(text);
+        if (isGlobalDuplicate) {
+            duplicateCodes.push(text);
+            // Valid code but duplicate
+            isValid = false; 
+        } else if (isBatchDuplicate) {
+            // Already added in this batch, treat as duplicate for display
+            duplicateCodes.push(text); 
+            isValid = false;
+        } else {
+            // 3. Check Quantity Limits
+            const currentQty = sessionCounts[matchedItem.GTIN] || 0;
+            if (currentQty < matchedItem.amount) {
+                isValid = true;
+                newCodes.push(text);
+                sessionCounts[matchedItem.GTIN] = currentQty + 1;
+            } else {
+                // Limit exceeded
+                isValid = false;
+                isRed = true; // Mark as error
+            }
+        }
     } else {
-      newCodes.push(text);
+        // Invalid GTIN
+        isRed = true;
     }
 
     const { topLeft, topRight, bottomRight, bottomLeft } = result.position;
@@ -114,13 +139,15 @@ export const processScanImage = async (
     ctx.lineTo(bottomLeft.x, bottomLeft.y);
     ctx.closePath();
 
-    // Dynamic line width based on image size
+    // Dynamic line width
     ctx.lineWidth = Math.max(5, width / 150);
 
-    if (isGlobalDuplicate || isBatchDuplicate) {
-      ctx.strokeStyle = "#FFD700"; // Gold for duplicates
+    if (isRed) {
+        ctx.strokeStyle = "#f44336"; // Red for invalid GTIN or Limit Exceeded
+    } else if (!isValid) {
+        ctx.strokeStyle = "#FFD700"; // Gold for duplicates (valid GTIN but already scanned)
     } else {
-      ctx.strokeStyle = "#32CD32"; // LimeGreen for new
+        ctx.strokeStyle = "#32CD32"; // LimeGreen for accepted new codes
     }
 
     ctx.stroke();

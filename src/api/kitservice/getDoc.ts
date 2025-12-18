@@ -21,6 +21,8 @@ export interface GetDocResponse {
   kitDetail: KitDetail[];
   packCount: number;
   collectedCount: number;
+  KitNum?: string; // Номер набора (если редактируем или только что создали)
+  scanCodes?: string[]; // Коды в наборе (если редактируем)
 }
 
 interface GetDocParams {

@@ -1,3 +1,5 @@
+import { GetDocResponse } from "./getDoc";
+
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface CreateKitParams {
@@ -7,13 +9,7 @@ interface CreateKitParams {
   scanCodes: string[];
 }
 
-export interface CreateKitResponse {
-  error: string;
-  info: string;
-  infoType: string;
-  // Removed 'status' as it's likely not part of the backend response based on standard pattern
-  // Backend usually returns 'error' string if something is wrong, or empty string if success.
-}
+export type CreateKitResponse = GetDocResponse;
 
 export const createKit = async (params: CreateKitParams): Promise<CreateKitResponse> => {
   const headers = {
@@ -29,8 +25,6 @@ export const createKit = async (params: CreateKitParams): Promise<CreateKitRespo
     try {
       return JSON.parse(text);
     } catch (e) {
-      // Cast to any to satisfy the explicit return type which might expect a specific interface
-      // In a real app, you'd want to handle types more gracefully or allow error only responses
       return { error: text } as any;
     }
 };

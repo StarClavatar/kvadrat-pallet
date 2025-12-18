@@ -1,3 +1,5 @@
+import { GetDocResponse } from "./getDoc";
+
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface ChangeKitParams {
@@ -5,12 +7,10 @@ interface ChangeKitParams {
   tsdUUID: string;
   kitNum: string;
   scanCodes: string[];
+  docNum: string
 }
 
-export interface ChangeKitResponse {
-  error: string;
-  info?: string;
-}
+export type ChangeKitResponse = GetDocResponse;
 
 export const changeKit = async (params: ChangeKitParams): Promise<ChangeKitResponse> => {
   const headers = {
@@ -26,7 +26,6 @@ export const changeKit = async (params: ChangeKitParams): Promise<ChangeKitRespo
     try {
       return JSON.parse(text);
     } catch (e) {
-      return { error: text };
+      return { error: text } as any;
     }
 };
-
