@@ -58,49 +58,59 @@ const KitAggregation = () => {
   const handleLiveScan = (scannedCodes: string[]) => {
     let addedCount = 0;
     const newCodesList = [...codes];
-    
-    // We only check if GTIN exists in the doc, no count limits
+    // Create a map of current counts to track additions within this batch
+    const countsCheck: Record<string, number> = {};
+
+    // Initialize with current counts
+    docData?.kitDetail.forEach(item => {
+      countsCheck[item.GTIN] = newCodesList.filter(c => c.includes(item.GTIN)).length;
+    });
+
     for (const cleanCode of scannedCodes) {
-      if (newCodesList.length >= SET_SIZE) break; 
-      
+      if (newCodesList.length >= SET_SIZE) break;
+
       const item = docData?.kitDetail.find(d => cleanCode.includes(d.GTIN));
       if (item) {
+        // Check limits
+        if ((countsCheck[item.GTIN] || 0) < item.amount) {
           if (!newCodesList.includes(cleanCode)) {
             newCodesList.push(cleanCode);
+            countsCheck[item.GTIN] = (countsCheck[item.GTIN] || 0) + 1;
             addedCount++;
           }
+        }
       }
     }
 
     if (addedCount > 0) {
-       const updatedCodes = newCodesList;
-       setCodes(updatedCodes);
-       
-       // Auto-submit if set is complete
-       if (updatedCodes.length === SET_SIZE && docData) {
-           // We need to trigger submission. 
-           // Since handleSubmit relies on 'codes' state which might not be updated yet in this closure,
-           // we should call createKit directly with updatedCodes.
-           setIsLoading(true);
-           createKit({
-            pinCode: String(pinAuthData?.pinCode),
-            tsdUUID: String(localStorage.getItem("tsdUUID")),
-            docNum: docData.docNum,
-            scanCodes: updatedCodes,
-          }).then(response => {
-              if (response.error) {
-                setErrorText(response.error);
-              } else {
-                setSuccessText("Набор успешно агрегирован!");
-                setDocData(response);
-                setCodes([]); 
-              }
-          }).catch(err => {
-              setErrorText(err.message || String(err));
-          }).finally(() => {
-              setIsLoading(false);
-          });
-       }
+      const updatedCodes = newCodesList;
+      setCodes(updatedCodes);
+
+      // Auto-submit if set is complete
+      if (updatedCodes.length === SET_SIZE && docData) {
+        // We need to trigger submission. 
+        // Since handleSubmit relies on 'codes' state which might not be updated yet in this closure,
+        // we should call createKit directly with updatedCodes.
+        setIsLoading(true);
+        createKit({
+          pinCode: String(pinAuthData?.pinCode),
+          tsdUUID: String(localStorage.getItem("tsdUUID")),
+          docNum: docData.docNum,
+          scanCodes: updatedCodes,
+        }).then(response => {
+          if (response.error) {
+            setErrorText(response.error);
+          } else {
+            setSuccessText("Набор успешно агрегирован!");
+            setDocData(response);
+            setCodes([]);
+          }
+        }).catch(err => {
+          setErrorText(err.message || String(err));
+        }).finally(() => {
+          setIsLoading(false);
+        });
+      }
     }
   };
   // -------------------------------------------
@@ -134,20 +144,27 @@ const KitAggregation = () => {
     if (reviewData && reviewData.newCodes.length > 0) {
       // Validate counts again before adding (just in case processScanImage logic changes or is bypassed)
       const newCodesList = [...codes];
+      const countsCheck: Record<string, number> = {};
+      docData?.kitDetail.forEach(item => {
+        countsCheck[item.GTIN] = newCodesList.filter(c => c.includes(item.GTIN)).length;
+      });
 
       const validNewCodes: string[] = [];
-      
+
       for (const code of reviewData.newCodes) {
-          if (newCodesList.length + validNewCodes.length >= SET_SIZE) break;
-          
-          const item = docData?.kitDetail.find(d => code.includes(d.GTIN));
-          if (item) {
-             validNewCodes.push(code);
+        if (newCodesList.length + validNewCodes.length >= SET_SIZE) break;
+
+        const item = docData?.kitDetail.find(d => code.includes(d.GTIN));
+        if (item) {
+          if ((countsCheck[item.GTIN] || 0) < item.amount) {
+            validNewCodes.push(code);
+            countsCheck[item.GTIN] = (countsCheck[item.GTIN] || 0) + 1;
           }
+        }
       }
 
       if (validNewCodes.length > 0) {
-          setCodes(prev => [...prev, ...validNewCodes]);
+        setCodes(prev => [...prev, ...validNewCodes]);
       }
     }
     closeReview();
@@ -189,28 +206,36 @@ const KitAggregation = () => {
     }
   };
 
-    const handleChangeKitScan = (scannedCodes: string[]) => {
-     let addedCount = 0;
-     const newCodesList = [...codes];
- 
-     for (const cleanCode of scannedCodes) {
-       if (newCodesList.length >= SET_SIZE) break;
- 
-       const item = docData?.kitDetail.find(d => cleanCode.includes(d.GTIN));
-       if (item) {
-           if (!newCodesList.includes(cleanCode)) {
-             newCodesList.push(cleanCode);
-             addedCount++;
-           }
-       }
-     }
- 
-     if (addedCount > 0) {
-       setCodes(newCodesList);
-       // Trigger changeKit
-       performChangeKit(newCodesList);
-     }
-    };
+  const handleChangeKitScan = (scannedCodes: string[]) => {
+    let addedCount = 0;
+    const newCodesList = [...codes];
+    const countsCheck: Record<string, number> = {};
+
+    docData?.kitDetail.forEach(item => {
+      countsCheck[item.GTIN] = newCodesList.filter(c => c.includes(item.GTIN)).length;
+    });
+
+    for (const cleanCode of scannedCodes) {
+      if (newCodesList.length >= SET_SIZE) break;
+
+      const item = docData?.kitDetail.find(d => cleanCode.includes(d.GTIN));
+      if (item) {
+        if ((countsCheck[item.GTIN] || 0) < item.amount) {
+          if (!newCodesList.includes(cleanCode)) {
+            newCodesList.push(cleanCode);
+            countsCheck[item.GTIN] = (countsCheck[item.GTIN] || 0) + 1;
+            addedCount++;
+          }
+        }
+      }
+    }
+
+    if (addedCount > 0) {
+      setCodes(newCodesList);
+      // Trigger changeKit
+      performChangeKit(newCodesList);
+    }
+  };
 
   const performChangeKit = async (currentCodes: string[]) => {
     if (!docData?.KitNum) return;
@@ -474,41 +499,29 @@ const KitAggregation = () => {
         </div>
         {/* )} */}
 
-
-
-
-
-
         {docData?.KitNum &&
-          <div className={styles.buttonEditContainer}>
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
             <CameraScanner
               onScan={handleChangeKitScan}
               expectedCount={Math.max(1, SET_SIZE - codes.length)}
               existingCodes={codes}
               targetTotal={SET_SIZE}
               className={`${styles.button} ${styles.buttonEdit}`}
+              iconWidth={32}
               textButton='Изменить набор'
               scannerText='Сканируйте новые банки для изменения в наборе'
-              buttonHeight={20}
+              iconHeight={32}
               validateCode={validateCode}
               closeOnScan={true}
             />
             <button
               className={`${styles.button} ${styles.buttonDelete}`}
               onClick={handleDeleteKit}
+            // disabled={ codes.length <= 0 }
             >
               Удалить набор
             </button>
           </div>
-
-
-
-
-
-
-
-
-
         }
         {/* <button 
         //       className={styles.button}

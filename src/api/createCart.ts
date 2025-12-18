@@ -4,8 +4,9 @@ export const createCart = async (
   pinCode: string,
   tsdUUID: string,
   scanCod: string,
+  orderNum: string,
   packCount?: number,
-  docUUID?: string
+  docUUID?: string,
 ) => {
   const body: {
     pinCode: string;
@@ -13,10 +14,12 @@ export const createCart = async (
     scanCod: string;
     packCount?: number;
     docUUID?: string;
+    orderNum: string;
   } = {
     pinCode,
     tsdUUID,
     scanCod,
+    orderNum,
   };
 
   if (packCount) {

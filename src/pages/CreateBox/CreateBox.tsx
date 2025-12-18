@@ -12,7 +12,7 @@ import { ICartData } from "../../context/valueContext";
 import Loader from "../../components/Loader/Loader";
 
 const CreateBox = () => {
-    const { setCartData, isLoading, setIsLoading, initialCartInfo, setInitialCartInfo, initialScanCode, setInitialScanCode } = useContext(ValueContext);
+    const { setCartData, isLoading, setIsLoading, initialCartInfo, setInitialCartInfo, initialScanCode, setInitialScanCode, order } = useContext(ValueContext);
     const [scanCode, setScanCode] = useState<string>("");
     const [manualInput, setManualInput] = useState<string>(""); // Для ручного ввода
     const navigate = useNavigate();
@@ -44,7 +44,9 @@ const CreateBox = () => {
             const response = await createCart(
                 String(pinAuthData?.pinCode),
                 String(localStorage.getItem("tsdUUID")),
-                scannedCode
+                scannedCode,
+                String(productInfo?.docNum), 
+
             );
 
             if (response.SSCC && response.SSCC.length > 0) {
@@ -52,7 +54,6 @@ const CreateBox = () => {
                 setCartData(response);
                 navigate('/box-aggregation');
             } else if (response.error) {
-                console.log("ЗДОРОВЕННЫЙ ХУЙ",response.error);
                 audioError.play();
                 setPopupErrorText(response.error);
                 setPopupError(true);
@@ -85,6 +86,7 @@ const CreateBox = () => {
                 String(pinAuthData?.pinCode),
                 String(localStorage.getItem("tsdUUID")),
                 scanCode,
+                String(order?.docNum), 
                 Number(packCount)
             );
 

@@ -18,6 +18,7 @@ interface CameraScannerProps {
   scannerText?: string;
   validateCode?: (code: string) => boolean; // Функция валидации кода (например, проверка GTIN)
   defaultOpen?: boolean;
+  buttonHeight?: number;
 }
 
 const CameraScanner = ({
@@ -33,6 +34,7 @@ const CameraScanner = ({
   closeOnScan = false,
   scannerText,
   validateCode,
+  buttonHeight = 30,
   defaultOpen = false
 }: CameraScannerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(defaultOpen);
@@ -482,7 +484,7 @@ const CameraScanner = ({
   return (
     <>
       <button type="button" onClick={() => setIsModalOpen(true)} className={`${styles.scanButton} ${className || ""}`}>
-        {textButton ? <span style={{ display: "flex", alignItems: "center", gap: "10px", height: 60 }}>{textButton} <BarCodeIcon width={iconWidth} height={iconHeight} /></span> : <BarCodeIcon width={iconWidth} height={iconHeight} />}
+        {textButton ? <span style={{ display: "flex", alignItems: "center", gap: "10px", height: buttonHeight + 'px' }}>{textButton} <BarCodeIcon width={iconWidth} height={iconHeight} /></span> : <BarCodeIcon width={iconWidth} height={iconHeight} />}
       </button>
 
       {isModalOpen && (

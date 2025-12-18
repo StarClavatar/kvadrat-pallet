@@ -107,8 +107,8 @@ const WorkPallet = () => {
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
         jumpConfirmation.scannedCode,
-        undefined, 
-        jumpConfirmation.docUUID
+        order.docNum,
+        // jumpConfirmation.docUUID,
       );
       if (response.error) {
         errorAudio.play();
