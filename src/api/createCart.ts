@@ -7,6 +7,7 @@ export const createCart = async (
   orderNum: string,
   packCount?: number,
   docUUID?: string,
+  orderDate?: string, // Add orderDate parameter
 ) => {
   const body: {
     pinCode: string;
@@ -15,6 +16,7 @@ export const createCart = async (
     packCount?: number;
     docUUID?: string;
     orderNum: string;
+    orderDate?: string; // Add orderDate to body interface
   } = {
     pinCode,
     tsdUUID,
@@ -28,6 +30,10 @@ export const createCart = async (
 
   if (docUUID) {
     body.docUUID = docUUID;
+  }
+
+  if (orderDate) {
+    body.orderDate = orderDate;
   }
 
   const response = await fetch(`${BASE_URL}/cartservice/createCart`, {

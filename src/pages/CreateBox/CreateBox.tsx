@@ -45,7 +45,11 @@ const CreateBox = () => {
                 String(pinAuthData?.pinCode),
                 String(localStorage.getItem("tsdUUID")),
                 scannedCode,
-                String(productInfo?.docNum), 
+                String(productInfo?.docNum),
+                Number(packCount),
+                undefined,
+                String(order?.beginDate)
+                
 
             );
 
@@ -87,7 +91,9 @@ const CreateBox = () => {
                 String(localStorage.getItem("tsdUUID")),
                 scanCode,
                 String(order?.docNum), 
-                Number(packCount)
+                Number(packCount),
+                undefined,
+                String(order?.beginDate)
             );
 
             if (response.error) {
@@ -101,7 +107,6 @@ const CreateBox = () => {
             }
         } catch (err) {
             audioError.play();
-            setPopupErrorText("Сетевая ошибка");
             setPopupError(true);
         } finally {
             setIsLoading(false);
