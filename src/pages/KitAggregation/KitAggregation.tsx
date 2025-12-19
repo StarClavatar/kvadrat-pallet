@@ -25,7 +25,7 @@ const KitAggregation = () => {
   // Calculate SET_SIZE dynamically based on kitDetail
   const SET_SIZE = useMemo(() => {
     if (!docData?.kitDetail) return 4; // Default fallback
-    return docData.kitDetail.reduce((sum, item) => sum + item.amount, 0);
+    return docData.kitDetail.reduce((sum, item) => sum + Number(item.amount), 0);
   }, [docData]);
 
   // Validator function with Count Check
@@ -56,40 +56,36 @@ const KitAggregation = () => {
 
   // --- ОБРАБОТКА в рил тайме ---
   const handleLiveScan = (scannedCodes: string[]) => {
-    let addedCount = 0;
-    const newCodesList = [...codes];
+    // Пользователь требует сканировать СРАЗУ весь набор (3 из 3).
+    // Поэтому мы не накапливаем коды, а берем то, что вернул сканер.
     
-    // We only check if GTIN exists in the doc, no count limits
+    const validCodes: string[] = [];
+    
+    // Валидируем GTIN
     for (const cleanCode of scannedCodes) {
-      if (newCodesList.length >= SET_SIZE) break; 
+      if (validCodes.length >= SET_SIZE) break; 
       
       const item = docData?.kitDetail.find(d => cleanCode.includes(d.GTIN));
       if (item) {
-          if (!newCodesList.includes(cleanCode)) {
-            newCodesList.push(cleanCode);
-            addedCount++;
-          }
+          validCodes.push(cleanCode);
       }
     }
 
-    if (addedCount > 0) {
-       const updatedCodes = newCodesList;
-       setCodes(updatedCodes);
+    if (validCodes.length > 0) {
+       setCodes(validCodes);
        
-       // Auto-submit if set is complete
-       if (updatedCodes.length === SET_SIZE && docData) {
-           // We need to trigger submission. 
-           // Since handleSubmit relies on 'codes' state which might not be updated yet in this closure,
-           // we should call createKit directly with updatedCodes.
+       // Если набрали нужное количество - отправляем сразу
+       if (validCodes.length === SET_SIZE && docData) {
            setIsLoading(true);
            createKit({
             pinCode: String(pinAuthData?.pinCode),
             tsdUUID: String(localStorage.getItem("tsdUUID")),
             docNum: docData.docNum,
-            scanCodes: updatedCodes,
+            scanCodes: validCodes,
           }).then(response => {
               if (response.error) {
                 setErrorText(response.error);
+                setCodes([]); // Сбрасываем коды при ошибке, чтобы можно было сканировать заново
               } else {
                 setSuccessText("Набор успешно агрегирован!");
                 setDocData(response);
@@ -97,6 +93,7 @@ const KitAggregation = () => {
               }
           }).catch(err => {
               setErrorText(err.message || String(err));
+              setCodes([]); // Сбрасываем коды при ошибке сети/кода
           }).finally(() => {
               setIsLoading(false);
           });
@@ -198,10 +195,9 @@ const KitAggregation = () => {
  
        const item = docData?.kitDetail.find(d => cleanCode.includes(d.GTIN));
        if (item) {
-           if (!newCodesList.includes(cleanCode)) {
-             newCodesList.push(cleanCode);
-             addedCount++;
-           }
+           // Remove duplicate check
+           newCodesList.push(cleanCode);
+           addedCount++;
        }
      }
  
@@ -295,28 +291,7 @@ const KitAggregation = () => {
 
   // const handleSubmit = async () => {
   //   if (codes.length !== SET_SIZE || !docData) return;
-
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await createKit({
-  //       pinCode: String(pinAuthData?.pinCode),
-  //       tsdUUID: String(localStorage.getItem("tsdUUID")),
-  //       docNum: docData.docNum,
-  //       scanCodes: codes,
-  //     });
-
-  //     if (response.error) {
-  //       setErrorText(response.error);
-  //     } else {
-  //       setSuccessText("Набор успешно агрегирован!");
-  //       setDocData(response);
-  //       setCodes([]); // Clear only after success and updating docData
-  //     }
-  //   } catch (err: any) {
-  //     setErrorText(err.message || String(err));
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
+  //   ...
   // };
 
   const handleSuccessClose = () => {
@@ -385,16 +360,7 @@ const KitAggregation = () => {
 
         {/* Items Progress Bar */}
         <div className={styles.progressSection}>
-          {/* <div className={styles.progressInfo}>
-            <span>Товары в наборе</span>
-            <span><strong>{codes.length}</strong> из <strong>{SET_SIZE}</strong></span>
-          </div>
-          <div className={styles.progressBar}>
-            <div 
-              className={`${styles.progressFill} ${isComplete ? styles.progressFillComplete : ''}`}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div> */}
+          {/* ... */}
         </div>
       </header>
 
@@ -417,20 +383,7 @@ const KitAggregation = () => {
           <p>Сканируйте коды камерой.</p>
         </div>
         {/* ) : ( */}
-        {/* <div className={styles.codesList}>
-            {codes.map((code, index) => (
-              <div key={`${code}-${index}`} className={styles.codeItem}>
-                <span className={styles.codeText}>{code}</span>
-                <button 
-                  className={styles.removeButton}
-                  onClick={() => removeCode(index)}
-                  aria-label="Удалить код"
-                >
-                  &times;
-                </button>
-              </div>
-            ))}
-          </div> */}
+        {/* ... codesList ... */}
         {/* )} */}
       </main>
 
@@ -441,30 +394,20 @@ const KitAggregation = () => {
           {/* Кнопка Live сканера */}
           <CameraScanner
             onScan={handleLiveScan}
-            expectedCount={Math.max(1, SET_SIZE - codes.length)}
-            existingCodes={codes}
+            expectedCount={SET_SIZE} // Всегда ожидаем полный набор
             targetTotal={SET_SIZE}
             className={`${styles.button} ${styles.liveScanButton}`}
             iconWidth={32}
             textButton='Создать набор'
             scannerText='Сканируйте набор'
             iconHeight={32}
+            buttonHeight={60}
             validateCode={validateCode}
             closeOnScan={true}
           />
 
-          {/* <button 
-              className={`${styles.button} ${styles.cameraButton}`}
-              onClick={() => cameraInputRef.current?.click()}
-            > Фото
-            </button>
-
-            <button 
-              className={`${styles.button} ${styles.uploadButton}`}
-              onClick={() => galleryInputRef.current?.click()}
-            >
-              Галерея
-            </button> */}
+          {/* <button ... Фото ... > ... </button>
+            <button ... Галерея ... > ... </button> */}
           {docData.KitNum && <button
             className={`${styles.button} ${styles.buttonPrint}`}
             onClick={() => window.confirm("Вы уверены, что хотите отправить этикетки на печать?") ? handlePrintLabel : null}
@@ -474,17 +417,11 @@ const KitAggregation = () => {
         </div>
         {/* )} */}
 
-
-
-
-
-
         {docData?.KitNum &&
           <div className={styles.buttonEditContainer}>
             <CameraScanner
               onScan={handleChangeKitScan}
-              expectedCount={Math.max(1, SET_SIZE - codes.length)}
-              existingCodes={codes}
+              expectedCount={SET_SIZE}
               targetTotal={SET_SIZE}
               className={`${styles.button} ${styles.buttonEdit}`}
               textButton='Изменить набор'
@@ -500,24 +437,7 @@ const KitAggregation = () => {
               Удалить набор
             </button>
           </div>
-
-
-
-
-
-
-
-
-
         }
-        {/* <button 
-        //       className={styles.button}
-        //       style={{ backgroundColor: isComplete ? '#4caf50' : '#e0e0e0', color: isComplete ? 'white' : '#888' }}
-        //       onClick={handleSubmit}
-        //       disabled={!isComplete}
-        //     >
-        //       {isComplete ? 'Отправить набор' : 'Наполните набор'}
-        //     </button> */}
       </footer>
 
       {/* Hidden Inputs */}

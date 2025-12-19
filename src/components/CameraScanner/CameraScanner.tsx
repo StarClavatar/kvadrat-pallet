@@ -48,6 +48,7 @@ const CameraScanner = ({
   const canvasRef = useRef<HTMLCanvasElement>(null); // For image capture
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null); // For real-time overlay
   const requestRef = useRef<number>();
+  const lastScanTimeRef = useRef<number>(0);
   const toastTimeoutRef = useRef<NodeJS.Timeout>();
 
   const startCamera = async () => {
@@ -132,13 +133,16 @@ const CameraScanner = ({
     const sourceWidth = video.videoWidth;
     const sourceHeight = video.videoHeight;
 
-    // Simulate object-fit: contain
-    const scale = Math.min(containerWidth / sourceWidth, containerHeight / sourceHeight);
-    const scaledWidth = sourceWidth * scale;
-    // const scaledHeight = sourceHeight * scale; // Unused but consistent with logic
+    // Simulate object-fit: contain (same logic as before, just renaming for clarity)
+    const displayScale = Math.min(containerWidth / sourceWidth, containerHeight / sourceHeight);
+    const scaledWidth = sourceWidth * displayScale;
+    
+    // We processed the image at a smaller scale (720p height), so we need to know that scale factor
+    // to map coordinates back to the original video size
+    const processingScale = 720 / sourceHeight; 
 
     const offsetX = (containerWidth - scaledWidth) / 2;
-    const offsetY = (containerHeight - (sourceHeight * scale)) / 2;
+    const offsetY = (containerHeight - (sourceHeight * displayScale)) / 2;
 
     const currentBatchCodes: string[] = [];
 
@@ -156,8 +160,11 @@ const CameraScanner = ({
       const { topLeft, topRight, bottomRight, bottomLeft } = barcode.position;
 
       const transformPoint = (p: { x: number; y: number }) => ({
-        x: p.x * scale + offsetX,
-        y: p.y * scale + offsetY,
+        // 1. Un-scale from processing resolution (p.x / processingScale) -> gets coordinate in original video size
+        // 2. Scale to display size (* displayScale)
+        // 3. Add offset (+ offsetX)
+        x: (p.x / processingScale) * displayScale + offsetX,
+        y: (p.y / processingScale) * displayScale + offsetY,
       });
 
       const pt = [transformPoint(topLeft), transformPoint(topRight), transformPoint(bottomRight), transformPoint(bottomLeft)];
@@ -276,19 +283,34 @@ const CameraScanner = ({
     )
       return;
 
+    // Reduce throttling significantly - check more often for better recognition speed
+    const now = performance.now();
+    if (now - lastScanTimeRef.current < 30) { // ~30 FPS
+      requestRef.current = requestAnimationFrame(scanFrame);
+      return;
+    }
+    lastScanTimeRef.current = now;
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     if (ctx && video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Use smaller resolution for processing to speed up detection
+      // but keep aspect ratio
+      const scale = 720 / video.videoHeight; // Target 720p height for processing
+      const processWidth = video.videoWidth * scale;
+      const processHeight = 720;
+      
+      canvas.width = processWidth;
+      canvas.height = processHeight;
+      
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
       try {
         const results = await readBarcodes(imageData, {
-          maxNumberOfSymbols: expectedCount,
+          maxNumberOfSymbols: expectedCount, // Строго ограничиваем кол-во
           formats: formats,
           tryHarder: true
         });
@@ -320,16 +342,18 @@ const CameraScanner = ({
           }
 
           const validTexts = validResults.map(r => cleanCode(r.text));
-          const uniqueValidTexts = [...new Set(validTexts)];
-
+          // We don't deduplicate here anymore to allow multiple identical codes if they are physically present (and user requested to remove dup checks)
+          // const uniqueValidTexts = [...new Set(validTexts)]; 
+          
           // Check if we have enough VALID codes
-          if (uniqueValidTexts.length >= expectedCount) {
+          if (validTexts.length >= expectedCount) {
             // Capture snapshot with ALL results (valid + invalid so user sees what happened)
             const imageWithBarcode = drawBarcodeOnCanvas(results, video, container);
             stopCamera();
             successAudio.play();
 
-            const validDedupedTexts = [...new Set(validTexts)];
+            // Return EXACTLY expectedCount items if we found more
+            const validDedupedTexts = validTexts.slice(0, expectedCount);
 
             if (closeOnScan) {
               onScan(validDedupedTexts);
@@ -338,8 +362,8 @@ const CameraScanner = ({
             }
 
             if (imageWithBarcode) {
-              const newCount = validDedupedTexts.filter(t => !existingCodes.includes(t)).length;
-              const dupCount = validDedupedTexts.length - newCount;
+              const newCount = validDedupedTexts.length; // Simplified since we don't check existing codes
+              const dupCount = 0;
 
               setScanResult({
                 texts: validDedupedTexts,
@@ -420,7 +444,7 @@ const CameraScanner = ({
           }
         }
 
-        const dedupedTexts = [...new Set(texts)];
+        const dedupedTexts = texts;
 
         if (closeOnScan) {
           onScan(dedupedTexts);

@@ -320,11 +320,13 @@
 }
 
 .successMessage {
-  font-size: 1.1rem;
-  color: #555;
+  font-size: 1rem;
+  color: black;
   margin: 0 0 24px 0;
   text-align: center;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  font-weight: 500;
 }
 
 .successButton {

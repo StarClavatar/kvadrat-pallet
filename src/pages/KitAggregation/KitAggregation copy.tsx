@@ -368,6 +368,9 @@ const KitAggregation = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <div>
             <p className={styles.docNum}>Заказ №{docData?.docNum}</p>
+            <div className={styles.docState} style={{ backgroundColor: docData.docState === 'собран' ? 'rgb(76, 175, 79)' : 'rgb(255,221,3)' }}>
+              {docData.docState}
+            </div>
           </div>
           {/* <div style={{marginLeft: '10px'}}> */}
           <CameraScanner
@@ -385,9 +388,33 @@ const KitAggregation = () => {
         </div>
         {docData && (
           <div className={styles.docName}>
-            <div className={styles.docState} style={{ backgroundColor: docData.docState === 'собран' ? 'rgb(76, 175, 79)' : 'rgb(255,221,3)' }}>
+            {/* <div className={styles.docState} style={{ backgroundColor: docData.docState === 'собран' ? 'rgb(76, 175, 79)' : 'rgb(255,221,3)' }}>
               {docData.docState}
-            </div>
+            </div> */}
+            {docData?.KitNum &&
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            <CameraScanner
+              onScan={handleChangeKitScan}
+              expectedCount={Math.max(1, SET_SIZE - codes.length)}
+              existingCodes={codes}
+              targetTotal={SET_SIZE}
+              className={`${styles.button} ${styles.buttonEdit}`}
+              iconWidth={32}
+              textButton='Изменить набор'
+              scannerText='Сканируйте новые банки для изменения в наборе'
+              iconHeight={32}
+              validateCode={validateCode}
+              closeOnScan={true}
+            />
+            <button
+              className={`${styles.button} ${styles.buttonDelete}`}
+              onClick={handleDeleteKit}
+            // disabled={ codes.length <= 0 }
+            >
+              Удалить набор
+            </button>
+          </div>
+        }
             {docData.prodName}
           </div>
         )}
@@ -499,7 +526,7 @@ const KitAggregation = () => {
         </div>
         {/* )} */}
 
-        {docData?.KitNum &&
+        {/* {docData?.KitNum &&
           <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
             <CameraScanner
               onScan={handleChangeKitScan}
@@ -522,7 +549,7 @@ const KitAggregation = () => {
               Удалить набор
             </button>
           </div>
-        }
+        } */}
         {/* <button 
         //       className={styles.button}
         //       style={{ backgroundColor: isComplete ? '#4caf50' : '#e0e0e0', color: isComplete ? 'white' : '#888' }}

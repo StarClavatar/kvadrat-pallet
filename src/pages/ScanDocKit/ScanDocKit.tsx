@@ -83,7 +83,7 @@ const ScanDocKit = () => {
             textButton="Сканировать камерой"
             scannerText="Сканируйте номер заказа"
             expectedCount={1}
-            formats={["Code128", "DataMatrix"]}
+            formats={["Code128"]}
             closeOnScan={true}
             defaultOpen={true}
          />

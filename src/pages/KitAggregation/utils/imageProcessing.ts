@@ -16,8 +16,8 @@ export const processScanImage = async (
   docData: GetDocResponse | undefined // Need full doc data for counts validation
 ): Promise<ScanResultData> => {
   // Calculate how many we still need
-  const currentCount = existingCodes.length;
-  const neededCount = Math.max(1, targetTotal - currentCount);
+  // const currentCount = existingCodes.length;
+  // const neededCount = Math.max(1, targetTotal - currentCount);
 
   // 1. Load Image
   let imageSource: ImageBitmap | HTMLImageElement;
@@ -75,19 +75,6 @@ export const processScanImage = async (
   const newCodes: string[] = [];
   const duplicateCodes: string[] = [];
   
-  // Create a tracking map for items added in this session
-  // AND existing items to check global limits
-  const sessionCounts: Record<string, number> = {};
-  
-  // Initialize with existing codes
-  if (docData?.kitDetail) {
-      docData.kitDetail.forEach(item => {
-          sessionCounts[item.GTIN] = existingCodes.filter(c => c.includes(item.GTIN)).length;
-      });
-  }
-
-  const validGtins = docData?.kitDetail?.map(d => d.GTIN) || [];
-
   results.forEach((result) => {
     const text = result.text.trim().replace(/\((00|01|21|93)\)/g, "$1");
     foundCodes.push(text);
@@ -95,36 +82,14 @@ export const processScanImage = async (
     // Validation Logic
     let isValid = false;
     let isRed = false;
-    
+
     // 1. Check GTIN existence
     const matchedItem = docData?.kitDetail?.find(d => text.includes(d.GTIN));
     
     if (matchedItem) {
-        // 2. Check duplicates
-        const isGlobalDuplicate = existingCodes.includes(text);
-        const isBatchDuplicate = newCodes.includes(text); // Check against *accepted* new codes
-
-        if (isGlobalDuplicate) {
-            duplicateCodes.push(text);
-            // Valid code but duplicate
-            isValid = false; 
-        } else if (isBatchDuplicate) {
-            // Already added in this batch, treat as duplicate for display
-            duplicateCodes.push(text); 
-            isValid = false;
-        } else {
-            // 3. Check Quantity Limits
-            const currentQty = sessionCounts[matchedItem.GTIN] || 0;
-            if (currentQty < matchedItem.amount) {
-                isValid = true;
-                newCodes.push(text);
-                sessionCounts[matchedItem.GTIN] = currentQty + 1;
-            } else {
-                // Limit exceeded
-                isValid = false;
-                isRed = true; // Mark as error
-            }
-        }
+        // Validation simplified: Allow duplicates, let backend handle errors
+        isValid = true;
+        newCodes.push(text);
     } else {
         // Invalid GTIN
         isRed = true;
@@ -145,7 +110,8 @@ export const processScanImage = async (
     if (isRed) {
         ctx.strokeStyle = "#f44336"; // Red for invalid GTIN or Limit Exceeded
     } else if (!isValid) {
-        ctx.strokeStyle = "#FFD700"; // Gold for duplicates (valid GTIN but already scanned)
+        // Should not happen with new logic unless logic changes
+        ctx.strokeStyle = "#FFD700"; 
     } else {
         ctx.strokeStyle = "#32CD32"; // LimeGreen for accepted new codes
     }
