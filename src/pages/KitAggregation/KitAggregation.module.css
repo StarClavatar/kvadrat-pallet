@@ -196,6 +196,7 @@
   background-color: #f44336;
   color: white;
   padding: 8px;
+  height: 33px;
 }
 
 .buttonDelete:disabled {
@@ -215,7 +216,7 @@
   color: rgb(69, 156, 255);
   text-decoration: underline;
   padding: 8px;
-  height: 20px;
+  height: 33px;
 }
 
 .buttonEdit:disabled {
