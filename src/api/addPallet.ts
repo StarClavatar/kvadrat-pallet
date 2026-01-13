@@ -5,6 +5,7 @@ export const addPallet = async (
     pinCode: string,
     tsdUUID: string,
     docNum: string,
+    docUUID: string,
     palletNum: string
 ): Promise<IOrder> => {
     const response = await fetch(`${BASE_URL}/orderservice/addPallet`, {
@@ -16,6 +17,7 @@ export const addPallet = async (
             pinCode,
             tsdUUID,
             docNum,
+            docUUID,
             palletNum,
         }),
     });

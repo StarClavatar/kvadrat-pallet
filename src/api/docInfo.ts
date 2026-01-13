@@ -3,7 +3,8 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 export const fetchDocInfo = async (
   pinCode: string,
   docNum: string,
-  tsdUUID: string
+  tsdUUID: string,
+  docUUID: string
 ) => {
   const response = await fetch(`${BASE_URL}/orderservice/docinfo`, {
     method: "POST",
@@ -14,6 +15,7 @@ export const fetchDocInfo = async (
       pinCode,
       docNum,
       tsdUUID,
+      docUUID,
     }),
   });
 

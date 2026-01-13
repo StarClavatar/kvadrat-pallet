@@ -41,6 +41,7 @@ export interface IOrder {
     docState: string;
     customer: string;
     shippingDate: string;
+    docUUID: string;
     enclosedInCart: number;
     activePallet: string;
     goods: IGood[];

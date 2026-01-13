@@ -57,6 +57,7 @@ const Order = () => {
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
         order.docNum,
+        order.docUUID,
         scannedCode
       );
 
@@ -82,7 +83,8 @@ const Order = () => {
       const response = await closeDocument(
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
-        order.docNum
+        order.docNum,
+        order.docUUID
       );
 
       if (response.error) {
@@ -107,6 +109,7 @@ const Order = () => {
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
         order.docNum,
+        order.docUUID,
         confirmType
       );
 

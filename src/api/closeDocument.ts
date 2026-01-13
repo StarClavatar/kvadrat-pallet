@@ -10,6 +10,7 @@ export const closeDocument = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
+  docUUID: string,
   infoType: "yes" | "no" | "" = ""
 ): Promise<ICloseShipmentResponse> => {
   const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/closeDocument`, {
@@ -21,6 +22,7 @@ export const closeDocument = async (
       pinCode,
       tsdUUID,
       docNum,
+      docUUID,
       infoType,
     }),
   });

@@ -10,6 +10,7 @@ export const closePallet = async (
   pinCode: string,
     tsdUUID: string,
   docNum: string,
+  docUUID: string,
   palletNum: string,
   infoType: "yes" | "no" | "" = ""
 ): Promise<IClosePalletResponse> => {
@@ -22,6 +23,7 @@ export const closePallet = async (
       pinCode,
       tsdUUID,
       docNum,
+      docUUID,
       palletNum,
       infoType,
         }),

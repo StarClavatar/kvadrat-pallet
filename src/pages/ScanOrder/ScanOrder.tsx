@@ -34,7 +34,8 @@ const ScanOrder = () => {
       const response = await fetchDocInfo(
         String(pinAuthData?.pinCode),
         String(code),
-        String(localStorage.getItem("tsdUUID"))
+        String(localStorage.getItem("tsdUUID")),
+        String(code)
       );
 
       if (!response?.error) {

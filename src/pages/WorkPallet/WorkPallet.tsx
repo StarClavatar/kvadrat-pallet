@@ -70,7 +70,8 @@ const WorkPallet = () => {
         String(localStorage.getItem("tsdUUID")),
         order.docNum,
         palletId!,
-        scannedCode
+        scannedCode,
+        order.docUUID
       );
       
       const responseData = response as any;
@@ -108,7 +109,8 @@ const WorkPallet = () => {
         String(localStorage.getItem("tsdUUID")),
         jumpConfirmation.scannedCode,
         order.docNum,
-        // jumpConfirmation.docUUID,
+        undefined,
+        order.docUUID,
       );
       if (response.error) {
         errorAudio.play();
@@ -138,6 +140,7 @@ const WorkPallet = () => {
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
             order.docNum,
+            order.docUUID,
             palletId!,
             scannedCode
         );
@@ -166,6 +169,7 @@ const WorkPallet = () => {
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
             order.docNum,
+            order.docUUID,
             palletId!
         );
 
@@ -191,6 +195,7 @@ const WorkPallet = () => {
             String(pinAuthData?.pinCode),
             String(localStorage.getItem("tsdUUID")),
             order.docNum,
+            order.docUUID,
             palletId!,
             confirmType
         );

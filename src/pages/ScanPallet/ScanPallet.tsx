@@ -38,6 +38,7 @@ const ScanPallet = () => {
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
         order.docNum,
+        order.docUUID,
         scannedCode
       );
 
@@ -65,7 +66,8 @@ const ScanPallet = () => {
       const response = await createPallet(
         String(pinAuthData?.pinCode),
         String(localStorage.getItem("tsdUUID")),
-        order.docNum
+        order.docNum,
+        order.docUUID
       );
 
       if (response.infoType && response.info) {

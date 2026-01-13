@@ -10,6 +10,7 @@ export const deleteScan = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
+  docUUID: string,
   palletNum: string,
   scanCod: string
 ): Promise<IDeleteScanResponse> => {
@@ -22,6 +23,7 @@ export const deleteScan = async (
       pinCode,
       tsdUUID,
       docNum,
+      docUUID,
       palletNum,
       scanCod,
     }),

@@ -7,7 +7,8 @@ export const addScan = async (
     tsdUUID: string,
     docNum: string,
     palletNum: string,
-    scanCod: string
+    scanCod: string,
+    docUUID: string
 ): Promise<IOrder> => {
     const response = await fetch(`${BASE_URL}/orderservice/addScan`, {
         method: "POST",
@@ -20,6 +21,7 @@ export const addScan = async (
             docNum,
             palletNum,
             scanCod,
+            docUUID,
         }),
     });
     return response.json();

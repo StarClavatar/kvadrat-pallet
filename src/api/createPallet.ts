@@ -10,6 +10,7 @@ export const createPallet = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
+  docUUID: string,
 ): Promise<CreatePalletResponse> => {
   const response = await fetch(`${BASE_URL}/orderservice/createPallet`, {
     method: "POST",
@@ -20,6 +21,7 @@ export const createPallet = async (
       pinCode,
       tsdUUID,
       docNum,
+      docUUID,
     }),
   });
   return response.json();

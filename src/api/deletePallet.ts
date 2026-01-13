@@ -10,6 +10,7 @@ export const deletePallet = async (
   pinCode: string,
   tsdUUID: string,
   docNum: string,
+  docUUID: string,
   palletNum: string // This will be the scanned code
 ): Promise<IDeletePalletResponse> => {
   const response = await fetch(`${import.meta.env.VITE_BASE_URL}/orderservice/deletePallet`, {
@@ -21,6 +22,7 @@ export const deletePallet = async (
       pinCode,
       tsdUUID,
       docNum,
+      docUUID,
       palletNum,
     }),
   });

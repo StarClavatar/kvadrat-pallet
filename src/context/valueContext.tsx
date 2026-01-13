@@ -91,6 +91,7 @@ export const ValueContext = createContext<valueContextType>({
     docState: "",
     customer: "",
     shippingDate: "",
+    docUUID: "",
     activePallet: "",
     goods: [],
     pallets: [],
