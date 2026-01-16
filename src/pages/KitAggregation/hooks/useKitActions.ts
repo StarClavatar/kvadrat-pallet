@@ -7,6 +7,7 @@ import { getKit } from '../../../api/kitservice/getKit';
 import { changeKit } from '../../../api/kitservice/changeKit';
 import { deleteKit } from '../../../api/kitservice/deleteKit';
 import { printLabel } from '../../../api/kitservice/printLabel';
+import printIcon from '../../../assets/printIcon';
 
 export const useKitActions = () => {
   const location = useLocation();
@@ -35,19 +36,31 @@ export const useKitActions = () => {
 
   const handleApiCall = async <T,>(
     apiFn: (params: any) => Promise<T & { error?: string }>,
-    params: any,
-    successMessage?: string,
+    params: any = {},
+    successMessage?: string | ((data: T) => string),
     updateDoc = true,
     updateCodes = false
   ) => {
     setIsLoading(true);
     try {
-      const response = await apiFn({ ...params, pinCode, tsdUUID });
+      const payload = {
+        pinCode,
+        tsdUUID,
+        docNum: docData?.docNum ? String(docData.docNum) : undefined,
+        kitNum: docData?.KitNum ? String(docData.KitNum) : undefined,
+        ...params
+      };
+      const response = await apiFn(payload);
       if (response.error) {
         setErrorText(response.error);
         if (updateCodes) setCodes([]);
       } else {
-        if (successMessage) setSuccessText(successMessage);
+        if (successMessage) {
+            const message = typeof successMessage === 'function' 
+                ? successMessage(response) 
+                : successMessage;
+            setSuccessText(message);
+        }
         if (updateDoc) setDocData(response as any);
         if (updateCodes) setCodes((response as any).scanCodes || []);
         else setCodes([]);
@@ -61,7 +74,8 @@ export const useKitActions = () => {
   };
 
   const createKitAction = (scannedCodes: string[]) => {
-      handleApiCall(createKit, { docNum: docData?.docNum, scanCodes: scannedCodes }, "Набор успешно агрегирован!", true, false);
+      handleApiCall(createKit, { docNum: docData?.docNum, scanCodes: scannedCodes }, (data: GetDocResponse) => `Набор успешно агрегирован! ${data.info ? data.info : ''}`, true, false);
+      console.log('docData: ', docData)
   };
 
   const findKitAction = (scannedCodes: string[]) => {

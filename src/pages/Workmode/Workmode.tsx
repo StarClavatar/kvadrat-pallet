@@ -9,6 +9,7 @@ const Workmode = () => {
   return (
     <div className="workmode">
         <p className="workmode__employee">{pinAuthData?.workerName}</p>
+        <p className="workmode__employee">{pinAuthData?.tsdNumber}</p>
       <div className="workmode__links">
         {pinAuthData?.operations.makePallets && <Link to={"/new-pallet"} className="link">Создание паллет </Link>}
         {/* <Link to={"/scan-order"} className="link">Работа с заказом</Link> */}
