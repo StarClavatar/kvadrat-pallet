@@ -20,6 +20,7 @@ interface CameraScannerProps {
   defaultOpen?: boolean;
   buttonHeight?: number;
   buttonDisabled?: boolean;
+  fullscreen?: boolean;
 }
 
 const CameraScanner = ({
@@ -37,7 +38,8 @@ const CameraScanner = ({
   scannerText,
   validateCode,
   buttonHeight = 30,
-  defaultOpen = false
+  defaultOpen = false,
+  fullscreen = false
 }: CameraScannerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(defaultOpen);
   const [scanResult, setScanResult] = useState<{ texts: string[]; image: string; newCount: number; dupCount: number } | null>(null);
@@ -95,7 +97,13 @@ const CameraScanner = ({
     setTorchEnabled(false); // Reset torch state on start
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { 
+          facingMode: "environment", 
+          width: { ideal: 2560 }, 
+          height: { ideal: 1440 },
+          // @ts-ignore
+          focusMode: { ideal: "continuous" } 
+        },
       });
       if (videoRef.current) {
         const video = videoRef.current;
@@ -150,9 +158,11 @@ const CameraScanner = ({
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
-    const displayScale = Math.min(cw / vw, ch / vh);
+    const displayScale = fullscreen 
+      ? Math.max(cw / vw, ch / vh)
+      : Math.min(cw / vw, ch / vh);
     const scaledW = vw * displayScale;
-    const processingScale = 720 / vh;
+    const processingScale = 1440 / vh;
     const offsetX = (cw - scaledW) / 2;
     const offsetY = (ch - (vh * displayScale)) / 2;
 
@@ -202,7 +212,9 @@ const CameraScanner = ({
     else { sw = source.naturalWidth; sh = source.naturalHeight; }
 
     const { width: cw, height: ch } = container.getBoundingClientRect();
-    const scale = Math.min(cw / sw, ch / sh);
+    const scale = fullscreen 
+      ? Math.max(cw / sw, ch / sh)
+      : Math.min(cw / sw, ch / sh);
     const scaledW = sw * scale;
     const scaledH = sh * scale;
     const offsetX = (cw - scaledW) / 2;
@@ -237,10 +249,13 @@ const CameraScanner = ({
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     if (ctx && video.readyState === video.HAVE_ENOUGH_DATA) {
-      // Downscale to 720p height
-      const scale = 720 / video.videoHeight;
+      // Use higher resolution for better recognition of small codes
+      // 1080p height is a good balance between performance and detail
+      const targetHeight = 1440;
+      const scale = targetHeight / video.videoHeight;
       const w = video.videoWidth * scale;
-      const h = 720;
+      const h = targetHeight;
+      
       canvas.width = w;
       canvas.height = h;
       ctx.drawImage(video, 0, 0, w, h);
@@ -249,7 +264,10 @@ const CameraScanner = ({
         const results = await readBarcodes(ctx.getImageData(0, 0, w, h), {
           maxNumberOfSymbols: expectedCount,
           formats: formats,
-          tryHarder: true
+          tryHarder: true,
+          tryRotate: true,
+          tryInvert: true,
+          tryDenoise: true
         });
 
         if (results.length > 0) {
@@ -305,7 +323,11 @@ const CameraScanner = ({
       ctx?.drawImage(img, 0, 0);
 
       const results = await readBarcodes(ctx!.getImageData(0, 0, canvas.width, canvas.height), {
-        maxNumberOfSymbols: expectedCount, formats: ["DataMatrix", "QRCode"], tryHarder: true
+        maxNumberOfSymbols: expectedCount, 
+        tryHarder: true,
+        tryRotate: true,
+        tryInvert: true,
+        tryDenoise: true
       });
 
       if (results.length > 0) {
@@ -351,32 +373,34 @@ const CameraScanner = ({
       {isModalOpen && (
         <div className={styles.modalOverlay}>
           {scannerText && <h4 className={styles.modalTitle}>{scannerText}</h4>}
-          <div className={styles.modalContent}>
+          <div className={`${styles.modalContent} ${fullscreen ? styles.modalContentFullscreen : ''}`}>
             <button type="button" className={styles.closeButton} onClick={handleClose}>&times;</button>
-            {error && <p className={styles.errorText}>{error}</p>}
-            {toastMessage && <div className={styles.toast}>{toastMessage}</div>}
-
-            <div className={styles.scannerContainer}>
-              {!scanResult && <video ref={videoRef} playsInline muted className={styles.video} />}
-              {!scanResult && <canvas ref={overlayCanvasRef} className={styles.overlayCanvas} />}
-              
-              {!scanResult && (
+            
+            {/* Moved torch button outside scannerContainer to be relative to modalContent and respect z-index properly */}
+            {!scanResult && (
                   <button 
                     type="button" 
                     className={styles.torchButton} 
                     onClick={toggleTorch}
-                    style={{ backgroundColor: torchEnabled ? '#ffeb3b' : 'rgba(255,255,255,0.3)', color: torchEnabled ? '#000' : '#fff' }}
+                    style={{ backgroundColor: torchEnabled ? 'rgba(255, 235, 59, 0.8)' : 'rgba(0, 0, 0, 0.5)', color: torchEnabled ? '#000' : '#fff' }}
                   >
-                    {torchEnabled ? '🔦 Выкл' : '🔦 Вкл'}
+                    {torchEnabled ? '🔦' : '🔦'}
                   </button>
-              )}
+            )}
 
-              {scanResult && <img src={scanResult.image} alt="Scanned code" className={styles.resultImage} />}
+            {error && <p className={styles.errorText}>{error}</p>}
+            {toastMessage && <div className={styles.toast}>{toastMessage}</div>}
+
+            <div className={styles.scannerContainer}>
+              {!scanResult && <video ref={videoRef} playsInline muted className={`${styles.video} ${fullscreen ? styles.videoFullscreen : ''}`} />}
+              {!scanResult && <canvas ref={overlayCanvasRef} className={styles.overlayCanvas} />}
+              
+              {scanResult && <img src={scanResult.image} alt="Scanned code" className={`${styles.resultImage} ${fullscreen ? styles.videoFullscreen : ''}`} />}
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
 
             {scanResult ? (
-              <div className={styles.resultActions}>
+              <div className={`${styles.resultActions} ${fullscreen ? styles.resultActionsFullscreen : ''}`}>
                 <div className={styles.infoBlock}>
                   <p className={styles.detailsText}>Найдено: <b>{scanResult.texts.length}</b></p>
                 </div>
@@ -388,7 +412,7 @@ const CameraScanner = ({
                 </div>
               </div>
             ) : (
-              <div className={styles.actions}>
+              <div className={`${styles.actions} ${fullscreen ? styles.actionsFullscreen : ''}`}>
                 <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.actionButton}>Выбрать из галереи</button>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
               </div>

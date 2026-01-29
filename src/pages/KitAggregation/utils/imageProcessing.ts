@@ -61,6 +61,9 @@ export const processScanImage = async (
     tryHarder: true,
     formats: ["DataMatrix"],
     maxNumberOfSymbols: targetTotal + 5, // Allow finding more to filter them later
+    tryRotate: true,
+    tryInvert: true,
+    tryDenoise: true
   };
 
   let results: ReadResult[] = [];

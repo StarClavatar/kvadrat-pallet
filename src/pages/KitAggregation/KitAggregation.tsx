@@ -140,6 +140,7 @@ const KitAggregation = () => {
                   validateCode={validateCode}
                   closeOnScan={true}
                   buttonDisabled={docData.collectedCount == docData.packCount}
+                  fullscreen={true}
                 />
                 <button
                   className={`${styles.button} ${styles.buttonDelete}`}
@@ -160,6 +161,7 @@ const KitAggregation = () => {
                 textButton="Поиск"
                 scannerText="Поиск набора"
                 formats={["DataMatrix", "Code128"]}
+                fullscreen={true}
               />
         </div>
         
@@ -220,6 +222,7 @@ const KitAggregation = () => {
             validateCode={validateCode}
             closeOnScan={true}
             buttonDisabled={docData.collectedCount == docData.packCount}
+            fullscreen={true}
           />
 
           {docData?.KitNum && <button

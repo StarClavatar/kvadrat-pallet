@@ -86,6 +86,7 @@ const ScanDocKit = () => {
             formats={["Code128"]}
             closeOnScan={true}
             defaultOpen={true}
+            fullscreen={true}
          />
       </div>
 
