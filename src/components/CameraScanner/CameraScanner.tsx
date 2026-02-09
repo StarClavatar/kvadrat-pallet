@@ -1,19 +1,50 @@
-import { useState, useRef, useEffect } from "react";
-import { readBarcodes, ReaderOptions, type ReadResult } from "zxing-wasm/reader";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import successSound from "../../assets/scanSuccess.mp3";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import styles from "./CameraScanner.module.css";
+import { useBarcodeDetector, DetectedBarcode } from "../../hooks/useBarcodeDetector";
+import { readBarcodes } from "zxing-wasm/reader";
+
+const FORMAT_MAP: Record<string, string> = {
+  "DataMatrix": "data_matrix",
+  "QRCode": "qr_code",
+  "Code128": "code_128",
+  "EAN-13": "ean_13",
+  "EAN-8": "ean_8",
+  "ITF": "itf",
+  "PDF417": "pdf417",
+  "Aztec": "aztec",
+  "Codabar": "codabar",
+  "Code39": "code_39",
+  "Code93": "code_93",
+  "UPC-A": "upc_a",
+  "UPC-E": "upc_e"
+};
+
+type BarcodeFormat = 
+  | "DataMatrix" 
+  | "QRCode" 
+  | "Code128" 
+  | "EAN-13" 
+  | "EAN-8" 
+  | "ITF" 
+  | "PDF417" 
+  | "Aztec" 
+  | "Codabar" 
+  | "Code39" 
+  | "Code93" 
+  | "UPC-A" 
+  | "UPC-E";
 
 interface CameraScannerProps {
   onScan: (results: string[]) => void;
   className?: string;
-  textButton?: string|JSX.Element;
+  textButton?: string | JSX.Element;
   expectedCount?: number;
   iconWidth?: number;
   iconHeight?: number;
   existingCodes?: string[];
-  targetTotal?: number;
-  formats?: ReaderOptions["formats"];
+  formats?: BarcodeFormat[];
   closeOnScan?: boolean;
   scannerText?: string;
   validateCode?: (code: string) => boolean;
@@ -21,6 +52,7 @@ interface CameraScannerProps {
   buttonHeight?: number;
   buttonDisabled?: boolean;
   fullscreen?: boolean;
+  targetTotal?: number;
 }
 
 const CameraScanner = ({
@@ -32,8 +64,7 @@ const CameraScanner = ({
   iconWidth = 24,
   iconHeight = 24,
   existingCodes = [],
-  // targetTotal is unused in this simplified version but kept for prop interface compatibility
-  formats = ["DataMatrix", "QRCode"],
+  formats = ["DataMatrix", "QRCode", "Code128", "EAN-13"],
   closeOnScan = false,
   scannerText,
   validateCode,
@@ -42,95 +73,267 @@ const CameraScanner = ({
   fullscreen = false
 }: CameraScannerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(defaultOpen);
-  const [scanResult, setScanResult] = useState<{ texts: string[]; image: string; newCount: number; dupCount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [torchEnabled, setTorchEnabled] = useState(false);
+  
+  // Convert ZXing formats to Native formats
+  // Memoize to prevent infinite re-render loops if parent passes new array reference
+  const nativeFormats = useMemo(() => formats
+    .map(f => FORMAT_MAP[f] || f.toLowerCase())
+    .filter(Boolean), [formats.join(',')]);
 
-  const successAudio = new Audio(successSound);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { detector } = useBarcodeDetector(nativeFormats);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const lastScanTimeRef = useRef<number>(0);
-  const toastTimeoutRef = useRef<NodeJS.Timeout>();
+  const streamRef = useRef<MediaStream | null>(null);
+  const successAudio = useMemo(() => new Audio(successSound), []);
 
-  // --- Helpers ---
-  const cleanCode = (text: string) => text.trim().replace(/\((00|01|21|93)\)/g, "$1");
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToastMessage(message);
-    toastTimeoutRef.current = setTimeout(() => setToastMessage(null), 2000);
+  // Helper to clean code (remove brackets around AI)
+  const cleanCode = (text: string) => {
+      // Remove leading control characters (ASCII 0-31), e.g. GS (\u001d)
+      let cleaned = text.replace(/^[\x00-\x1F]+/, "").trim();
+      // Remove brackets for AIs
+      cleaned = cleaned.replace(/\((00|01|21|93)\)/g, "$1");
+      return cleaned;
   };
 
-  const loadImage = (file: File): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-      img.onerror = reject;
-      img.src = url;
-    });
-  };
+  const toggleTorch = async () => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
 
-  const toggleTorch = () => {
-    const video = videoRef.current;
-    if (video && video.srcObject) {
-      const stream = video.srcObject as MediaStream;
-      const track = stream.getVideoTracks()[0];
-      //@ts-ignore
-      if (track && track.getCapabilities && track.getCapabilities().torch) {
-        track.applyConstraints({
-          advanced: [{ torch: !torchEnabled }]
-        } as any).then(() => {
-          setTorchEnabled(!torchEnabled);
-        }).catch(err => console.error("Torch error:", err));
+    try {
+      const capabilities = track.getCapabilities();
+      // @ts-ignore
+      if (capabilities.torch) {
+        // @ts-ignore
+        await track.applyConstraints({ advanced: [{ torch: !torchEnabled }] });
+        setTorchEnabled(!torchEnabled);
       }
+    } catch (err) {
+      console.error("Torch error:", err);
     }
   };
 
-  const startCamera = async () => {
-    setError(null);
-    setScanResult(null);
-    setTorchEnabled(false); // Reset torch state on start
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: "environment", 
-          width: { ideal: 2560 }, 
-          height: { ideal: 1440 },
-          // @ts-ignore
-          focusMode: { ideal: "continuous" } 
-        },
+  const drawOverlay = (barcodes: DetectedBarcode[], video: HTMLVideoElement) => {
+    const canvas = canvasRef.current;
+    const container = video.parentElement;
+    if (!canvas || !container) return;
+    
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { width: cw, height: ch } = container.getBoundingClientRect();
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+
+    // Set canvas to match container exactly
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Calculate scaling to match object-fit: cover (fullscreen) or contain
+    const scale = fullscreen 
+      ? Math.max(cw / vw, ch / vh)
+      : Math.min(cw / vw, ch / vh);
+      
+    const scaledW = vw * scale;
+    const scaledH = vh * scale;
+    const offsetX = (cw - scaledW) / 2;
+    const offsetY = (ch - scaledH) / 2;
+
+    barcodes.forEach((barcode) => {
+      const rawText = barcode.rawValue;
+      const text = cleanCode(rawText);
+      
+      const isValid = validateCode ? validateCode(text) : true;
+      const isDuplicate = existingCodes.includes(text);
+
+      ctx.beginPath();
+      
+      // Transform coordinates
+      const transform = (x: number, y: number) => ({
+        x: x * scale + offsetX,
+        y: y * scale + offsetY
       });
-      if (videoRef.current) {
-        const video = videoRef.current;
-        video.srcObject = stream;
-        video.onloadedmetadata = () => {
-          video.play();
-          requestRef.current = requestAnimationFrame(scanFrame);
-        };
+
+      if (barcode.cornerPoints && barcode.cornerPoints.length === 4) {
+        const points = barcode.cornerPoints.map(p => transform(p.x, p.y));
+        ctx.moveTo(points[0].x, points[0].y);
+        ctx.lineTo(points[1].x, points[1].y);
+        ctx.lineTo(points[2].x, points[2].y);
+        ctx.lineTo(points[3].x, points[3].y);
+      } else {
+        const { x, y, width, height } = barcode.boundingBox;
+        const p1 = transform(x, y);
+        const p2 = transform(x + width, y + height);
+        ctx.rect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+      }
+      ctx.closePath();
+
+      if (!isValid) {
+        ctx.strokeStyle = "#f44336"; 
+        ctx.fillStyle = "rgba(244, 67, 54, 0.2)";
+      } else if (isDuplicate) {
+        ctx.strokeStyle = "#FFD700";
+        ctx.fillStyle = "rgba(255, 215, 0, 0.2)";
+      } else {
+        ctx.strokeStyle = "#4caf50";
+        ctx.fillStyle = "rgba(76, 175, 80, 0.2)";
+      }
+
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.fill();
+    });
+  };
+
+  const scanLoop = useCallback(async () => {
+    if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) {
+      requestRef.current = requestAnimationFrame(scanLoop);
+      return;
+    }
+
+    // Throttle scanning slightly to save battery, but keep it smooth (e.g., 30fps)
+    const now = performance.now();
+    if (now - lastScanTimeRef.current < 30) {
+      requestRef.current = requestAnimationFrame(scanLoop);
+      return;
+    }
+    lastScanTimeRef.current = now;
+
+    try {
+      let barcodes: DetectedBarcode[] = [];
+
+      if (detector) {
+        // Native detection
+        barcodes = await detector.detect(videoRef.current);
+        
+      } else {
+        // Fallback to ZXing
+        // For ZXing we need a temporary canvas to draw the frame
+        // Or we can use the video element directly if ZXing supports it (readBarcodes usually takes ImageData or ImageBitmap)
+        // Creating a small offscreen canvas for better performance? Or use the full res one?
+        // Let's use an offscreen canvas for processing to not affect UI
+        const offscreenCanvas = document.createElement('canvas');
+        // Reduce resolution for performance on older devices?
+        const scale = 0.5; 
+        offscreenCanvas.width = videoRef.current.videoWidth * scale;
+        offscreenCanvas.height = videoRef.current.videoHeight * scale;
+        const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+        if (ctx) {
+            ctx.drawImage(videoRef.current, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            
+            const results = await readBarcodes(imageData, {
+                formats: formats as any, // ZXing expects its own format strings which match ours mostly
+                tryHarder: true,
+                maxNumberOfSymbols: expectedCount
+            });
+
+            // Convert ZXing results to DetectedBarcode format
+            barcodes = results.map(res => ({
+                rawValue: res.text,
+                format: res.format,
+                boundingBox: new DOMRectReadOnly(
+                    res.position.topLeft.x / scale, 
+                    res.position.topLeft.y / scale, 
+                    (res.position.topRight.x - res.position.topLeft.x) / scale, 
+                    (res.position.bottomLeft.y - res.position.topLeft.y) / scale
+                ),
+                cornerPoints: [
+                    { x: res.position.topLeft.x / scale, y: res.position.topLeft.y / scale },
+                    { x: res.position.topRight.x / scale, y: res.position.topRight.y / scale },
+                    { x: res.position.bottomRight.x / scale, y: res.position.bottomRight.y / scale },
+                    { x: res.position.bottomLeft.x / scale, y: res.position.bottomLeft.y / scale }
+                ]
+            }));
+        }
+      }
+      
+      // Draw results immediately
+      drawOverlay(barcodes, videoRef.current);
+
+      if (barcodes.length > 0) {
+        // Filter valid codes
+        const validBarcodes = barcodes.filter(b => {
+          const text = cleanCode(b.rawValue);
+          return validateCode ? validateCode(text) : true;
+        });
+
+        // Check if we have enough valid codes visible simultaneously
+        if (validBarcodes.length >= expectedCount) {
+          const texts = validBarcodes.map(b => cleanCode(b.rawValue)).slice(0, expectedCount);
+          
+          successAudio.play().catch(() => {});
+          
+          if (closeOnScan) {
+            onScan(texts);
+            handleClose();
+          } else {
+            // If we don't close, we might want to debounce this or just fire it
+            // For now, let's fire and let parent handle deduplication if needed
+            onScan(texts);
+            // Optional: Pause briefly to prevent spamming?
+          }
+        }
       }
     } catch (err) {
-      console.error("Camera error:", err);
-      setError("Не удалось получить доступ к камере.");
+      console.error("Detection error:", err);
+    }
+
+    requestRef.current = requestAnimationFrame(scanLoop);
+  }, [detector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats]);
+
+  const startCamera = async () => {
+    setError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          // @ts-ignore
+          focusMode: { ideal: "continuous" }
+        },
+        audio: false
+      });
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        
+        // Use promise-based play() for robustness
+        videoRef.current.play().then(() => {
+            requestRef.current = requestAnimationFrame(scanLoop);
+        }).catch(e => {
+            console.error("Video play failed:", e);
+        });
+      }
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setError("Нет доступа к камере. Проверьте разрешения.");
     }
   };
 
   const stopCamera = () => {
-    if (requestRef.current) cancelAnimationFrame(requestRef.current);
-    const video = videoRef.current;
-    if (video?.srcObject) {
-      const stream = video.srcObject as MediaStream;
-      const track = stream.getVideoTracks()[0];
-      // Try to turn off torch before stopping track
-      if (track && torchEnabled) {
-          track.applyConstraints({ advanced: [{ torch: false }] } as any).catch(() => {});
-      }
-      stream.getTracks().forEach((track) => track.stop());
-      video.srcObject = null;
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setTorchEnabled(false);
   };
@@ -138,285 +341,93 @@ const CameraScanner = ({
   const handleClose = () => {
     stopCamera();
     setIsModalOpen(false);
-    setScanResult(null);
-    setError(null);
-    setToastMessage(null);
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-  };
-
-  // --- Drawing & Scanning ---
-  const drawOverlay = (barcodes: ReadResult[], video: HTMLVideoElement, container: HTMLElement) => {
-    const canvas = overlayCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const { width: cw, height: ch } = container.getBoundingClientRect();
-    canvas.width = cw;
-    canvas.height = ch;
-    ctx.clearRect(0, 0, cw, ch);
-
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    const displayScale = fullscreen 
-      ? Math.max(cw / vw, ch / vh)
-      : Math.min(cw / vw, ch / vh);
-    const scaledW = vw * displayScale;
-    const processingScale = 1440 / vh;
-    const offsetX = (cw - scaledW) / 2;
-    const offsetY = (ch - (vh * displayScale)) / 2;
-
-    const currentBatchCodes: string[] = [];
-
-    barcodes.forEach((b) => {
-      const text = cleanCode(b.text);
-      const isValid = validateCode ? validateCode(text) : true;
-      const isGlobalDuplicate = existingCodes.includes(text);
-      const isBatchDuplicate = currentBatchCodes.includes(text);
-      if (!isBatchDuplicate) currentBatchCodes.push(text);
-
-      const { topLeft: tl, topRight: tr, bottomRight: br, bottomLeft: bl } = b.position;
-      const tf = (p: { x: number; y: number }) => ({
-        x: (p.x / processingScale) * displayScale + offsetX,
-        y: (p.y / processingScale) * displayScale + offsetY,
-      });
-
-      const pt = [tf(tl), tf(tr), tf(br), tf(bl)];
-
-      ctx.beginPath();
-      ctx.moveTo(pt[0].x, pt[0].y);
-      ctx.lineTo(pt[1].x, pt[1].y);
-      ctx.lineTo(pt[2].x, pt[2].y);
-      ctx.lineTo(pt[3].x, pt[3].y);
-      ctx.closePath();
-
-      if (!isValid) ctx.strokeStyle = "#f44336";
-      else if (isGlobalDuplicate || isBatchDuplicate) ctx.strokeStyle = "#FFD700";
-      else ctx.strokeStyle = "#4caf50";
-
-      ctx.lineWidth = 4;
-      ctx.stroke();
-    });
-  };
-
-  const drawBarcodeOnCanvas = (_barcodes: ReadResult[], source: any, container: HTMLElement) => {
-    // _barcodes are unused for simplified drawing, but kept in signature for compatibility or future overlay drawing
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return null;
-
-    let sw, sh;
-    if (source instanceof HTMLVideoElement) { sw = source.videoWidth; sh = source.videoHeight; }
-    else if (source instanceof ImageBitmap) { sw = source.width; sh = source.height; }
-    else { sw = source.naturalWidth; sh = source.naturalHeight; }
-
-    const { width: cw, height: ch } = container.getBoundingClientRect();
-    const scale = fullscreen 
-      ? Math.max(cw / sw, ch / sh)
-      : Math.min(cw / sw, ch / sh);
-    const scaledW = sw * scale;
-    const scaledH = sh * scale;
-    const offsetX = (cw - scaledW) / 2;
-    const offsetY = (ch - scaledH) / 2;
-
-    canvas.width = cw;
-    canvas.height = ch;
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.drawImage(source, offsetX, offsetY, scaledW, scaledH);
-
-    // Draw simplified boxes for snapshot (no complex coordinate mapping needed as we just drew the image)
-    // Note: This logic assumes source was processed at full res, but for video we process at 720p. 
-    // Ideally we should redraw boxes accurately, but for snapshot preview this is often acceptable or skipped.
-    // For critical accuracy we would need to pass original coordinates.
-    // Simplifying for now: Just return the image.
-    return canvas.toDataURL("image/jpeg");
-  };
-
-  const scanFrame = async () => {
-    const container = videoRef.current?.parentElement;
-    if (!videoRef.current || !canvasRef.current || videoRef.current.paused || !container) return;
-
-    const now = performance.now();
-    if (now - lastScanTimeRef.current < 30) {
-      requestRef.current = requestAnimationFrame(scanFrame);
-      return;
-    }
-    lastScanTimeRef.current = now;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-    if (ctx && video.readyState === video.HAVE_ENOUGH_DATA) {
-      // Use higher resolution for better recognition of small codes
-      // 1080p height is a good balance between performance and detail
-      const targetHeight = 1440;
-      const scale = targetHeight / video.videoHeight;
-      const w = video.videoWidth * scale;
-      const h = targetHeight;
-      
-      canvas.width = w;
-      canvas.height = h;
-      ctx.drawImage(video, 0, 0, w, h);
-
-      try {
-        const results = await readBarcodes(ctx.getImageData(0, 0, w, h), {
-          maxNumberOfSymbols: expectedCount,
-          formats: formats,
-          tryHarder: true,
-          tryRotate: true,
-          tryInvert: true,
-          tryDenoise: true
-        });
-
-        if (results.length > 0) {
-          drawOverlay(results, video, container);
-
-          // Validation Logic
-          let validResults = results;
-          if (validateCode) {
-            const valid = results.filter(r => validateCode!(cleanCode(r.text)));
-            if (valid.length < results.length && !toastMessage) showToast("GTIN товара не найден в заказе");
-            validResults = valid;
-          }
-
-          const validTexts = validResults.map(r => cleanCode(r.text));
-
-          if (validTexts.length >= expectedCount) {
-            const finalTexts = validTexts.slice(0, expectedCount);
-            const img = drawBarcodeOnCanvas(results, video, container);
-            stopCamera();
-            successAudio.play();
-
-            if (closeOnScan) {
-              onScan(finalTexts);
-              handleClose();
-              return;
-            }
-
-            if (img) {
-              setScanResult({ texts: finalTexts, image: img, newCount: finalTexts.length, dupCount: 0 });
-            }
-            return;
-          }
-        } else {
-          // Clear overlay
-          const oCtx = overlayCanvasRef.current?.getContext('2d');
-          if (oCtx) oCtx.clearRect(0, 0, overlayCanvasRef.current!.width, overlayCanvasRef.current!.height);
-        }
-      } catch (e) { /* ignore */ }
-    }
-    requestRef.current = requestAnimationFrame(scanFrame);
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    stopCamera(); setError(null); setScanResult(null);
-
-    try {
-      const img = await loadImage(file);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(img, 0, 0);
-
-      const results = await readBarcodes(ctx!.getImageData(0, 0, canvas.width, canvas.height), {
-        maxNumberOfSymbols: expectedCount, 
-        tryHarder: true,
-        tryRotate: true,
-        tryInvert: true,
-        tryDenoise: true
-      });
-
-      if (results.length > 0) {
-        const texts = results.map(r => cleanCode(r.text));
-        if (validateCode) {
-          if (texts.some(t => !validateCode(t))) {
-            alert("Найдены товары, не соответствующие набору.");
-            startCamera(); return;
-          }
-        }
-        if (closeOnScan) { onScan(texts); handleClose(); return; }
-
-        const container = canvasRef.current?.parentElement;
-        if (container) {
-          const snapshot = drawBarcodeOnCanvas(results, img, container);
-          successAudio.play();
-          if (snapshot) setScanResult({ texts, image: snapshot, newCount: texts.length, dupCount: 0 });
-        }
-      } else {
-        alert("Коды не найдены."); startCamera();
-      }
-    } catch (e) {
-      console.error(e); alert("Ошибка сканирования файла."); startCamera();
-    }
   };
 
   useEffect(() => {
-    if (isModalOpen) startCamera();
-    else stopCamera();
-    return stopCamera;
-  }, [isModalOpen]);
+    if (isModalOpen) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [isModalOpen]); // Removed detector from deps to avoid re-starting camera when it loads
 
   return (
     <>
-      <button type="button" 
-        onClick={() => setIsModalOpen(true)} 
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
         className={`${styles.scanButton} ${className || ""}`}
         disabled={buttonDisabled}
-        >
-        {textButton ? <span style={{ display: "flex", alignItems: "center", gap: "10px", height: buttonHeight + 'px' }}>{textButton} <BarCodeIcon width={iconWidth} height={iconHeight} /></span> : <BarCodeIcon width={iconWidth} height={iconHeight} />}
+      >
+        {textButton ? (
+          <span style={{ display: "flex", alignItems: "center", gap: "10px", height: buttonHeight + "px" }}>
+            {textButton} <BarCodeIcon width={iconWidth} height={iconHeight} />
+          </span>
+        ) : (
+          <BarCodeIcon width={iconWidth} height={iconHeight} />
+        )}
       </button>
 
       {isModalOpen && (
         <div className={styles.modalOverlay}>
           {scannerText && <h4 className={styles.modalTitle}>{scannerText}</h4>}
-          <div className={`${styles.modalContent} ${fullscreen ? styles.modalContentFullscreen : ''}`}>
-            <button type="button" className={styles.closeButton} onClick={handleClose}>&times;</button>
-            
-            {/* Moved torch button outside scannerContainer to be relative to modalContent and respect z-index properly */}
-            {!scanResult && (
-                  <button 
-                    type="button" 
-                    className={styles.torchButton} 
-                    onClick={toggleTorch}
-                    style={{ backgroundColor: torchEnabled ? 'rgba(255, 235, 59, 0.8)' : 'rgba(0, 0, 0, 0.5)', color: torchEnabled ? '#000' : '#fff' }}
-                  >
-                    {torchEnabled ? '🔦' : '🔦'}
-                  </button>
-            )}
+          
+          <div className={`${styles.modalContent} ${fullscreen ? styles.modalContentFullscreen : ""}`}>
+            <button type="button" className={styles.closeButton} onClick={handleClose}>
+              &times;
+            </button>
 
-            {error && <p className={styles.errorText}>{error}</p>}
-            {toastMessage && <div className={styles.toast}>{toastMessage}</div>}
+            <button
+              type="button"
+              className={styles.torchButton}
+              onClick={toggleTorch}
+              style={{
+                backgroundColor: torchEnabled ? "rgba(255, 235, 59, 0.8)" : "rgba(0, 0, 0, 0.5)",
+                color: torchEnabled ? "#000" : "#fff"
+              }}
+            >
+              🔦
+            </button>
+
+            {error && <div className={styles.errorText}>{error}</div>}
+            
+            {/* Show info only if truly unsupported (fallback failed or very old browser) - here we assume fallback works so we hide this unless debugging */}
+            {/* {isSupported === false && !detector && (
+              <div className={styles.errorText} style={{color: 'orange'}}>
+                Using fallback scanner (WASM). Performance might be slower.
+              </div>
+            )} */}
 
             <div className={styles.scannerContainer}>
-              {!scanResult && <video ref={videoRef} playsInline muted className={`${styles.video} ${fullscreen ? styles.videoFullscreen : ''}`} />}
-              {!scanResult && <canvas ref={overlayCanvasRef} className={styles.overlayCanvas} />}
-              
-              {scanResult && <img src={scanResult.image} alt="Scanned code" className={`${styles.resultImage} ${fullscreen ? styles.videoFullscreen : ''}`} />}
-              <canvas ref={canvasRef} style={{ display: "none" }} />
+              <video
+                ref={videoRef}
+                className={`${styles.video} ${fullscreen ? styles.videoFullscreen : ""}`}
+                playsInline
+                muted
+              />
+              <canvas
+                ref={canvasRef}
+                className={styles.overlayCanvas}
+              />
+              {/* Mode Indicator */}
+              <div style={{
+                  position: 'absolute',
+                  bottom: '10px',
+                  right: '10px',
+                  zIndex: 20,
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '10px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  pointerEvents: 'none'
+              }}>
+                  {detector ? "Barcode Detection API" : "ZXing"}
+              </div>
             </div>
-
-            {scanResult ? (
-              <div className={`${styles.resultActions} ${fullscreen ? styles.resultActionsFullscreen : ''}`}>
-                <div className={styles.infoBlock}>
-                  <p className={styles.detailsText}>Найдено: <b>{scanResult.texts.length}</b></p>
-                </div>
-                <div className={styles.buttonsRow}>
-                  <button type="button" onClick={startCamera} className={`${styles.actionButton} ${styles.secondaryButton}`}>Переснять</button>
-                  <button type="button" onClick={() => { onScan(scanResult.texts); handleClose(); }} className={styles.actionButton}>
-                    Добавить (+{scanResult.newCount})
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className={`${styles.actions} ${fullscreen ? styles.actionsFullscreen : ''}`}>
-                <button type="button" onClick={() => fileInputRef.current?.click()} className={styles.actionButton}>Выбрать из галереи</button>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
-              </div>
-            )}
+            
+            {/* Fallback for file upload if needed could go here, but focusing on camera as requested */}
           </div>
         </div>
       )}

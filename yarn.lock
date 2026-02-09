@@ -2812,11 +2812,6 @@ hoek@0.9.x:
   resolved "https://registry.npmjs.org/hoek/-/hoek-0.9.1.tgz"
   integrity sha512-ZZ6eGyzGjyMTmpSPYVECXy9uNfqBR7x5CavhUaLOeD6W0vWK1mp/b7O3f86XE0Mtfo9rZ6Bh3fnuw9Xr8MF9zA==
 
-html5-qrcode@^2.3.8:
-  version "2.3.8"
-  resolved "https://registry.npmjs.org/html5-qrcode/-/html5-qrcode-2.3.8.tgz"
-  integrity sha512-jsr4vafJhwoLVEDW3n1KvPnCCXWaQfRng0/EEYk1vNcQGcG/htAdhJX0be8YyqMoSz7+hZvOZSTAepsabiuhiQ==
-
 http-signature@~0.9.11:
   version "0.9.11"
   resolved "https://registry.npmjs.org/http-signature/-/http-signature-0.9.11.tgz"

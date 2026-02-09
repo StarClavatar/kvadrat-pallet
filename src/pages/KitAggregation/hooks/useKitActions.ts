@@ -1,4 +1,4 @@
-import { useState, useContext, useMemo, useEffect } from 'react';
+import { useState, useContext, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PinContext } from '../../../context/PinAuthContext';
 import { GetDocResponse } from '../../../api/kitservice/getDoc';
@@ -7,7 +7,6 @@ import { getKit } from '../../../api/kitservice/getKit';
 import { changeKit } from '../../../api/kitservice/changeKit';
 import { deleteKit } from '../../../api/kitservice/deleteKit';
 import { printLabel } from '../../../api/kitservice/printLabel';
-import printIcon from '../../../assets/printIcon';
 
 export const useKitActions = () => {
   const location = useLocation();

@@ -217,6 +217,7 @@ const KitAggregation = () => {
             iconWidth={32}
             textButton='Создать набор'
             scannerText='Сканируйте набор'
+            formats={['DataMatrix']}
             iconHeight={32}
             buttonHeight={60}
             validateCode={validateCode}
