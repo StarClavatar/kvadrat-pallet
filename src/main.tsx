@@ -28,6 +28,7 @@ import ScanBox from "./pages/ScanBox/ScanBox";
 import CreateBox from "./pages/CreateBox/CreateBox";
 import KitAggregation from "./pages/KitAggregation/KitAggregation.tsx";
 import ScanDocKit from "./pages/ScanDocKit/ScanDocKit.tsx";
+import MassMarkingScan from "./pages/MassMarkingScan/MassMarkingScan.tsx";
 
 const router = createBrowserRouter([
   {
@@ -185,6 +186,10 @@ const router = createBrowserRouter([
       {
         path: "/scan-doc-kit",
         element: <ProtectedRoute><ScanDocKit /></ProtectedRoute>
+      },
+      {
+        path: "/mass-marking-scan",
+        element: <ProtectedRoute><MassMarkingScan /></ProtectedRoute>
       }
     ],
   },

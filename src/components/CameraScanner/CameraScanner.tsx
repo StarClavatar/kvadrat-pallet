@@ -1,4 +1,12 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import successSound from "../../assets/scanSuccess.mp3";
 import { BarCodeIcon } from "../../assets/barCodeIcon";
 import styles from "./CameraScanner.module.css";
@@ -36,6 +44,11 @@ type BarcodeFormat =
   | "UPC-A" 
   | "UPC-E";
 
+export type CameraScannerHandle = {
+  /** Открыть модалку камеры (как нажатие «Сканировать»). */
+  open: () => void;
+};
+
 interface CameraScannerProps {
   onScan: (results: string[]) => void;
   className?: string;
@@ -53,25 +66,35 @@ interface CameraScannerProps {
   buttonDisabled?: boolean;
   fullscreen?: boolean;
   targetTotal?: number;
+  /** Показать сверху модалки счётчик «добавлено за сессию» (значение с родителя). */
+  modalSessionCount?: number;
+  /** Вызывается при открытии/закрытии модалки камеры. */
+  onModalOpenChange?: (isOpen: boolean) => void;
 }
 
-const CameraScanner = ({
-  onScan,
-  className,
-  textButton,
-  expectedCount = 1,
-  buttonDisabled = false,
-  iconWidth = 24,
-  iconHeight = 24,
-  existingCodes = [],
-  formats = ["DataMatrix", "QRCode", "Code128", "EAN-13"],
-  closeOnScan = false,
-  scannerText,
-  validateCode,
-  buttonHeight = 30,
-  defaultOpen = false,
-  fullscreen = false
-}: CameraScannerProps) => {
+const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
+  function CameraScanner(
+    {
+      onScan,
+      className,
+      textButton,
+      expectedCount,
+      buttonDisabled = false,
+      iconWidth = 24,
+      iconHeight = 24,
+      existingCodes = [],
+      formats = ["DataMatrix", "QRCode", "Code128", "EAN-13"],
+      closeOnScan = false,
+      scannerText,
+      validateCode,
+      buttonHeight = 30,
+      defaultOpen = false,
+      fullscreen = false,
+      modalSessionCount,
+      onModalOpenChange,
+    },
+    ref
+  ) {
   const [isModalOpen, setIsModalOpen] = useState(defaultOpen);
   const [error, setError] = useState<string | null>(null);
   const [torchEnabled, setTorchEnabled] = useState(false);
@@ -91,13 +114,11 @@ const CameraScanner = ({
   const streamRef = useRef<MediaStream | null>(null);
   const successAudio = useMemo(() => new Audio(successSound), []);
 
-  // Helper to clean code (remove brackets around AI)
+  /** Как `normalizeCode` в MassMarkingScan: все управляющие символы по строке, не только в начале — иначе на Android (BarcodeDetector) GS внутри кода не совпадает с `existingCodes`. */
   const cleanCode = (text: string) => {
-      // Remove leading control characters (ASCII 0-31), e.g. GS (\u001d)
-      let cleaned = text.replace(/^[\x00-\x1F]+/, "").trim();
-      // Remove brackets for AIs
-      cleaned = cleaned.replace(/\((00|01|21|93)\)/g, "$1");
-      return cleaned;
+    let s = text.replace(/[\x00-\x1F\x7F]+/g, "").trim();
+    s = s.replace(/\((00|01|21|93)\)/g, "$1");
+    return s;
   };
 
   const toggleTorch = async () => {
@@ -233,7 +254,7 @@ const CameraScanner = ({
             const results = await readBarcodes(imageData, {
                 formats: formats as any, // ZXing expects its own format strings which match ours mostly
                 tryHarder: true,
-                maxNumberOfSymbols: expectedCount
+                ...(typeof expectedCount === "number" ? { maxNumberOfSymbols: expectedCount } : {})
             });
 
             // Convert ZXing results to DetectedBarcode format
@@ -267,8 +288,10 @@ const CameraScanner = ({
         });
 
         // Check if we have enough valid codes visible simultaneously
-        if (validBarcodes.length >= expectedCount) {
-          const texts = validBarcodes.map(b => cleanCode(b.rawValue)).slice(0, expectedCount);
+        const minRequiredCount = typeof expectedCount === "number" ? expectedCount : 1;
+        if (validBarcodes.length >= minRequiredCount) {
+          const allTexts = validBarcodes.map(b => cleanCode(b.rawValue));
+          const texts = typeof expectedCount === "number" ? allTexts.slice(0, expectedCount) : allTexts;
           
           successAudio.play().catch(() => {});
           
@@ -352,6 +375,21 @@ const CameraScanner = ({
     return () => stopCamera();
   }, [isModalOpen]); // Removed detector from deps to avoid re-starting camera when it loads
 
+  const onModalOpenChangeRef = useRef(onModalOpenChange);
+  onModalOpenChangeRef.current = onModalOpenChange;
+
+  useEffect(() => {
+    onModalOpenChangeRef.current?.(isModalOpen);
+  }, [isModalOpen]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      open: () => setIsModalOpen(true),
+    }),
+    []
+  );
+
   return (
     <>
       <button
@@ -370,7 +408,16 @@ const CameraScanner = ({
       </button>
 
       {isModalOpen && (
-        <div className={styles.modalOverlay}>
+        <div
+          className={`${styles.modalOverlay} ${
+            typeof modalSessionCount === "number" ? styles.modalOverlayWithSession : ""
+          }`}
+        >
+          {typeof modalSessionCount === "number" && (
+            <div className={styles.sessionCounterBar} aria-live="polite">
+              Добавлено: {modalSessionCount}
+            </div>
+          )}
           {scannerText && <h4 className={styles.modalTitle}>{scannerText}</h4>}
           
           <div className={`${styles.modalContent} ${fullscreen ? styles.modalContentFullscreen : ""}`}>
@@ -433,6 +480,6 @@ const CameraScanner = ({
       )}
     </>
   );
-};
+});
 
 export default CameraScanner;

@@ -1,0 +1,341 @@
+.page {
+  height: 100svh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: #eef1f5;
+  color: #111;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+/* как .exit-button в Order.css — кнопка назад слева */
+.backButton {
+  background-color: #c82333;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.backButton svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.15;
+  text-align: center;
+  min-width: 0;
+}
+
+.counter {
+  min-width: 48px;
+  height: 32px;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.content {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.boxListScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.boxToolbar {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.addBoxButton {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  color: #1e293b;
+}
+
+.addBoxButton:active {
+  background: #f8fafc;
+}
+
+.addBoxButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f1f5f9;
+  color: #c9d5e7;
+  border: 1px dashed #768ba5;
+}
+
+.boxListSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.boxList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.boxListItem {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.boxCard {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: stretch;
+  gap: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.boxCardActive {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+}
+
+.boxCardSelect {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+}
+
+.boxCardName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.2;
+}
+
+.boxCardHint {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.2;
+}
+
+.boxCardActive .boxCardHint {
+  color: #059669;
+  font-weight: 600;
+}
+
+.boxCardCodesBtn {
+  padding: 8px 12px;
+  border: none;
+  border-left: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: stretch;
+}
+
+.boxCardActive .boxCardCodesBtn {
+  border-left-color: #bfdbfe;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.boxCardCodesBtn:disabled {
+  color: #94a3b8;
+  text-decoration: none;
+  cursor: default;
+}
+
+.boxDelete {
+  width: 40px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  border-left: 1px solid #e2e8f0;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.boxCardActive .boxDelete {
+  border-left-color: #bfdbfe;
+}
+
+/* «Очистить всё» — на всю ширину под шапкой */
+.topBar {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* Только для сетки страницы (Fragment у CameraScanner даёт 2 узла); без фона и рамок */
+.scanDock {
+  width: 100%;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+/* «Сканировать» — заметная CTA: светлый текст + белая иконка (в SVG был #303C42 на тёмном фоне) */
+.scanButton {
+  background: #39ce6d;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+.scanButtonDock {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  min-height: 54px;
+  padding: 12px 14px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.clearButton {
+  min-height: 44px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-weight: 600;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.25);
+}
+
+/* модалка кодов — как Popup + Group: белый лист, ограниченная высота */
+:global(.popup_massMarkingCodes) {
+  background-color: #fff;
+  height: 85%;
+  max-height: min(90svh, 640px);
+}
+
+.codesModalInner {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 48px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.codesModalNote {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.codesModalEmpty {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.codesModalList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.codeItem {
+  background: #fef3c7;
+  border: 1px solid #facc15;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.3;
+  padding: 7px 8px;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.codeItem:last-child {
+  margin-bottom: 0;
+}
+

@@ -21,6 +21,31 @@
   z-index: 1000;
 }
 
+.modalOverlayWithSession .modalTitle {
+  top: 52px;
+}
+
+.sessionCounterBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.modalOverlayWithSession .closeButton,
+.modalOverlayWithSession .torchButton {
+  top: 52px;
+}
+
 .modalContent {
   background-color: white;
   padding: 0;

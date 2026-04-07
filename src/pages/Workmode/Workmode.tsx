@@ -57,6 +57,7 @@ const Workmode = () => {
         <Link to={"/disaggregation"} className="link">Разагрегация</Link>
         <Link className="link" to={"/create-box"}>Агрегация коробов</Link>
         <Link className="link" to={"/scan-doc-kit"}>Агрегация набора</Link>
+        <Link className="link" to={"/mass-marking-scan"}>Массовый скан маркировки</Link>
       </div>
 
       <div className="workmode__footer">

@@ -1,0 +1,422 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import CameraScanner, {
+  type CameraScannerHandle,
+} from "../../components/CameraScanner/CameraScanner";
+import Popup from "../../components/Popup/Popup";
+import BackspaceIcon from "../../assets/backspaceIcon";
+import styles from "./MassMarkingScan.module.css";
+
+const STORAGE_KEY = "mass-marking-dm-codes-v2";
+const LEGACY_STORAGE_KEY = "mass-marking-dm-codes-v1";
+
+/** Макс. кодов в модалке (остальное не рендерим, чтобы не повесить UI). */
+const MAX_CODES_IN_MODAL = 2000;
+
+/** Защита от сотен коробок в localStorage / по памяти. */
+const MAX_BOXES = 50;
+
+function capBoxesToLimit(list: ScanBox[]): ScanBox[] {
+  if (list.length <= MAX_BOXES) return list;
+  return list.slice(0, MAX_BOXES).map((b, i) => ({
+    ...b,
+    name: newBoxName(i + 1),
+  }));
+}
+
+/**
+ * Вторая и следующие коробки — только если последняя уже не пустая
+ * (иначе накликивают десятки пустых). Первую «вторую» разрешаем всегда.
+ */
+function canAddMoreBox(list: ScanBox[]): boolean {
+  if (list.length >= MAX_BOXES) return false;
+  if (list.length <= 1) return true;
+  const last = list[list.length - 1];
+  return last.codes.length > 0;
+}
+
+export type ScanBox = {
+  id: string;
+  name: string;
+  codes: string[];
+};
+
+function newBoxName(index: number) {
+  return `Коробка ${index}`;
+}
+
+function createBox(index: number): ScanBox {
+  return {
+    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `box-${Date.now()}-${Math.random()}`,
+    name: newBoxName(index),
+    codes: []
+  };
+}
+
+function codesCountLabel(n: number) {
+  if (n === 0) return "нет кодов";
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} код`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} кода`;
+  return `${n} кодов`;
+}
+
+/** Как в CameraScanner + убираем все управляющие символы — иначе дубли с разным GS. */
+function normalizeCode(text: string) {
+  let s = text.replace(/[\x00-\x1F\x7F]+/g, "").trim();
+  s = s.replace(/\((00|01|21|93)\)/g, "$1");
+  return s;
+}
+
+function dedupeCodeList(codes: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of codes) {
+    const k = normalizeCode(raw);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push(k);
+  }
+  return out;
+}
+
+/** Ключи кодов, уже лежащих в других коробках (не в `exceptBoxId`). */
+function keysInOtherBoxes(boxes: ScanBox[], exceptBoxId: string) {
+  const keys = new Set<string>();
+  for (const b of boxes) {
+    if (b.id === exceptBoxId) continue;
+    for (const c of b.codes) {
+      const k = normalizeCode(c);
+      if (k) keys.add(k);
+    }
+  }
+  return keys;
+}
+
+const MassMarkingScan = () => {
+  const navigate = useNavigate();
+  const firstBoxIdRef = useRef<string | null>(null);
+  const [boxes, setBoxes] = useState<ScanBox[]>(() => {
+    const b = createBox(1);
+    firstBoxIdRef.current = b.id;
+    return [b];
+  });
+  const [activeBoxId, setActiveBoxId] = useState(() => firstBoxIdRef.current!);
+  /** Длина кодов активной коробки в момент открытия камеры (счётчик «Добавлено» = сейчас − это). */
+  const [scanSessionStartLen, setScanSessionStartLen] = useState<number | null>(null);
+  const [codesModalBoxId, setCodesModalBoxId] = useState<string | null>(null);
+  const scannerRef = useRef<CameraScannerHandle>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { boxes?: ScanBox[]; activeBoxId?: string };
+        if (parsed?.boxes && Array.isArray(parsed.boxes) && parsed.boxes.length > 0) {
+          const cleaned = capBoxesToLimit(
+            parsed.boxes.map((b, i) => ({
+              id: typeof b.id === "string" ? b.id : `box-${i}`,
+              name: typeof b.name === "string" && b.name ? b.name : newBoxName(i + 1),
+              codes: Array.isArray(b.codes)
+                ? dedupeCodeList(
+                    b.codes.filter((c): c is string => typeof c === "string")
+                  )
+                : []
+            }))
+          );
+          setBoxes(cleaned);
+          const aid = parsed.activeBoxId;
+          setActiveBoxId(
+            aid && cleaned.some((b) => b.id === aid) ? aid : cleaned[0].id
+          );
+          return;
+        }
+      }
+
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        if (Array.isArray(parsed)) {
+          const codes = dedupeCodeList(
+            parsed.filter((item): item is string => typeof item === "string")
+          );
+          const b = createBox(1);
+          b.codes = codes;
+          setBoxes([b]);
+          setActiveBoxId(b.id);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to restore boxes:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (boxes.length === 0) return;
+    if (!boxes.some((b) => b.id === activeBoxId)) {
+      setActiveBoxId(boxes[0].id);
+    }
+  }, [boxes, activeBoxId]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ boxes, activeBoxId })
+    );
+  }, [boxes, activeBoxId]);
+
+  const activeBox = useMemo(
+    () => boxes.find((b) => b.id === activeBoxId) ?? boxes[0],
+    [boxes, activeBoxId]
+  );
+
+  const totalCodes = useMemo(
+    () => boxes.reduce((n, b) => n + b.codes.length, 0),
+    [boxes]
+  );
+
+  /** Все коды по всем коробкам — для подсветки «уже есть» в камере. */
+  const allCodesFlat = useMemo(
+    () => dedupeCodeList(boxes.flatMap((b) => b.codes)),
+    [boxes]
+  );
+
+  const handleLiveScan = useCallback(
+    (results: string[]) => {
+      const batch = dedupeCodeList(results);
+      if (batch.length === 0) return;
+
+      setBoxes((prev) => {
+        const idx = prev.findIndex((b) => b.id === activeBoxId);
+        if (idx < 0) return prev;
+
+        const takenElsewhere = keysInOtherBoxes(prev, activeBoxId);
+        const batchNew = batch.filter((c) => !takenElsewhere.has(normalizeCode(c)));
+        if (batchNew.length === 0) return prev;
+
+        const box = prev[idx];
+        const base = dedupeCodeList(box.codes);
+        const merged = dedupeCodeList([...base, ...batchNew]);
+        if (merged.length === base.length) return prev;
+
+        const next = [...prev];
+        next[idx] = { ...box, codes: merged };
+        return next;
+      });
+    },
+    [activeBoxId]
+  );
+
+  const sessionAddedCount = useMemo(() => {
+    if (scanSessionStartLen === null) return undefined;
+    return Math.max(0, activeBox.codes.length - scanSessionStartLen);
+  }, [activeBox.codes.length, scanSessionStartLen]);
+
+  const codesModalBox = useMemo(
+    () => (codesModalBoxId ? boxes.find((b) => b.id === codesModalBoxId) : undefined),
+    [boxes, codesModalBoxId]
+  );
+
+  const modalCodes = useMemo(() => {
+    if (!codesModalBox) return [];
+    const raw = codesModalBox.codes;
+    const tail = raw.length > MAX_CODES_IN_MODAL ? raw.slice(-MAX_CODES_IN_MODAL) : raw;
+    return [...tail].reverse();
+  }, [codesModalBox]);
+
+  const handleScannerOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        const len =
+          boxes.find((b) => b.id === activeBoxId)?.codes.length ?? 0;
+        setScanSessionStartLen(len);
+      } else {
+        setScanSessionStartLen(null);
+      }
+    },
+    [boxes, activeBoxId]
+  );
+
+  const addBox = () => {
+    setBoxes((prev) => {
+      if (!canAddMoreBox(prev)) return prev;
+      const b = createBox(prev.length + 1);
+      setActiveBoxId(b.id);
+      queueMicrotask(() => scannerRef.current?.open());
+      return [...prev, b];
+    });
+  };
+
+  const canAddBox = useMemo(() => canAddMoreBox(boxes), [boxes]);
+
+  const addBoxDisabledTitle = useMemo(() => {
+    if (canAddBox) return "Добавить коробку";
+    if (boxes.length >= MAX_BOXES) return `Не больше ${MAX_BOXES} коробок`;
+    return "Сначала отсканируйте хотя бы один код в последнюю коробку";
+  }, [canAddBox, boxes.length]);
+
+  const removeBox = (id: string) => {
+    setBoxes((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((b) => b.id !== id);
+    });
+  };
+
+  const clearAll = () => {
+    if (
+      !window.confirm(
+        "Очистить все коробки и все отсканированные коды? Это действие нельзя отменить."
+      )
+    ) {
+      return;
+    }
+    setCodesModalBoxId(null);
+    const b = createBox(1);
+    setBoxes([b]);
+    setActiveBoxId(b.id);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  };
+
+  useEffect(() => {
+    if (codesModalBoxId && !boxes.some((b) => b.id === codesModalBoxId)) {
+      setCodesModalBoxId(null);
+    }
+  }, [boxes, codesModalBoxId]);
+
+  return (
+    <>
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <button
+          type="button"
+          className={styles.backButton}
+          onClick={() => navigate("/workmode")}
+          aria-label="Назад в режим работы"
+        >
+          <BackspaceIcon color="#ffffff" />
+        </button>
+        <h1 className={styles.title}>Массовое сканирование</h1>
+        <div className={styles.counter} title="Всего кодов">
+          {totalCodes}
+        </div>
+      </header>
+
+      <main className={styles.content}>
+        <section className={styles.topBar} aria-label="Действия">
+          <button type="button" className={styles.clearButton} onClick={clearAll}>
+            Очистить всё
+          </button>
+        </section>
+
+        <section className={styles.boxListSection} aria-label="Коробки">
+          <div className={styles.boxListScroll}>
+            <ul className={styles.boxList}>
+              {boxes.map((b) => {
+                const isActive = b.id === activeBoxId;
+                const n = b.codes.length;
+                const countLabel = codesCountLabel(n);
+                return (
+                  <li key={b.id} className={styles.boxListItem}>
+                    <div
+                      className={`${styles.boxCard} ${isActive ? styles.boxCardActive : ""}`}
+                    >
+                      <button
+                        type="button"
+                        className={styles.boxCardSelect}
+                        onClick={() => setActiveBoxId(b.id)}
+                        aria-pressed={isActive}
+                      >
+                        <span className={styles.boxCardName}>{b.name}</span>
+                        <span className={styles.boxCardHint}>
+                          {isActive ? "сканирование сюда" : "нажмите, чтобы выбрать"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.boxCardCodesBtn}
+                        onClick={() => setCodesModalBoxId(b.id)}
+                        disabled={n === 0}
+                      >
+                        {countLabel}
+                      </button>
+                      {boxes.length > 1 && (
+                        <button
+                          type="button"
+                          className={styles.boxDelete}
+                          aria-label={`Удалить ${b.name}`}
+                          onClick={() => removeBox(b.id)}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className={styles.boxToolbar}>
+              <button
+                type="button"
+                className={styles.addBoxButton}
+                onClick={addBox}
+                disabled={!canAddBox}
+                title={addBoxDisabledTitle}
+              >
+                + Коробка
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div className={styles.scanDock}>
+        <CameraScanner
+          ref={scannerRef}
+          onScan={handleLiveScan}
+          className={`${styles.scanButton} ${styles.scanButtonDock}`}
+          textButton="Сканировать"
+          buttonHeight={44}
+          iconWidth={22}
+          iconHeight={22}
+          formats={["DataMatrix"]}
+          closeOnScan={false}
+          existingCodes={allCodesFlat}
+          fullscreen={true}
+          modalSessionCount={sessionAddedCount}
+          onModalOpenChange={handleScannerOpenChange}
+        />
+      </div>
+    </div>
+
+    <Popup
+      title={codesModalBox ? `Коды: ${codesModalBox.name}` : "Коды"}
+      isOpen={codesModalBoxId !== null}
+      onClose={() => setCodesModalBoxId(null)}
+      containerClassName="popup_massMarkingCodes"
+    >
+      <div className={styles.codesModalInner}>
+        {codesModalBox && codesModalBox.codes.length > MAX_CODES_IN_MODAL && (
+          <p className={styles.codesModalNote}>
+            Показаны последние {MAX_CODES_IN_MODAL} из {codesModalBox.codes.length}.
+          </p>
+        )}
+        {modalCodes.length === 0 ? (
+          <p className={styles.codesModalEmpty}>В этой коробке пока нет кодов.</p>
+        ) : (
+          <ul className={styles.codesModalList}>
+            {modalCodes.map((code) => (
+              <li key={code} className={styles.codeItem}>
+                {code}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Popup>
+    </>
+  );
+};
+
+export default MassMarkingScan;
