@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CameraScanner, {
   type CameraScannerHandle,
 } from "../../components/CameraScanner/CameraScanner";
 import Popup from "../../components/Popup/Popup";
 import BackspaceIcon from "../../assets/backspaceIcon";
+import { PinContext } from "../../context/PinAuthContext";
 import styles from "./MassMarkingScan.module.css";
 
 const STORAGE_KEY = "mass-marking-dm-codes-v2";
@@ -39,6 +40,21 @@ export type ScanBox = {
   id: string;
   name: string;
   codes: string[];
+};
+
+type ReturnInfo = {
+  returnDate: string;
+  returnDescription: string;
+  returnNumber: string;
+};
+
+type MassMarkingDraftPayload = {
+  pinCode: string;
+  tsdUUID: string;
+  returnDate: string;
+  returnDescription: string;
+  returnNumber: string;
+  boxes: Record<string, string[]>;
 };
 
 function newBoxName(index: number) {
@@ -95,6 +111,7 @@ function keysInOtherBoxes(boxes: ScanBox[], exceptBoxId: string) {
 }
 
 const MassMarkingScan = () => {
+  const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
   const firstBoxIdRef = useRef<string | null>(null);
   const [boxes, setBoxes] = useState<ScanBox[]>(() => {
@@ -107,12 +124,25 @@ const MassMarkingScan = () => {
   const [scanSessionStartLen, setScanSessionStartLen] = useState<number | null>(null);
   const [codesModalBoxId, setCodesModalBoxId] = useState<string | null>(null);
   const scannerRef = useRef<CameraScannerHandle>(null);
+  /** undefined = еще загружаем из localStorage, null = данных нет, object = данные есть */
+  const [returnInfo, setReturnInfo] = useState<ReturnInfo | null | undefined>(undefined);
+  const [isReturnPopupOpen, setIsReturnPopupOpen] = useState(false);
+  const [submitDescriptionError, setSubmitDescriptionError] = useState(false);
+  const [returnDraft, setReturnDraft] = useState<ReturnInfo>({
+    returnDate: "",
+    returnDescription: "",
+    returnNumber: "",
+  });
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as { boxes?: ScanBox[]; activeBoxId?: string };
+        const parsed = JSON.parse(raw) as {
+          boxes?: ScanBox[];
+          activeBoxId?: string;
+          returnInfo?: Partial<ReturnInfo>;
+        };
         if (parsed?.boxes && Array.isArray(parsed.boxes) && parsed.boxes.length > 0) {
           const cleaned = capBoxesToLimit(
             parsed.boxes.map((b, i) => ({
@@ -130,6 +160,27 @@ const MassMarkingScan = () => {
           setActiveBoxId(
             aid && cleaned.some((b) => b.id === aid) ? aid : cleaned[0].id
           );
+
+          const savedReturnInfo = parsed.returnInfo;
+          if (
+            savedReturnInfo &&
+            typeof savedReturnInfo.returnDate === "string" &&
+            typeof savedReturnInfo.returnDescription === "string" &&
+            typeof savedReturnInfo.returnNumber === "string" &&
+            savedReturnInfo.returnDate &&
+            savedReturnInfo.returnDescription.trim() &&
+            savedReturnInfo.returnNumber.trim()
+          ) {
+            const normalized: ReturnInfo = {
+              returnDate: savedReturnInfo.returnDate,
+              returnDescription: savedReturnInfo.returnDescription.trim(),
+              returnNumber: savedReturnInfo.returnNumber.trim(),
+            };
+            setReturnInfo(normalized);
+            setReturnDraft(normalized);
+          } else {
+            setReturnInfo(null);
+          }
           return;
         }
       }
@@ -147,8 +198,10 @@ const MassMarkingScan = () => {
           setActiveBoxId(b.id);
         }
       }
+      setReturnInfo(null);
     } catch (error) {
       console.error("Failed to restore boxes:", error);
+      setReturnInfo(null);
     }
   }, []);
 
@@ -162,9 +215,9 @@ const MassMarkingScan = () => {
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ boxes, activeBoxId })
+      JSON.stringify({ boxes, activeBoxId, returnInfo })
     );
-  }, [boxes, activeBoxId]);
+  }, [boxes, activeBoxId, returnInfo]);
 
   const activeBox = useMemo(
     () => boxes.find((b) => b.id === activeBoxId) ?? boxes[0],
@@ -285,6 +338,61 @@ const MassMarkingScan = () => {
     }
   }, [boxes, codesModalBoxId]);
 
+  const canSubmitReturnDraft = useMemo(() => {
+    return (
+      returnDraft.returnDate.trim().length > 0 &&
+      returnDraft.returnDescription.trim().length > 0 &&
+      returnDraft.returnNumber.trim().length > 0
+    );
+  }, [returnDraft]);
+
+  const saveReturnInfo = () => {
+    if (!canSubmitReturnDraft) return;
+    setReturnInfo({
+      returnDate: returnDraft.returnDate.trim(),
+      returnDescription: returnDraft.returnDescription.trim(),
+      returnNumber: returnDraft.returnNumber.trim(),
+    });
+    setSubmitDescriptionError(false);
+    setIsReturnPopupOpen(false);
+  };
+
+  const returnInfoShortText = useMemo(() => {
+    if (!returnInfo || returnInfo === undefined) return "";
+    return returnInfo.returnDescription;
+  }, [returnInfo]);
+
+  const submitDraft = () => {
+    if (!returnInfo) return;
+    const description = returnInfo.returnDescription.trim();
+    if (!description) {
+      setSubmitDescriptionError(true);
+      setReturnDraft((prev) => ({
+        ...prev,
+        returnDescription: returnInfo.returnDescription,
+      }));
+      setIsReturnPopupOpen(true);
+      return;
+    }
+    if (!window.confirm("Отправить данные возврата и коды?")) return;
+
+    const nonEmptyBoxes = boxes.filter((box) => box.codes.length > 0);
+    const payload: MassMarkingDraftPayload = {
+      pinCode: String(pinAuthData?.pinCode ?? ""),
+      tsdUUID: String(pinAuthData?.tsdUUID ?? ""),
+      returnDate: returnInfo.returnDate,
+      returnDescription: description,
+      returnNumber: returnInfo.returnNumber,
+      boxes: nonEmptyBoxes.reduce<Record<string, string[]>>((acc, box, index) => {
+        acc[`box${index + 1}`] = [...box.codes];
+        return acc;
+      }, {}),
+    };
+
+    // TODO: заменить на API вызов, когда endpoint будет готов.
+    console.log("[MassMarkingScan] submit payload:", payload);
+  };
+
   return (
     <>
     <div className={styles.page}>
@@ -305,6 +413,24 @@ const MassMarkingScan = () => {
 
       <main className={styles.content}>
         <section className={styles.topBar} aria-label="Действия">
+          {returnInfo && (
+            <button
+              type="button"
+              className={`${styles.returnInfoCard} ${styles.returnInfoCardButton} ${submitDescriptionError ? styles.returnInfoCardError : ""}`}
+              title={`${returnInfo.returnDate} | ${returnInfo.returnNumber} | ${returnInfo.returnDescription}`}
+              onClick={() => {
+                setReturnDraft(returnInfo);
+                setSubmitDescriptionError(false);
+                setIsReturnPopupOpen(true);
+              }}
+            >
+              <div className={styles.returnInfoMeta}>
+                <span className={styles.returnInfoTag}>{returnInfo.returnDate}</span>
+                <span className={styles.returnInfoTag}>{returnInfo.returnNumber}</span>
+              </div>
+              <p className={styles.returnInfoShort}>{returnInfoShortText}</p>
+            </button>
+          )}
           <button type="button" className={styles.clearButton} onClick={clearAll}>
             Очистить всё
           </button>
@@ -374,6 +500,7 @@ const MassMarkingScan = () => {
       <div className={styles.scanDock}>
         <CameraScanner
           ref={scannerRef}
+          forceZXing
           onScan={handleLiveScan}
           className={`${styles.scanButton} ${styles.scanButtonDock}`}
           textButton="Сканировать"
@@ -387,8 +514,92 @@ const MassMarkingScan = () => {
           modalSessionCount={sessionAddedCount}
           onModalOpenChange={handleScannerOpenChange}
         />
+        <button
+          type="button"
+          className={styles.submitButton}
+          onClick={submitDraft}
+          disabled={!returnInfo}
+          aria-label="Отправить данные"
+        >
+          <svg
+            className={styles.submitIcon}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M22 2L11 13" />
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+          </svg>
+        </button>
       </div>
     </div>
+
+    <Popup
+      title="Данные возврата"
+      isOpen={returnInfo === null || isReturnPopupOpen}
+      onClose={() => {
+        if (returnInfo) setIsReturnPopupOpen(false);
+      }}
+      containerClassName="popup_massMarkingReturn"
+    >
+      <div className={styles.returnModalInner}>
+        <label className={styles.returnField}>
+          <span className={styles.returnFieldLabel}>Дата возврата</span>
+          <input
+            type="date"
+            className={styles.returnInput}
+            value={returnDraft.returnDate}
+            onChange={(e) =>
+              setReturnDraft((prev) => ({ ...prev, returnDate: e.target.value }))
+            }
+          />
+        </label>
+
+        <label className={styles.returnField}>
+          <span className={styles.returnFieldLabel}>Что за возврат</span>
+          <input
+            type="text"
+            className={styles.returnInput}
+            placeholder="Например: возврат от клиента"
+            value={returnDraft.returnDescription}
+            onChange={(e) =>
+              setReturnDraft((prev) => ({
+                ...prev,
+                returnDescription: e.target.value,
+              }))
+            }
+            onFocus={() => setSubmitDescriptionError(false)}
+            aria-invalid={submitDescriptionError}
+            style={submitDescriptionError ? { borderColor: "#dc2626" } : undefined}
+          />
+          {submitDescriptionError && (
+            <span className={styles.returnFieldError}>Заполните описание возврата</span>
+          )}
+        </label>
+
+        <label className={styles.returnField}>
+          <span className={styles.returnFieldLabel}>Номер возврата</span>
+          <input
+            type="text"
+            className={styles.returnInput}
+            placeholder="Например: RV-2026-00421"
+            value={returnDraft.returnNumber}
+            onChange={(e) =>
+              setReturnDraft((prev) => ({ ...prev, returnNumber: e.target.value }))
+            }
+          />
+        </label>
+
+        <button
+          type="button"
+          className={styles.returnSubmit}
+          onClick={saveReturnInfo}
+          disabled={!canSubmitReturnDraft}
+        >
+          {returnInfo ? "Сохранить" : "Продолжить"}
+        </button>
+      </div>
+    </Popup>
 
     <Popup
       title={codesModalBox ? `Коды: ${codesModalBox.name}` : "Коды"}

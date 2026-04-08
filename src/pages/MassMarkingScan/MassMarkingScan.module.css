@@ -235,6 +235,72 @@
 .topBar {
   flex-shrink: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.returnInfoCard {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+.returnInfoCardButton {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.returnInfoCardButton:active {
+  background: #f8fafc;
+}
+
+.returnInfoCardError {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.18);
+}
+
+.returnInfoMeta {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.returnInfoTag {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  color: #334155;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+  padding: 3px 6px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.returnInfoShort {
+  margin: 0;
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Только для сетки страницы (Fragment у CameraScanner даёт 2 узла); без фона и рамок */
@@ -242,10 +308,17 @@
   width: 100%;
   flex-shrink: 0;
   margin: 0;
-  padding: 0;
+  padding: 8px 10px max(8px, env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
   background: none;
   border: none;
   box-shadow: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(50px, 54px);
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* «Сканировать» — заметная CTA: светлый текст + белая иконка (в SVG был #303C42 на тёмном фоне) */
@@ -257,17 +330,52 @@
 
 .scanButtonDock {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-top: none;
+  border-radius: 12px;
   min-height: 54px;
-  padding: 12px 14px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding: 0 14px;
   font-weight: 700;
   font-size: 16px;
   letter-spacing: 0.02em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.32);
+}
+
+.submitButton {
+  width: 54px;
+  min-width: 50px;
+  max-width: 54px;
+  height: 54px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+  color: #fff;
+  font-size: 0;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.submitButton:disabled {
+  background: #94a3b8;
+  box-shadow: none;
+}
+
+.submitIcon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: translateX(1px) translateY(-1px);
 }
 
 .clearButton {
@@ -282,6 +390,101 @@
   background: #dc2626;
   color: #fff;
   box-shadow: 0 1px 2px rgba(220, 38, 38, 0.25);
+}
+
+/* модалка обязательного ввода данных возврата */
+:global(.popup_massMarkingReturn) {
+  background-color: #fff;
+  height: auto;
+  max-height: min(86svh, 520px);
+}
+
+.returnModalInner {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: 44px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 160ms ease;
+  will-change: transform;
+}
+
+.returnField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.returnFieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.returnFieldError {
+  color: #dc2626;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.returnInput {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  font-size: 14px;
+  background: #fff;
+  color: #0f172a;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* -webkit-appearance: none; */
+  /* font-variant-numeric: tabular-nums; */
+}
+
+.returnInput[type="date"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  text-align: left;
+  line-height: 40px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.returnInput[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.returnInput[type="date"]::-webkit-datetime-edit {
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.returnSubmit {
+  margin-top: 4px;
+  min-height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.returnSubmit:disabled {
+  background: #94a3b8;
 }
 
 /* модалка кодов — как Popup + Group: белый лист, ограниченная высота */

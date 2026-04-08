@@ -29,6 +29,9 @@ const FORMAT_MAP: Record<string, string> = {
   "UPC-E": "upc_e"
 };
 
+const SOUND_COOLDOWN_MS = 1200;
+const SAME_CODES_COOLDOWN_MS = 1800;
+
 type BarcodeFormat = 
   | "DataMatrix" 
   | "QRCode" 
@@ -70,6 +73,8 @@ interface CameraScannerProps {
   modalSessionCount?: number;
   /** Вызывается при открытии/закрытии модалки камеры. */
   onModalOpenChange?: (isOpen: boolean) => void;
+  /** Принудительно использовать ZXing вместо Barcode Detection API. */
+  forceZXing?: boolean;
 }
 
 const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
@@ -92,6 +97,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
       fullscreen = false,
       modalSessionCount,
       onModalOpenChange,
+      forceZXing = false,
     },
     ref
   ) {
@@ -106,11 +112,15 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
     .filter(Boolean), [formats.join(',')]);
 
   const { detector } = useBarcodeDetector(nativeFormats);
+  const useNativeDetector = !forceZXing && !!detector;
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const lastScanTimeRef = useRef<number>(0);
+  const lastSoundAtRef = useRef<number>(0);
+  const lastEmittedCodesKeyRef = useRef<string>("");
+  const lastEmittedAtRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
   const successAudio = useMemo(() => new Audio(successSound), []);
 
@@ -231,7 +241,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
     try {
       let barcodes: DetectedBarcode[] = [];
 
-      if (detector) {
+      if (useNativeDetector && detector) {
         // Native detection
         barcodes = await detector.detect(videoRef.current);
         
@@ -292,8 +302,27 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
         if (validBarcodes.length >= minRequiredCount) {
           const allTexts = validBarcodes.map(b => cleanCode(b.rawValue));
           const texts = typeof expectedCount === "number" ? allTexts.slice(0, expectedCount) : allTexts;
-          
-          successAudio.play().catch(() => {});
+
+          // Anti-spam: пока тот же набор кодов в кадре, не шумим и не шлём onScan циклически.
+          const codesKey = Array.from(new Set(texts)).sort().join("||");
+          const nowMs = Date.now();
+          const isSameRecent =
+            codesKey.length > 0 &&
+            codesKey === lastEmittedCodesKeyRef.current &&
+            nowMs - lastEmittedAtRef.current < SAME_CODES_COOLDOWN_MS;
+
+          if (isSameRecent) {
+            requestRef.current = requestAnimationFrame(scanLoop);
+            return;
+          }
+
+          if (nowMs - lastSoundAtRef.current >= SOUND_COOLDOWN_MS) {
+            successAudio.play().catch(() => {});
+            lastSoundAtRef.current = nowMs;
+          }
+
+          lastEmittedCodesKeyRef.current = codesKey;
+          lastEmittedAtRef.current = nowMs;
           
           if (closeOnScan) {
             onScan(texts);
@@ -311,7 +340,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
     }
 
     requestRef.current = requestAnimationFrame(scanLoop);
-  }, [detector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats]);
+  }, [detector, useNativeDetector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats]);
 
   const startCamera = async () => {
     setError(null);
@@ -358,6 +387,9 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    lastEmittedCodesKeyRef.current = "";
+    lastEmittedAtRef.current = 0;
+    lastSoundAtRef.current = 0;
     setTorchEnabled(false);
   };
 
@@ -470,7 +502,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
                   borderRadius: '4px',
                   pointerEvents: 'none'
               }}>
-                  {detector ? "Barcode Detection API" : "ZXing"}
+                  {useNativeDetector ? "Barcode Detection API" : "ZXing"}
               </div>
             </div>
             
