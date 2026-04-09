@@ -61,6 +61,24 @@ function createBox(index: number): ScanBox {
   };
 }
 
+function extractBoxNumber(name: string): number | null {
+  const m = name.match(/Коробка\s+(\d+)/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+function nextFreeBoxNumber(list: ScanBox[]): number {
+  const used = new Set<number>();
+  for (const b of list) {
+    const n = extractBoxNumber(b.name);
+    if (n !== null) used.add(n);
+  }
+  let candidate = 1;
+  while (used.has(candidate)) candidate += 1;
+  return candidate;
+}
+
 function codesCountLabel(n: number) {
   if (n === 0) return "нет кодов";
   const mod10 = n % 10;
@@ -289,7 +307,7 @@ const MassMarkingScan = () => {
   const addBox = () => {
     setBoxes((prev) => {
       if (!canAddMoreBox(prev)) return prev;
-      const b = createBox(prev.length + 1);
+      const b = createBox(nextFreeBoxNumber(prev));
       setActiveBoxId(b.id);
       queueMicrotask(() => scannerRef.current?.open());
       return [...prev, b];
