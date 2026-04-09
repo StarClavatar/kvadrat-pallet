@@ -542,3 +542,128 @@
   margin-bottom: 0;
 }
 
+/* Отправка возврата: ошибка */
+.submitErrorPopup {
+  background-color: #ffebee;
+  color: #d32f2f;
+  justify-content: center;
+}
+
+.submitErrorInner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.submitErrorText {
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 0 6px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  width: 95%;
+}
+
+.submitErrorButton {
+  width: 50%;
+  max-width: 200px;
+  padding: 14px 0;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  background-color: #d32f2f;
+  color: #fff;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+/* Отправка возврата: успех (как KitAggregation) */
+.submitSuccessPopup {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 85% !important;
+  max-width: 340px !important;
+  height: auto !important;
+  align-self: center !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+
+.submitSuccessContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.submitSuccessIcon {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: white;
+  font-size: 36px;
+  box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+  animation: submitSuccessPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes submitSuccessPopIn {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+.submitSuccessTitle {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.submitSuccessMessage {
+  font-size: 1rem;
+  color: black;
+  margin: 0 0 24px 0;
+  text-align: center;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.submitSuccessButton {
+  background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+  color: white;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.submitSuccessButton:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+}
+

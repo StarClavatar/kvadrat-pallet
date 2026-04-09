@@ -6,6 +6,7 @@ import CameraScanner, {
 import Popup from "../../components/Popup/Popup";
 import BackspaceIcon from "../../assets/backspaceIcon";
 import { PinContext } from "../../context/PinAuthContext";
+import { postRefundGoods } from "../../api/refundGoods";
 import styles from "./MassMarkingScan.module.css";
 
 const STORAGE_KEY = "mass-marking-dm-codes-v2";
@@ -46,15 +47,6 @@ type ReturnInfo = {
   returnDate: string;
   returnDescription: string;
   returnNumber: string;
-};
-
-type MassMarkingDraftPayload = {
-  pinCode: string;
-  tsdUUID: string;
-  returnDate: string;
-  returnDescription: string;
-  returnNumber: string;
-  boxes: Record<string, string[]>;
 };
 
 function newBoxName(index: number) {
@@ -133,6 +125,9 @@ const MassMarkingScan = () => {
     returnDescription: "",
     returnNumber: "",
   });
+  const [submitSuccessText, setSubmitSuccessText] = useState<string | null>(null);
+  const [submitErrorText, setSubmitErrorText] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     try {
@@ -362,7 +357,7 @@ const MassMarkingScan = () => {
     return returnInfo.returnDescription;
   }, [returnInfo]);
 
-  const submitDraft = () => {
+  const submitDraft = async () => {
     if (!returnInfo) return;
     const description = returnInfo.returnDescription.trim();
     if (!description) {
@@ -377,9 +372,9 @@ const MassMarkingScan = () => {
     if (!window.confirm("Отправить данные возврата и коды?")) return;
 
     const nonEmptyBoxes = boxes.filter((box) => box.codes.length > 0);
-    const payload: MassMarkingDraftPayload = {
-      pinCode: String(pinAuthData?.pinCode ?? ""),
-      tsdUUID: String(pinAuthData?.tsdUUID ?? ""),
+    const payload = {
+      pinCode: String(pinAuthData?.pinCode),
+      tsdUUID: String(pinAuthData?.tsdUUID),
       returnDate: returnInfo.returnDate,
       returnDescription: description,
       returnNumber: returnInfo.returnNumber,
@@ -389,9 +384,40 @@ const MassMarkingScan = () => {
       }, {}),
     };
 
-    // TODO: заменить на API вызов, когда endpoint будет готов.
-    console.log("[MassMarkingScan] submit payload:", payload);
+    setIsSubmitting(true);
+    try {
+      const response = await postRefundGoods(
+        payload.pinCode,
+        payload.tsdUUID,
+        payload.returnDate,
+        payload.returnDescription,
+        payload.returnNumber,
+        payload.boxes
+      ) as { error?: string; info?: string; infotype?: string };
+
+      if (!response.error?.trim()) {
+        // По требованию: после успешной отправки полностью очищаем localStorage.
+        localStorage.clear();
+        setSubmitSuccessText(
+          response.info?.trim() || "Данные возврата успешно отправлены."
+        );
+      } else {
+        setSubmitErrorText(
+          response.error.trim() || response.info?.trim() || "Ошибка запроса"
+        );
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Сеть недоступна";
+      setSubmitErrorText(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const handleSuccessCloseAndExit = useCallback(() => {
+    setSubmitSuccessText(null);
+    navigate("/workmode");
+  }, [navigate]);
 
   return (
     <>
@@ -496,7 +522,6 @@ const MassMarkingScan = () => {
           </div>
         </section>
       </main>
-
       <div className={styles.scanDock}>
         <CameraScanner
           ref={scannerRef}
@@ -517,8 +542,8 @@ const MassMarkingScan = () => {
         <button
           type="button"
           className={styles.submitButton}
-          onClick={submitDraft}
-          disabled={!returnInfo}
+          onClick={() => submitDraft()}
+          disabled={!returnInfo || isSubmitting}
           aria-label="Отправить данные"
         >
           <svg
@@ -626,6 +651,48 @@ const MassMarkingScan = () => {
         )}
       </div>
     </Popup>
+
+    {submitErrorText && (
+      <Popup
+        isOpen={!!submitErrorText}
+        onClose={() => setSubmitErrorText(null)}
+        title="Внимание"
+        containerClassName={styles.submitErrorPopup}
+      >
+        <div className={styles.submitErrorInner}>
+          <p className={styles.submitErrorText}>{submitErrorText}</p>
+          <button
+            type="button"
+            className={styles.submitErrorButton}
+            onClick={() => setSubmitErrorText(null)}
+          >
+            OK
+          </button>
+        </div>
+      </Popup>
+    )}
+
+    {submitSuccessText && (
+      <Popup
+        isOpen={!!submitSuccessText}
+        onClose={handleSuccessCloseAndExit}
+        title=""
+        containerClassName={styles.submitSuccessPopup}
+      >
+        <div className={styles.submitSuccessContainer}>
+          <div className={styles.submitSuccessIcon}>✓</div>
+          <h2 className={styles.submitSuccessTitle}>Успешно!</h2>
+          <p className={styles.submitSuccessMessage}>{submitSuccessText}</p>
+          <button
+            type="button"
+            className={styles.submitSuccessButton}
+            onClick={handleSuccessCloseAndExit}
+          >
+            Продолжить
+          </button>
+        </div>
+      </Popup>
+    )}
     </>
   );
 };
