@@ -6,7 +6,8 @@ export const postRefundGoods = async (
   returnDate: string,
   returnDescription: string,
   returnNumber: string,
-  boxes: Record<string, string[]>
+  boxes: Record<string, string[]>,
+  guidDoc?: string | null,
 ) => {
   const response = await fetch(`${BASE_URL}/refundsgoods/refundsgoods`, {
     method: "POST",
@@ -15,7 +16,8 @@ export const postRefundGoods = async (
     },
     body: JSON.stringify({
       pinCode: pinCode,
-      tsdUUID: tsdUUID ? tsdUUID : "",
+      tsdUUID: tsdUUID || "",
+      guidDoc: guidDoc || null,
       returnDate: returnDate,
       returnDescription: returnDescription,
       returnNumber: returnNumber,

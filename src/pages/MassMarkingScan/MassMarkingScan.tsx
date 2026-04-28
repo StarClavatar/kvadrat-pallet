@@ -5,8 +5,11 @@ import CameraScanner, {
 } from "../../components/CameraScanner/CameraScanner";
 import Popup from "../../components/Popup/Popup";
 import BackspaceIcon from "../../assets/backspaceIcon";
+import successSound from "../../assets/scanSuccess.mp3";
+import errorSound from "../../assets/scanFailed.mp3";
 import { PinContext } from "../../context/PinAuthContext";
 import { postRefundGoods } from "../../api/refundGoods";
+import { useCustomScanner } from "../../hooks/useCustomScanner";
 import styles from "./MassMarkingScan.module.css";
 
 const STORAGE_KEY = "mass-marking-dm-codes-v2";
@@ -47,6 +50,13 @@ type ReturnInfo = {
   returnDate: string;
   returnDescription: string;
   returnNumber: string;
+};
+
+type StoredMassMarkingData = {
+  boxes?: ScanBox[];
+  activeBoxId?: string;
+  returnInfo?: Partial<ReturnInfo>;
+  guidDoc?: string | null;
 };
 
 function newBoxName(index: number) {
@@ -120,6 +130,33 @@ function keysInOtherBoxes(boxes: ScanBox[], exceptBoxId: string) {
   return keys;
 }
 
+type AddCodesOutcome = "noop" | "duplicate" | "added";
+
+function addCodesToActiveScanBox(
+  prev: ScanBox[],
+  activeBoxId: string,
+  results: string[]
+): { outcome: AddCodesOutcome; next: ScanBox[] } {
+  const batch = dedupeCodeList(results);
+  if (batch.length === 0) return { outcome: "noop", next: prev };
+
+  const idx = prev.findIndex((b) => b.id === activeBoxId);
+  if (idx < 0) return { outcome: "noop", next: prev };
+
+  const takenElsewhere = keysInOtherBoxes(prev, activeBoxId);
+  const batchNew = batch.filter((c) => !takenElsewhere.has(normalizeCode(c)));
+  if (batchNew.length === 0) return { outcome: "duplicate", next: prev };
+
+  const box = prev[idx];
+  const base = dedupeCodeList(box.codes);
+  const merged = dedupeCodeList([...base, ...batchNew]);
+  if (merged.length === base.length) return { outcome: "duplicate", next: prev };
+
+  const next = [...prev];
+  next[idx] = { ...box, codes: merged };
+  return { outcome: "added", next };
+}
+
 const MassMarkingScan = () => {
   const { pinAuthData } = useContext(PinContext);
   const navigate = useNavigate();
@@ -146,16 +183,16 @@ const MassMarkingScan = () => {
   const [submitSuccessText, setSubmitSuccessText] = useState<string | null>(null);
   const [submitErrorText, setSubmitErrorText] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [guidDoc, setGuidDoc] = useState<string | null>(null);
+
+  const successAudio = useMemo(() => new Audio(successSound), []);
+  const errorAudio = useMemo(() => new Audio(errorSound), []);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as {
-          boxes?: ScanBox[];
-          activeBoxId?: string;
-          returnInfo?: Partial<ReturnInfo>;
-        };
+        const parsed = JSON.parse(raw) as StoredMassMarkingData;
         if (parsed?.boxes && Array.isArray(parsed.boxes) && parsed.boxes.length > 0) {
           const cleaned = capBoxesToLimit(
             parsed.boxes.map((b, i) => ({
@@ -173,6 +210,7 @@ const MassMarkingScan = () => {
           setActiveBoxId(
             aid && cleaned.some((b) => b.id === aid) ? aid : cleaned[0].id
           );
+          setGuidDoc(typeof parsed.guidDoc === "string" ? parsed.guidDoc : null);
 
           const savedReturnInfo = parsed.returnInfo;
           if (
@@ -228,9 +266,9 @@ const MassMarkingScan = () => {
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ boxes, activeBoxId, returnInfo })
+      JSON.stringify({ boxes, activeBoxId, returnInfo, guidDoc })
     );
-  }, [boxes, activeBoxId, returnInfo]);
+  }, [boxes, activeBoxId, returnInfo, guidDoc]);
 
   const activeBox = useMemo(
     () => boxes.find((b) => b.id === activeBoxId) ?? boxes[0],
@@ -241,6 +279,7 @@ const MassMarkingScan = () => {
     () => boxes.reduce((n, b) => n + b.codes.length, 0),
     [boxes]
   );
+  const isSubmitDisabled = !returnInfo || totalCodes === 0 || isSubmitting;
 
   /** Все коды по всем коробкам — для подсветки «уже есть» в камере. */
   const allCodesFlat = useMemo(
@@ -250,29 +289,39 @@ const MassMarkingScan = () => {
 
   const handleLiveScan = useCallback(
     (results: string[]) => {
-      const batch = dedupeCodeList(results);
-      if (batch.length === 0) return;
-
+      let playSuccess = false;
+      let playError = false;
       setBoxes((prev) => {
-        const idx = prev.findIndex((b) => b.id === activeBoxId);
-        if (idx < 0) return prev;
-
-        const takenElsewhere = keysInOtherBoxes(prev, activeBoxId);
-        const batchNew = batch.filter((c) => !takenElsewhere.has(normalizeCode(c)));
-        if (batchNew.length === 0) return prev;
-
-        const box = prev[idx];
-        const base = dedupeCodeList(box.codes);
-        const merged = dedupeCodeList([...base, ...batchNew]);
-        if (merged.length === base.length) return prev;
-
-        const next = [...prev];
-        next[idx] = { ...box, codes: merged };
-        return next;
+        const r = addCodesToActiveScanBox(prev, activeBoxId, results);
+        if (r.outcome === "added") {
+          playSuccess = true;
+          return r.next;
+        }
+        if (r.outcome === "duplicate") playError = true;
+        return prev;
       });
+      if (playSuccess) void successAudio.play().catch(() => {});
+      else if (playError) void errorAudio.play().catch(() => {});
     },
-    [activeBoxId]
+    [activeBoxId, successAudio, errorAudio]
   );
+
+  const handleHardwareScan = useCallback(
+    (symbol: string) => {
+      handleLiveScan([symbol]);
+    },
+    [handleLiveScan]
+  );
+
+  const hardwareScannerEnabled =
+    returnInfo != null &&
+    !isReturnPopupOpen &&
+    !isSubmitting &&
+    !submitSuccessText &&
+    !submitErrorText &&
+    codesModalBoxId === null;
+
+  useCustomScanner(handleHardwareScan, hardwareScannerEnabled);
 
   const sessionAddedCount = useMemo(() => {
     if (scanSessionStartLen === null) return undefined;
@@ -341,6 +390,7 @@ const MassMarkingScan = () => {
     const b = createBox(1);
     setBoxes([b]);
     setActiveBoxId(b.id);
+    setGuidDoc(null);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(LEGACY_STORAGE_KEY);
   };
@@ -410,12 +460,13 @@ const MassMarkingScan = () => {
         payload.returnDate,
         payload.returnDescription,
         payload.returnNumber,
-        payload.boxes
+        payload.boxes,
+        guidDoc
       ) as { error?: string; info?: string; infotype?: string };
 
       if (!response.error?.trim()) {
-        // По требованию: после успешной отправки полностью очищаем localStorage.
-        localStorage.clear();
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
         setSubmitSuccessText(
           response.info?.trim() || "Данные возврата успешно отправлены."
         );
@@ -544,6 +595,7 @@ const MassMarkingScan = () => {
         <CameraScanner
           ref={scannerRef}
           forceZXing
+          muteDetectorSuccessSound
           onScan={handleLiveScan}
           className={`${styles.scanButton} ${styles.scanButtonDock}`}
           textButton="Сканировать"
@@ -561,18 +613,22 @@ const MassMarkingScan = () => {
           type="button"
           className={styles.submitButton}
           onClick={() => submitDraft()}
-          disabled={!returnInfo || isSubmitting}
+          disabled={isSubmitDisabled}
           aria-label="Отправить данные"
         >
-          <svg
-            className={styles.submitIcon}
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path d="M22 2L11 13" />
-            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-          </svg>
+          {isSubmitting ? (
+            <span className={styles.submitLoader} aria-hidden="true" />
+          ) : (
+            <svg
+              className={styles.submitIcon}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+            </svg>
+          )}
         </button>
       </div>
     </div>

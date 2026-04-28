@@ -59,6 +59,7 @@ interface CameraScannerProps {
   expectedCount?: number;
   iconWidth?: number;
   iconHeight?: number;
+  buttonFontSize?: number;
   existingCodes?: string[];
   formats?: BarcodeFormat[];
   closeOnScan?: boolean;
@@ -75,6 +76,8 @@ interface CameraScannerProps {
   onModalOpenChange?: (isOpen: boolean) => void;
   /** Принудительно использовать ZXing вместо Barcode Detection API. */
   forceZXing?: boolean;
+  /** Не воспроизводить встроенный звук при детекте (родитель сам, например по факту добавления). */
+  muteDetectorSuccessSound?: boolean;
 }
 
 const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
@@ -92,12 +95,14 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
       closeOnScan = false,
       scannerText,
       validateCode,
+      buttonFontSize = 16,
       buttonHeight = 30,
       defaultOpen = false,
       fullscreen = false,
       modalSessionCount,
       onModalOpenChange,
       forceZXing = false,
+      muteDetectorSuccessSound = false,
     },
     ref
   ) {
@@ -317,7 +322,9 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
           }
 
           if (nowMs - lastSoundAtRef.current >= SOUND_COOLDOWN_MS) {
-            successAudio.play().catch(() => {});
+            if (!muteDetectorSuccessSound) {
+              successAudio.play().catch(() => {});
+            }
             lastSoundAtRef.current = nowMs;
           }
 
@@ -340,7 +347,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
     }
 
     requestRef.current = requestAnimationFrame(scanLoop);
-  }, [detector, useNativeDetector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats]);
+  }, [detector, useNativeDetector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats, muteDetectorSuccessSound]);
 
   const startCamera = async () => {
     setError(null);
@@ -431,7 +438,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
         disabled={buttonDisabled}
       >
         {textButton ? (
-          <span style={{ display: "flex", alignItems: "center", gap: "10px", height: buttonHeight + "px" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: buttonFontSize + "px", height: buttonHeight + "px" }}>
             {textButton} <BarCodeIcon width={iconWidth} height={iconHeight} />
           </span>
         ) : (

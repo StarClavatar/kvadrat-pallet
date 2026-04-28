@@ -29,6 +29,7 @@ import CreateBox from "./pages/CreateBox/CreateBox";
 import KitAggregation from "./pages/KitAggregation/KitAggregation.tsx";
 import ScanDocKit from "./pages/ScanDocKit/ScanDocKit.tsx";
 import MassMarkingScan from "./pages/MassMarkingScan/MassMarkingScan.tsx";
+import MassMarkingEntry from "./pages/MassMarkingEntry/MassMarkingEntry.tsx";
 
 const router = createBrowserRouter([
   {
@@ -189,6 +190,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/mass-marking-scan",
+        element: <ProtectedRoute><MassMarkingEntry /></ProtectedRoute>
+      },
+      {
+        path: "/mass-marking-scan/editor",
         element: <ProtectedRoute><MassMarkingScan /></ProtectedRoute>
       }
     ],
