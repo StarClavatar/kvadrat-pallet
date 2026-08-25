@@ -170,6 +170,10 @@ const MassMarkingScan = () => {
   /** Длина кодов активной коробки в момент открытия камеры (счётчик «Добавлено» = сейчас − это). */
   const [scanSessionStartLen, setScanSessionStartLen] = useState<number | null>(null);
   const [codesModalBoxId, setCodesModalBoxId] = useState<string | null>(null);
+  /** Нормализованный код, найденный сканом для удаления из открытой коробки. */
+  const [highlightedDeleteCode, setHighlightedDeleteCode] = useState<string | null>(null);
+  const [deleteScanError, setDeleteScanError] = useState<string | null>(null);
+  const highlightedCodeRef = useRef<HTMLLIElement | null>(null);
   const scannerRef = useRef<CameraScannerHandle>(null);
   /** undefined = еще загружаем из localStorage, null = данных нет, object = данные есть */
   const [returnInfo, setReturnInfo] = useState<ReturnInfo | null | undefined>(undefined);
@@ -306,11 +310,81 @@ const MassMarkingScan = () => {
     [activeBoxId, successAudio, errorAudio]
   );
 
+  const codesModalBox = useMemo(
+    () => (codesModalBoxId ? boxes.find((b) => b.id === codesModalBoxId) : undefined),
+    [boxes, codesModalBoxId]
+  );
+
+  const clearDeleteSelection = useCallback(() => {
+    setHighlightedDeleteCode(null);
+    setDeleteScanError(null);
+  }, []);
+
+  const handleDeleteScan = useCallback(
+    (rawSymbol: string) => {
+      if (!codesModalBoxId || !codesModalBox) {
+        setDeleteScanError("Сначала откройте коробку.");
+        void errorAudio.play().catch(() => {});
+        return;
+      }
+
+      const code = normalizeCode(rawSymbol);
+      if (!code) {
+        setDeleteScanError("Пустой или некорректный код.");
+        setHighlightedDeleteCode(null);
+        void errorAudio.play().catch(() => {});
+        return;
+      }
+
+      const inThisBox = codesModalBox.codes.find((c) => normalizeCode(c) === code);
+      if (inThisBox) {
+        setDeleteScanError(null);
+        setHighlightedDeleteCode(normalizeCode(inThisBox));
+        void successAudio.play().catch(() => {});
+        return;
+      }
+
+      const otherBox = boxes.find(
+        (b) =>
+          b.id !== codesModalBoxId &&
+          b.codes.some((c) => normalizeCode(c) === code)
+      );
+      setHighlightedDeleteCode(null);
+      if (otherBox) {
+        setDeleteScanError(`Код есть, но в другой коробке: ${otherBox.name}.`);
+      } else {
+        setDeleteScanError("Этого кода нет среди отсканированных.");
+      }
+      void errorAudio.play().catch(() => {});
+    },
+    [boxes, codesModalBox, codesModalBoxId, errorAudio, successAudio]
+  );
+
+  const confirmDeleteHighlightedCode = useCallback(() => {
+    if (!codesModalBoxId || !highlightedDeleteCode) return;
+    const key = normalizeCode(highlightedDeleteCode);
+    setBoxes((prev) =>
+      prev.map((b) => {
+        if (b.id !== codesModalBoxId) return b;
+        return {
+          ...b,
+          codes: b.codes.filter((c) => normalizeCode(c) !== key),
+        };
+      })
+    );
+    clearDeleteSelection();
+    void successAudio.play().catch(() => {});
+  }, [clearDeleteSelection, codesModalBoxId, highlightedDeleteCode, successAudio]);
+
   const handleHardwareScan = useCallback(
     (symbol: string) => {
+      if (codesModalBoxId) {
+        handleDeleteScan(symbol);
+        return;
+      }
       handleLiveScan([symbol]);
     },
-    [handleLiveScan]
+    [codesModalBoxId, handleDeleteScan, handleLiveScan]
   );
 
   const hardwareScannerEnabled =
@@ -318,8 +392,7 @@ const MassMarkingScan = () => {
     !isReturnPopupOpen &&
     !isSubmitting &&
     !submitSuccessText &&
-    !submitErrorText &&
-    codesModalBoxId === null;
+    !submitErrorText;
 
   useCustomScanner(handleHardwareScan, hardwareScannerEnabled);
 
@@ -328,17 +401,25 @@ const MassMarkingScan = () => {
     return Math.max(0, activeBox.codes.length - scanSessionStartLen);
   }, [activeBox.codes.length, scanSessionStartLen]);
 
-  const codesModalBox = useMemo(
-    () => (codesModalBoxId ? boxes.find((b) => b.id === codesModalBoxId) : undefined),
-    [boxes, codesModalBoxId]
-  );
-
   const modalCodes = useMemo(() => {
     if (!codesModalBox) return [];
     const raw = codesModalBox.codes;
     const tail = raw.length > MAX_CODES_IN_MODAL ? raw.slice(-MAX_CODES_IN_MODAL) : raw;
-    return [...tail].reverse();
-  }, [codesModalBox]);
+    const list = [...tail].reverse();
+    if (!highlightedDeleteCode) return list;
+    const key = normalizeCode(highlightedDeleteCode);
+    if (list.some((c) => normalizeCode(c) === key)) return list;
+    // Код есть в коробке, но вне «хвоста» модалки — всё равно показываем для рамки.
+    return [highlightedDeleteCode, ...list];
+  }, [codesModalBox, highlightedDeleteCode]);
+
+  useEffect(() => {
+    if (!highlightedDeleteCode || !highlightedCodeRef.current) return;
+    highlightedCodeRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [highlightedDeleteCode, modalCodes]);
 
   const handleScannerOpenChange = useCallback(
     (open: boolean) => {
@@ -398,8 +479,13 @@ const MassMarkingScan = () => {
   useEffect(() => {
     if (codesModalBoxId && !boxes.some((b) => b.id === codesModalBoxId)) {
       setCodesModalBoxId(null);
+      clearDeleteSelection();
     }
-  }, [boxes, codesModalBoxId]);
+  }, [boxes, codesModalBoxId, clearDeleteSelection]);
+
+  useEffect(() => {
+    clearDeleteSelection();
+  }, [codesModalBoxId, clearDeleteSelection]);
 
   const canSubmitReturnDraft = useMemo(() => {
     return (
@@ -703,7 +789,10 @@ const MassMarkingScan = () => {
     <Popup
       title={codesModalBox ? `Коды: ${codesModalBox.name}` : "Коды"}
       isOpen={codesModalBoxId !== null}
-      onClose={() => setCodesModalBoxId(null)}
+      onClose={() => {
+        clearDeleteSelection();
+        setCodesModalBoxId(null);
+      }}
       containerClassName="popup_massMarkingCodes"
     >
       <div className={styles.codesModalInner}>
@@ -716,12 +805,73 @@ const MassMarkingScan = () => {
           <p className={styles.codesModalEmpty}>В этой коробке пока нет кодов.</p>
         ) : (
           <ul className={styles.codesModalList}>
-            {modalCodes.map((code) => (
-              <li key={code} className={styles.codeItem}>
-                {code}
-              </li>
-            ))}
+            {modalCodes.map((code) => {
+              const isHighlighted =
+                !!highlightedDeleteCode &&
+                normalizeCode(code) === normalizeCode(highlightedDeleteCode);
+              return (
+                <li
+                  key={code}
+                  ref={isHighlighted ? highlightedCodeRef : undefined}
+                  className={`${styles.codeItem} ${
+                    isHighlighted ? styles.codeItemHighlighted : ""
+                  }`}
+                >
+                  {code}
+                </li>
+              );
+            })}
           </ul>
+        )}
+
+        {codesModalBox && codesModalBox.codes.length > 0 && (
+          <div className={styles.codesDeleteBar}>
+            {highlightedDeleteCode ? (
+              <>
+                <p className={styles.codesDeleteHint}>
+                  Код найден и выделен. Удалить эту банку из коробки?
+                </p>
+                <div className={styles.codesDeleteActions}>
+                  <button
+                    type="button"
+                    className={styles.codesDeleteConfirm}
+                    onClick={confirmDeleteHighlightedCode}
+                  >
+                    Удалить
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.codesDeleteCancel}
+                    onClick={clearDeleteSelection}
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className={styles.codesDeleteHint}>
+                  Чтобы удалить банку — отсканируйте её DataMatrix (камера или ТСД).
+                </p>
+                <CameraScanner
+                  forceZXing
+                  muteDetectorSuccessSound
+                  expectedCount={1}
+                  closeOnScan
+                  formats={["DataMatrix"]}
+                  textButton="Скан для удаления"
+                  buttonHeight={40}
+                  iconWidth={18}
+                  iconHeight={18}
+                  className={styles.codesDeleteScanButton}
+                  onScan={(results) => handleDeleteScan(results[0] ?? "")}
+                />
+              </>
+            )}
+            {deleteScanError && (
+              <p className={styles.codesDeleteError}>{deleteScanError}</p>
+            )}
+          </div>
         )}
       </div>
     </Popup>

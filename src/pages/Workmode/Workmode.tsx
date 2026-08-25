@@ -58,6 +58,7 @@ const Workmode = () => {
         <Link className="link" to={"/create-box"}>Агрегация коробов</Link>
         <Link className="link" to={"/scan-doc-kit"}>Агрегация набора</Link>
         <Link className="link" to={"/mass-marking-scan"}>Возвраты товаров</Link>
+        <Link className="link" to={"/series-photos"}>Фото серий</Link>
       </div>
 
       <div className="workmode__footer">
