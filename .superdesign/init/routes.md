@@ -1,3 +1,45 @@
+# Route map
+
+Routing is config-based with React Router 6.22.3 and `createBrowserRouter`. Every page is nested under `Root`; all routes except `/` are wrapped by `ProtectedRoute`.
+
+| URL | Component | Layout / guard | Summary |
+|---|---|---|---|
+| `/` | `src/App.tsx` → `src/pages/EntryPage/EntryPage.tsx` | `Root` | PIN login/keypad and PWA update prompt |
+| `/workmode` | `src/pages/Workmode/Workmode.tsx` | `Root`, protected | Operation menu / main hub |
+| `/new-pallet` | `src/pages/NewPallet/NewPallet.tsx` | `Root`, protected | Start pallet creation |
+| `/pallet/:sscc` | `src/pages/Pallet/Pallet.tsx` | `Root`, protected | Pallet workflow |
+| `/new-truck-filling` | `src/pages/NewTruckFilling/NewTruckFilling.tsx` | `Root`, protected | Start truck loading |
+| `/truck-filling/:docId` | `src/pages/TruckFilling/TruckFilling.tsx` | `Root`, protected | Truck loading document |
+| `/scan-cell` | `src/pages/ScanCell/ScanCell.tsx` | `Root`, protected | Scan inventory cell |
+| `/cell/:cellCode` | `src/pages/BoxAdmin/BoxAdmin.tsx` | `Root`, protected | Cell inventory |
+| `/box-admin` | `src/pages/BoxAdmin/BoxAdmin.tsx` | `Root`, protected | Box administration |
+| `/scan-order` | `src/pages/ScanOrder/ScanOrder.tsx` | `Root`, protected | Scan order |
+| `/order` | `src/pages/Order/Order.tsx` | `Root`, protected | Order workflow |
+| `/pallet-details/:palletId` | `src/pages/PalletDetails/PalletDetails.tsx` | `Root`, protected | Pallet details |
+| `/scan-pallet` | `src/pages/ScanPallet/ScanPallet.tsx` | `Root`, protected | Scan pallet |
+| `/work-pallet/:palletId` | `src/pages/WorkPallet/WorkPallet.tsx` | `Root`, protected | Work with pallet |
+| `/test-mode`, `/test` | `src/pages/TestMode/TestMode.tsx` | `Root`, protected | Test page aliases |
+| `/view-pallet/:palletId` | `src/pages/ViewPallet/ViewPallet.tsx` | `Root`, protected | Read-only pallet view |
+| `/order-goods` | `src/pages/OrderGoods/OrderGoods.tsx` | `Root`, protected | Order goods |
+| `/truck-filling` | `src/pages/TruckFilling/TruckFilling.tsx` | `Root`, protected | Truck loading without URL document id |
+| `/disaggregation` | `src/pages/Disaggregation/Disaggregation.tsx` | `Root`, protected | Disaggregation |
+| `/box-aggregation` | `src/pages/BoxAggregation/BoxAggregation.tsx` | `Root`, protected | Box aggregation |
+| `/scan-box` | `src/pages/ScanBox/ScanBox.tsx` | `Root`, protected | Scan box |
+| `/create-box` | `src/pages/CreateBox/CreateBox.tsx` | `Root`, protected | Create/aggregate box |
+| `/set-aggregation` | `src/pages/KitAggregation/KitAggregation.tsx` | `Root`, protected | Kit aggregation |
+| `/scan-doc-kit` | `src/pages/ScanDocKit/ScanDocKit.tsx` | `Root`, protected | Scan kit document |
+| `/mass-marking-scan` | `src/pages/MassMarkingEntry/MassMarkingEntry.tsx` | `Root`, protected | Return workflow entry |
+| `/mass-marking-scan/editor` | `src/pages/MassMarkingScan/MassMarkingScan.tsx` | `Root`, protected | Return marking editor |
+| `/series-photoes` | `src/pages/SeriesPhotos/SeriesPhotosEntry.tsx` | `Root`, protected | Enter transfer document number |
+| `/series-photoes/:docNumber` | `src/pages/SeriesPhotos/SeriesPhotosList.tsx` | `Root`, protected | Select transfer product/series |
+| `/series-photoes/:docNumber/:seriesUUID` | `src/pages/SeriesPhotos/SeriesPhotosDetails.tsx` | `Root`, protected | View, add, and retake series photos |
+
+Note: the deployed URL spelling is `series-photoes` (not `series-photos`) and is consistently used by current navigation.
+
+# Full router configuration
+
+## `src/main.tsx`
+```tsx
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import Workmode from "./pages/Workmode/Workmode.tsx";
@@ -224,3 +266,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </PinAuthContext>
   // </React.StrictMode>
 );
+```

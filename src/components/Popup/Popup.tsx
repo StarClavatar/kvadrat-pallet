@@ -8,6 +8,7 @@ type PopupProps = {
   onClose: () => void;
   containerClassName?: string;
   title?: string;
+  fullScreen?: boolean;
 };
 
 const Popup: FC<PopupProps> = ({
@@ -16,11 +17,12 @@ const Popup: FC<PopupProps> = ({
   isOpen,
   onClose,
   title,
+  fullScreen = false,
 }) => {
   return (
-    <div className={`popup ${isOpen ? "popup_opened" : null}`}>
-      <div className={`popup__inner ${containerClassName}`}>{children}</div>
-      <span className="popup__title">{title}</span>
+    <div className={`popup ${isOpen ? "popup_opened" : ""} ${fullScreen ? "popup_fullscreen" : ""}`}>
+      <div className={`popup__inner ${containerClassName || ""}`}>{children}</div>
+      {title && <span className="popup__title">{title}</span>}
       <button className="popup__close-button" onClick={onClose}>
         <CloseIcon />
       </button>

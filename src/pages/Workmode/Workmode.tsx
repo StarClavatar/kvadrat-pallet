@@ -32,13 +32,13 @@ const Workmode = () => {
 
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
     } else {
       console.log('User dismissed the install prompt');
     }
-    
+
     // We've used the prompt, and can't use it again, throw it away
     setDeferredPrompt(null);
     setIsInstallable(false);
@@ -46,9 +46,8 @@ const Workmode = () => {
 
   return (
     <div className="workmode">
-        <p className="workmode__employee">{pinAuthData?.workerName}</p>
-        <p className="workmode__employee">{pinAuthData?.tsdNumber}</p>
-      
+      <p className="workmode__employee">{pinAuthData?.workerName}</p>
+      <p className="workmode__employee">{pinAuthData?.tsdNumber}</p>
       <div className="workmode__links">
         {pinAuthData?.operations.makePallets && <Link to={"/new-pallet"} className="link">Создание паллет </Link>}
         {pinAuthData?.operations.workOrder && <Link to={"/scan-order"} className="link">Работа с заказом</Link>}
@@ -58,7 +57,7 @@ const Workmode = () => {
         <Link className="link" to={"/create-box"}>Агрегация коробов</Link>
         <Link className="link" to={"/scan-doc-kit"}>Агрегация набора</Link>
         <Link className="link" to={"/mass-marking-scan"}>Возвраты товаров</Link>
-        <Link className="link" to={"/series-photos"}>Фото серий</Link>
+        {pinAuthData?.operations.seriesPhotos && <Link className="link" to={"/series-photoes"}>Фото серий</Link>}
       </div>
 
       <div className="workmode__footer">

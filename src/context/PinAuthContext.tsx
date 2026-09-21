@@ -16,6 +16,7 @@ export type TPinAuthData = {
         shipment: boolean;
         inventory: boolean;
         workOrder: boolean;
+        seriesPhotos: boolean;
     }
 };
 

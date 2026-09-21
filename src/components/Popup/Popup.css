@@ -13,13 +13,32 @@
   visibility: hidden;
   opacity: 0;
   transform: scale(0);
-  z-index: 100;
+  z-index: 9999;
 }
 
 .popup_opened {
   visibility: visible;
   opacity: 1;
   transform: scale(1);
+}
+
+.popup_fullscreen {
+  padding-bottom: 0;
+  align-items: stretch;
+}
+
+.popup_fullscreen .popup__inner {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border-radius: 0;
+}
+
+.popup_fullscreen .popup__close-button {
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  z-index: 10;
 }
 
 .popup__inner {
