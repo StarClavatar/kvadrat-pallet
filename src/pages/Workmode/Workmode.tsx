@@ -57,6 +57,7 @@ const Workmode = () => {
         <Link className="link" to={"/create-box"}>Агрегация коробов</Link>
         <Link className="link" to={"/scan-doc-kit"}>Агрегация набора</Link>
         <Link className="link" to={"/mass-marking-scan"}>Возвраты товаров</Link>
+        <Link className="link" to={"/print-datamatrix"}>Печать DataMatrix</Link>
         {pinAuthData?.operations.seriesPhotos && <Link className="link" to={"/series-photoes"}>Фото серий</Link>}
       </div>
 

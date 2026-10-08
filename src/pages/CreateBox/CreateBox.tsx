@@ -92,7 +92,7 @@ const CreateBox = () => {
                 scanCode,
                 String(order?.docNum), 
                 Number(packCount),
-                undefined,
+                order.docUUID,
                 String(order?.beginDate)
             );
 

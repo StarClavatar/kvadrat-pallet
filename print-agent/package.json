@@ -1,0 +1,9 @@
+{
+  "name": "kvadrat-print-agent",
+  "version": "1.0.0",
+  "description": "CORS-прокси для CUPS (TSC TE310)",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js"
+  }
+}

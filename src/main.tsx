@@ -33,6 +33,7 @@ import MassMarkingEntry from "./pages/MassMarkingEntry/MassMarkingEntry.tsx";
 import SeriesPhotosEntry from "./pages/SeriesPhotos/SeriesPhotosEntry.tsx";
 import SeriesPhotosList from "./pages/SeriesPhotos/SeriesPhotosList.tsx";
 import SeriesPhotosDetails from "./pages/SeriesPhotos/SeriesPhotosDetails.tsx";
+import PrintDatamatrix from "./pages/PrintDatamatrix/PrintDatamatrix.tsx";
 
 const router = createBrowserRouter([
   {
@@ -148,6 +149,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <TestMode />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/print-datamatrix",
+    element: (
+      <ProtectedRoute>
+        <PrintDatamatrix />
       </ProtectedRoute>
     ),
   },

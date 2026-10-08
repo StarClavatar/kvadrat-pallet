@@ -164,7 +164,7 @@ const SeriesPhotosDetails = () => {
 
       const payload = [{
         ...(targetUUID ? { photoUUID: targetUUID } : {}),
-        fileName: `${product.name}_${product.series}_${currentTime}.jpg`,
+        fileName: `${product.name}_${product.series}_${currentTime}.jpg`.replaceAll('/', ''),
         base64: cleanBase64
       }];
 
@@ -270,7 +270,7 @@ const SeriesPhotosDetails = () => {
 
                   return (
                     <PhotoView key={photo.photoUUID} src={src}>
-                      <img src={src} alt={photo.fileName} className={styles.galleryThumbnail} />
+                      <img src={src} alt={photo.fileName.replaceAll('/', '')} className={styles.galleryThumbnail} />
                     </PhotoView>
                   );
                 })}

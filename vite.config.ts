@@ -54,6 +54,16 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: env.SOURCE_MAP === "true",
     },
+    server: {
+      proxy: {
+        "/cups": {
+          target: env.VITE_CUPS_URL || "https://ts4:631",
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/cups/, ""),
+        },
+      },
+    },
     plugins: [react(), VitePWA(pwaOptions)],
   };
 });

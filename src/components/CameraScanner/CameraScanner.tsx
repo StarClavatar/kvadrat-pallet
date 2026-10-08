@@ -78,6 +78,8 @@ interface CameraScannerProps {
   forceZXing?: boolean;
   /** Не воспроизводить встроенный звук при детекте (родитель сам, например по факту добавления). */
   muteDetectorSuccessSound?: boolean;
+  /** Отдавать код как есть (с GS \x1d), без cleanCode. Нужно для печати 1:1. */
+  rawOutput?: boolean;
 }
 
 const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
@@ -103,6 +105,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
       onModalOpenChange,
       forceZXing = false,
       muteDetectorSuccessSound = false,
+      rawOutput = false,
     },
     ref
   ) {
@@ -131,6 +134,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
 
   /** Как `normalizeCode` в MassMarkingScan: все управляющие символы по строке, не только в начале — иначе на Android (BarcodeDetector) GS внутри кода не совпадает с `existingCodes`. */
   const cleanCode = (text: string) => {
+    if (rawOutput) return text;
     let s = text.replace(/[\x00-\x1F\x7F]+/g, "").trim();
     s = s.replace(/\((00|01|21|93)\)/g, "$1");
     return s;
@@ -269,6 +273,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
             const results = await readBarcodes(imageData, {
                 formats: formats as any, // ZXing expects its own format strings which match ours mostly
                 tryHarder: true,
+                ...(rawOutput ? { textMode: "Plain" } : {}),
                 ...(typeof expectedCount === "number" ? { maxNumberOfSymbols: expectedCount } : {})
             });
 
@@ -347,7 +352,7 @@ const CameraScanner = forwardRef<CameraScannerHandle, CameraScannerProps>(
     }
 
     requestRef.current = requestAnimationFrame(scanLoop);
-  }, [detector, useNativeDetector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats, muteDetectorSuccessSound]);
+  }, [detector, useNativeDetector, validateCode, expectedCount, closeOnScan, successAudio, onScan, formats, muteDetectorSuccessSound, rawOutput]);
 
   const startCamera = async () => {
     setError(null);

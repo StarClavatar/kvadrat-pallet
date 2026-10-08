@@ -763,11 +763,11 @@ const MassMarkingScan = () => {
         </label>
 
         <label className={styles.returnField}>
-          <span className={styles.returnFieldLabel}>Номер возврата</span>
+          <span className={styles.returnFieldLabel}>Номер заявки на возврат</span>
           <input
             type="text"
             className={styles.returnInput}
-            placeholder="Например: RV-2026-00421"
+            placeholder="Например: 0000-000111 или 111"
             value={returnDraft.returnNumber}
             onChange={(e) =>
               setReturnDraft((prev) => ({ ...prev, returnNumber: e.target.value }))
